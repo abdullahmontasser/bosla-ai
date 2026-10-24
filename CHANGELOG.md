@@ -26,8 +26,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Typed translation dictionary loader with recursive deep merge fallback to canonical English copy in `src/lib/i18n/get-dictionary.ts` (see spec 0003).
 - Interactive visual component showcase and token gallery at `/[lang]/design-system` (see spec 0003).
 - Localized 404 view at `src/app/[lang]/not-found.tsx` matching the design system (see spec 0003).
+- AI provider configuration settings page at `/[lang]/settings/providers` with bilingual English and Arabic layout, loading provider cards through React Suspense and Partial Prerendering (see spec 0004).
+- Interactive `ProviderCard` component island providing credential validation, model fetching, model selection, active provider toggles, and deletion (see spec 0004).
+- Server Actions in `src/app/actions/provider-settings.ts` executing credential validation, safe AES 256 GCM key encryption, atomic active provider transactions, and corrupted key recovery (see spec 0004).
+- Model filtering and recommendation fallbacks in `src/lib/ai/provider-models.ts` supporting OpenAI, Anthropic Claude, Google Gemini, Groq, and local Ollama (see spec 0004).
+- Reusable inline `ProviderSwitcher` component for upcoming AI feature pages, displaying active models and enabling quick provider switching (see spec 0004).
+- Auth.js v5 authentication configuration in `src/auth.ts` with Prisma adapter and JWT user session forwarding (see spec 0004).
 
 ### Changed
 
 - Migrated root application layout and page into subpath structure under `src/app/[lang]/` with Radix `DirectionProvider` and `ThemeProvider` (see spec 0003).
 - Configured PostCSS compilation via `@tailwindcss/postcss` for reliable Tailwind CSS v4 asset builds (see spec 0003).
+- Updated provider settings validations and database helpers to permit updating default models or endpoints without re-entering existing secret keys (see spec 0004).
+
+### Security
+
+- Built SSRF protections for Ollama endpoints blocking cloud metadata IP addresses and internal database service ports (see spec 0004).
+- Implemented credential masking exposing only the last four characters of decrypted API keys in settings cards (see spec 0004).
+- Enforced session authentication guards across all provider Server Actions returning structured unauthorized responses before accessing the database (see spec 0004).

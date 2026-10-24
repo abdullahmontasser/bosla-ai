@@ -15,7 +15,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 2   | Coding standards & tooling              | Foundation | done    |
 | 3   | Data model                              | Foundation | done    |
 | 4   | Design system & bilingual UI foundation | Foundation | done    |
-| 5   | AI provider configuration (BYOK)        | Foundation | planned |
+| 5   | AI provider configuration (BYOK)        | Foundation | done    |
 | 6   | Core resume tailoring thread            | Slice 1    | planned |
 | 7   | Resume parsing and ingestion            | Slice 2    | planned |
 | 8   | ATS resume engine and PDF export        | Slice 3    | planned |
@@ -76,12 +76,20 @@ Design tokens, right to left and left to right layout primitives, dark and light
 - [x] Verify it: `/check verify design system & bilingual UI foundation`
 - [x] Test it: `/test design system & bilingual UI foundation`
 
-### 5. AI provider configuration (BYOK) · needs a decision
+### 5. AI provider configuration (BYOK) · done
 
+spec [0004](../specs/0004-ai-provider-configuration/index.md) · code in src/components/provider-settings/
 User settings to configure API keys for OpenAI, Anthropic, Gemini, Groq, or local Ollama, with key validation and model selection.
 **Done when:** users can enter, test, and save provider keys securely, and switch active models with clear feedback.
 
-- [ ] Design it (spec): `/architect AI provider configuration (BYOK)`
+- [x] Design it (spec): `/architect AI provider configuration (BYOK)`
+- [x] Build it: `/develop AI provider configuration (BYOK)`
+  - [x] Install auth and AI SDK runtime dependencies and configure SSRF and model filters (AC-2, AC-3, AC-8)
+  - [x] Server Actions for key validation, safe encryption, active provider transactions, and card configuration loader (AC-2, AC-4, AC-5, AC-6, AC-7, AC-8)
+  - [x] Bilingual settings page and interactive ProviderCard component island with masked key hints (AC-1, AC-3, AC-7, AC-10)
+  - [x] Exportable ProviderSwitcher component and comprehensive unit and component test suites (AC-1, AC-2, AC-5, AC-7, AC-8, AC-9, AC-10)
+- [x] Verify it: `/check verify AI provider configuration (BYOK)`
+- [x] Test it: `/test AI provider configuration (BYOK)`
 
 ## Slice 1: Core resume tailoring thread
 

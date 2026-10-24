@@ -18,10 +18,31 @@ export interface DecryptedProviderSetting {
 
 /**
  * Saves or updates an AI provider configuration for a user.
- * Commercial API keys are encrypted at rest using AES 256 GCM.
+ * Commercial API keys are encrypted at rest using AES-256-GCM.
+ * When rawApiKey is omitted on an update, existing encrypted credentials remain intact.
  */
 export async function upsertProviderSetting(userId: string, input: UpsertProviderSettingInput) {
-  const validated = UpsertProviderSettingSchema.parse(input)
+  const validatedInput = { ...input }
+
+  if (
+    !validatedInput.hasExistingKey &&
+    !validatedInput.rawApiKey &&
+    validatedInput.provider !== 'OLLAMA'
+  ) {
+    const existing = await prisma.userProviderSetting.findUnique({
+      where: {
+        userId_provider: {
+          userId,
+          provider: validatedInput.provider as AiProvider,
+        },
+      },
+    })
+    if (existing?.encryptedKey) {
+      validatedInput.hasExistingKey = true
+    }
+  }
+
+  const validated = UpsertProviderSettingSchema.parse(validatedInput)
 
   let encryptedKey: string | null = null
   let iv: string | null = null

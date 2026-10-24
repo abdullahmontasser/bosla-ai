@@ -73,6 +73,63 @@ describe('Provider Settings Repository (covers: AC-2)', () => {
     expect(result.id).toBe('setting_1')
   })
 
+  it('updates default model without rawApiKey when existing credentials exist (covers: AC-4)', async () => {
+    vi.mocked(prisma.userProviderSetting.findUnique).mockResolvedValueOnce({
+      id: 'setting_1',
+      userId: 'user_1',
+      provider: 'OPENAI',
+      encryptedKey: 'existingMockCipher',
+      iv: 'existingMockIv',
+      authTag: 'existingMockTag',
+      defaultModel: 'gpt-4o',
+      endpointUrl: null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as UserProviderSetting)
+
+    vi.mocked(prisma.userProviderSetting.upsert).mockResolvedValueOnce({
+      id: 'setting_1',
+      userId: 'user_1',
+      provider: 'OPENAI',
+      encryptedKey: 'existingMockCipher',
+      iv: 'existingMockIv',
+      authTag: 'existingMockTag',
+      defaultModel: 'gpt-4o-mini',
+      endpointUrl: null,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as unknown as UserProviderSetting)
+
+    const result = await upsertProviderSetting('user_1', {
+      provider: 'OPENAI',
+      defaultModel: 'gpt-4o-mini',
+      isActive: true,
+    })
+
+    expect(prisma.userProviderSetting.upsert).toHaveBeenCalledWith({
+      where: {
+        userId_provider: {
+          userId: 'user_1',
+          provider: 'OPENAI',
+        },
+      },
+      update: {
+        defaultModel: 'gpt-4o-mini',
+        endpointUrl: null,
+        isActive: true,
+      },
+      create: expect.objectContaining({
+        userId: 'user_1',
+        provider: 'OPENAI',
+        defaultModel: 'gpt-4o-mini',
+      }),
+    })
+
+    expect(result.defaultModel).toBe('gpt-4o-mini')
+  })
+
   it('decrypts stored active provider settings (covers: AC-2)', async () => {
     const { encryptSecret } = await import('@/lib/crypto')
     const rawKey = 'sk-ant-test-key-999'

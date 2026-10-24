@@ -40,5 +40,37 @@ export interface Dictionary {
     duplicateItem: string
     deleteItem: string
   }
+  providerSettings: {
+    title: string
+    description: string
+    active: string
+    inactive: string
+    configured: string
+    unconfigured: string
+    corrupted: string
+    apiKey: string
+    apiKeyPlaceholder: string
+    endpointUrl: string
+    endpointUrlPlaceholder: string
+    validateAndFetch: string
+    validating: string
+    selectModel: string
+    modelPlaceholder: string
+    saveSettings: string
+    saving: string
+    setActive: string
+    settingActive: string
+    delete: string
+    deleteConfirm: string
+    savedSuccess: string
+    deleteSuccess: string
+    activatedSuccess: string
+    fallbackNotice: string
+    retry: string
+    ollamaNote: string
+    switcherTitle: string
+    noActiveProvider: string
+    configureNow: string
+  }
   [key: string]: unknown
 }
