@@ -1,5 +1,6 @@
 import { prisma } from '../src/lib/prisma'
 import { encryptSecret } from '../src/lib/crypto'
+import bcrypt from 'bcryptjs'
 
 async function main() {
   console.log('🌱 Starting CareerCraft AI database seed...')
@@ -14,11 +15,13 @@ async function main() {
     await prisma.user.delete({ where: { id: existingUser.id } })
   }
 
-  // 1. Create Demo User
+  // 1. Create Demo User with hashed password
+  const demoPasswordHash = await bcrypt.hash('password123', 10)
   const user = await prisma.user.create({
     data: {
       email: 'demo@careercraft.ai',
       name: 'Tarek Mansour',
+      passwordHash: demoPasswordHash,
       image: 'https://avatars.githubusercontent.com/u/1024025?v=4',
     },
   })

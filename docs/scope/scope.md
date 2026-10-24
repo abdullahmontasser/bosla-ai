@@ -9,19 +9,19 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 
 ## At a glance
 
-| #   | Feature                                 | Phase      | Status  |
-| --- | --------------------------------------- | ---------- | ------- |
-| 1   | Stack & architecture                    | Foundation | done    |
-| 2   | Coding standards & tooling              | Foundation | done    |
-| 3   | Data model                              | Foundation | done    |
-| 4   | Design system & bilingual UI foundation | Foundation | done    |
-| 5   | AI provider configuration (BYOK)        | Foundation | done    |
-| 6   | Core resume tailoring thread            | Slice 1    | planned |
-| 7   | Resume parsing and ingestion            | Slice 2    | planned |
-| 8   | ATS resume engine and PDF export        | Slice 3    | planned |
-| 9   | Career outreach and interview prep      | Slice 4    | planned |
-| 10  | Job application kanban tracker          | Slice 5    | planned |
-| 11  | Public showcase and landing page        | Slice 6    | planned |
+| #   | Feature                                 | Phase      | Status      |
+| --- | --------------------------------------- | ---------- | ----------- |
+| 1   | Stack & architecture                    | Foundation | done        |
+| 2   | Coding standards & tooling              | Foundation | done        |
+| 3   | Data model                              | Foundation | done        |
+| 4   | Design system & bilingual UI foundation | Foundation | done        |
+| 5   | AI provider configuration (BYOK)        | Foundation | done        |
+| 6   | Core resume tailoring thread            | Slice 1    | done        |
+| 7   | Resume parsing and ingestion            | Slice 2    | in-progress |
+| 8   | ATS resume engine and PDF export        | Slice 3    | planned     |
+| 9   | Career outreach and interview prep      | Slice 4    | planned     |
+| 10  | Job application kanban tracker          | Slice 5    | planned     |
+| 11  | Public showcase and landing page        | Slice 6    | planned     |
 
 ## Foundations
 
@@ -93,21 +93,38 @@ User settings to configure API keys for OpenAI, Anthropic, Gemini, Groq, or loca
 
 ## Slice 1: Core resume tailoring thread
 
-### 6. Core resume tailoring thread · needs a decision
+### 6. Core resume tailoring thread · done
 
+spec [0005](../specs/0005-core-resume-tailoring-thread/index.md) · code in src/
 The walking skeleton slice. A user signs in, saves an AI key, inputs a job description and basic experience, and watches a tailored summary stream live in English or Arabic.
 **Done when:** the full pipeline (auth, database, AI streaming, and bilingual UI) runs end to end with real data.
 
-- [ ] Design it (spec): `/architect core resume tailoring thread`
+- [x] Design it (spec): `/architect core resume tailoring thread`
+- [x] Build it: `/develop core resume tailoring thread`
+  - [x] Credentials authentication and demo user seed (AC-1)
+  - [x] Candidate profile management and sample data actions (AC-3, AC-10)
+  - [x] Tailoring prompt engine and AI streaming route handler (AC-4, AC-5, AC-6, AC-7, AC-8)
+  - [x] Bilingual studio page and live streaming components (AC-2, AC-9, AC-10)
+  - [x] End to end verification and full test pass (AC-1, AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, AC-10)
+- [x] Verify it: `/check verify core resume tailoring thread`
+- [x] Test it: `/test core resume tailoring thread`
 
 ## Slice 2: Resume parsing and ingestion
 
-### 7. Resume parsing and ingestion · needs a decision
+### 7. Resume parsing and ingestion · in-progress
 
+spec [0005](../specs/0005-resume-parsing-and-ingestion/index.md)
 Upload PDF and Word files in English or Arabic, extract structured candidate data, and present an interactive review screen.
 **Done when:** uploaded documents are converted into structured records, and users can review or correct fields before saving their master profile.
 
-- [ ] Design it (spec): `/architect resume parsing and ingestion`
+- [x] Design it (spec): `/architect resume parsing and ingestion`
+- [ ] Build it: `/develop resume parsing and ingestion`
+  - [ ] Database schema migration for parsing lifecycle and error tracking (AC-5, AC-6)
+  - [ ] In memory text extraction service for PDF and DOCX with magic bytes validation and empty text detection (AC-1, AC-2)
+  - [ ] Server Actions for AI structured extraction, retry handling, and atomic profile commit with merge strategies (AC-1, AC-3, AC-5, AC-6, AC-7)
+  - [ ] Bilingual upload dropzone and interactive review screen with section level controls and inline editing (AC-1, AC-2, AC-4)
+- [ ] Verify it: `/check verify resume parsing and ingestion`
+- [ ] Test it: `/test resume parsing and ingestion`
 
 ## Slice 3: ATS resume engine and PDF export
 

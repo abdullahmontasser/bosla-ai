@@ -38,10 +38,26 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <Link href={`/${lang}/tailor`}>
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-1.5 bg-primary text-primary-foreground"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>{lang === 'ar' ? 'استوديو التخصيص' : 'Tailor Studio'}</span>
+              </Button>
+            </Link>
+            <Link href={`/${lang}/settings/providers`}>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+                <Bot className="h-4 w-4" />
+                <span>{lang === 'ar' ? 'المزودات' : 'Providers'}</span>
+              </Button>
+            </Link>
             <Link href={`/${lang}/design-system`}>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
                 <Palette className="h-4 w-4" />
-                <span className="hidden sm:inline">Design System</span>
+                <span>{lang === 'ar' ? 'نظام التصميم' : 'Design System'}</span>
               </Button>
             </Link>
             <LanguageSwitcher currentLang={lang} />
@@ -69,10 +85,20 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            <Link href={`/${lang}/design-system`}>
-              <Button size="lg" className="gap-2">
-                <span>Explore Design System</span>
+            <Link href={`/${lang}/tailor`}>
+              <Button
+                size="lg"
+                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>{lang === 'ar' ? 'افتح استوديو التخصيص' : 'Open Tailoring Studio'}</span>
                 <RtlIcon icon={ArrowRight} className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href={`/${lang}/settings/providers`}>
+              <Button size="lg" variant="outline" className="gap-2">
+                <Bot className="h-4 w-4" />
+                <span>{lang === 'ar' ? 'إعدادات المزودين' : 'Configure Providers'}</span>
               </Button>
             </Link>
           </div>

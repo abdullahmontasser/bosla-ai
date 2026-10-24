@@ -1,3 +1,50 @@
+export interface TailorDictionary {
+  title: string
+  subtitle: string
+  experiencePanelTitle: string
+  experiencePanelDesc: string
+  jobPostingPanelTitle: string
+  jobPostingPanelDesc: string
+  previewPanelTitle: string
+  previewPanelDesc: string
+  headline: string
+  headlinePlaceholder: string
+  summary: string
+  summaryPlaceholder: string
+  experiences: string
+  addExperience: string
+  removeExperience: string
+  companyName: string
+  jobTitle: string
+  bullets: string
+  addBullet: string
+  bulletPlaceholder: string
+  loadSampleData: string
+  saveProfile: string
+  profileSaved: string
+  jobTitleLabel: string
+  companyNameLabel: string
+  jobDescriptionLabel: string
+  jobDescriptionPlaceholder: string
+  tailorButton: string
+  tailoring: string
+  stopGenerating: string
+  missingProviderWarning: string
+  goToSettings: string
+  streamIdle: string
+  summaryTitle: string
+  bulletsTitle: string
+  copyAll: string
+  copied: string
+  errorTitle: string
+  retry: string
+  generatingBadge: string
+  completedBadge: string
+  failedBadge: string
+  savedNotice: string
+  [key: string]: string | undefined
+}
+
 export interface Dictionary {
   common: {
     brand: string
@@ -72,5 +119,6 @@ export interface Dictionary {
     noActiveProvider: string
     configureNow: string
   }
+  tailor?: TailorDictionary
   [key: string]: unknown
 }

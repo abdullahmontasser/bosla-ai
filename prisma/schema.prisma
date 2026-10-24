@@ -37,12 +37,19 @@ enum ApplicationStatus {
   OFFER
 }
 
+enum ResumeGenerationStatus {
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  passwordHash  String?   @map("password_hash") @db.Text
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -260,12 +267,13 @@ model JobPosting {
 }
 
 model TailoredResume {
-  id              String   @id @default(cuid())
-  userId          String   @map("user_id")
-  profileId       String   @map("profile_id")
-  jobPostingId    String   @map("job_posting_id")
-  language        Language @default(EN)
-  title           String   @db.VarChar(255)
+  id              String                 @id @default(cuid())
+  userId          String                 @map("user_id")
+  profileId       String                 @map("profile_id")
+  jobPostingId    String                 @map("job_posting_id")
+  status          ResumeGenerationStatus @default(GENERATING) @map("status")
+  language        Language               @default(EN)
+  title           String                 @db.VarChar(255)
   atsScore        Float?   @map("ats_score")
   missingSkills   String[] @map("missing_skills")
   tailoredSummary String?  @map("tailored_summary") @db.Text

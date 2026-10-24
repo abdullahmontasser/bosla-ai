@@ -146,3 +146,113 @@ export async function deleteProfile(userId: string, profileId: string) {
 
   return result.count > 0
 }
+
+/**
+ * Retrieves the default profile for a user and language with work experiences.
+ */
+export async function getDefaultProfile(userId: string, language: Language = 'EN') {
+  return prisma.profile.findFirst({
+    where: {
+      userId,
+      language,
+    },
+    include: {
+      workExperiences: { orderBy: { sortOrder: 'asc' } },
+    },
+    orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }],
+  })
+}
+
+/**
+ * Upserts candidate profile headline, summary, and work experiences for studio tailoring.
+ */
+export async function upsertTailoringCandidateProfile(
+  userId: string,
+  input: {
+    profileId?: string
+    language?: Language
+    headline: string
+    summary: string
+    experiences: Array<{
+      id?: string
+      companyName: string
+      jobTitle: string
+      bullets: string[]
+    }>
+  },
+) {
+  const language = input.language || 'EN'
+
+  return prisma.$transaction(async (tx) => {
+    let targetProfileId = input.profileId
+
+    if (targetProfileId) {
+      const existing = await tx.profile.findFirst({
+        where: { id: targetProfileId, userId },
+      })
+      if (!existing) {
+        throw new Error('Profile not found')
+      }
+
+      await tx.profile.update({
+        where: { id: targetProfileId },
+        data: {
+          headline: input.headline,
+          summary: input.summary,
+        },
+      })
+
+      await tx.workExperience.deleteMany({
+        where: { profileId: targetProfileId },
+      })
+    } else {
+      const existingDefault = await tx.profile.findFirst({
+        where: { userId, language },
+        orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }],
+      })
+
+      if (existingDefault) {
+        targetProfileId = existingDefault.id
+        await tx.profile.update({
+          where: { id: targetProfileId },
+          data: {
+            headline: input.headline,
+            summary: input.summary,
+          },
+        })
+        await tx.workExperience.deleteMany({
+          where: { profileId: targetProfileId },
+        })
+      } else {
+        const user = await tx.user.findUnique({ where: { id: userId } })
+        const newProfile = await tx.profile.create({
+          data: {
+            userId,
+            language,
+            fullName: user?.name || 'Candidate',
+            headline: input.headline,
+            summary: input.summary,
+            isDefault: true,
+          },
+        })
+        targetProfileId = newProfile.id
+      }
+    }
+
+    if (input.experiences.length > 0) {
+      await tx.workExperience.createMany({
+        data: input.experiences.map((exp, idx) => ({
+          profileId: targetProfileId!,
+          companyName: exp.companyName,
+          jobTitle: exp.jobTitle,
+          bullets: exp.bullets,
+          startDate: new Date('2022-01-01'),
+          isCurrent: idx === 0,
+          sortOrder: idx,
+        })),
+      })
+    }
+
+    return { profileId: targetProfileId! }
+  })
+}

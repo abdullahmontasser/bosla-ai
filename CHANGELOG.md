@@ -32,15 +32,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Model filtering and recommendation fallbacks in `src/lib/ai/provider-models.ts` supporting OpenAI, Anthropic Claude, Google Gemini, Groq, and local Ollama (see spec 0004).
 - Reusable inline `ProviderSwitcher` component for upcoming AI feature pages, displaying active models and enabling quick provider switching (see spec 0004).
 - Auth.js v5 authentication configuration in `src/auth.ts` with Prisma adapter and JWT user session forwarding (see spec 0004).
+- Credentials authentication support in Auth.js v5 with bcrypt password hashing and seeded demo credentials for `demo@careercraft.ai` (see spec 0005).
+- Candidate experience profile management and bilingual sample data loader for Senior Full Stack Engineers in English and Arabic (see spec 0005).
+- Anti hallucination tailoring prompt engine formatting streaming outputs with structured section delimiters (see spec 0005).
+- Real time AI streaming endpoint at `POST /api/tailor` that decrypts user provider keys in server memory and streams tailored content using Vercel AI SDK (see spec 0005).
+- Automatic persistence of tailored resume snapshots and job postings to PostgreSQL with generation status tracking upon stream completion (see spec 0005).
+- Bilingual resume tailoring studio workbench at `/[lang]/tailor` featuring candidate experience editing, job description input with character validation, inline provider switching, and live streaming output preview (see spec 0005).
+- Interactive sign in card with one click demo access and localized English and Arabic layout guidance (see spec 0005).
 
 ### Changed
 
 - Migrated root application layout and page into subpath structure under `src/app/[lang]/` with Radix `DirectionProvider` and `ThemeProvider` (see spec 0003).
 - Configured PostCSS compilation via `@tailwindcss/postcss` for reliable Tailwind CSS v4 asset builds (see spec 0003).
 - Updated provider settings validations and database helpers to permit updating default models or endpoints without re-entering existing secret keys (see spec 0004).
+- Extended PostgreSQL schema with `passwordHash` field on `User` and `status` lifecycle tracking on `TailoredResume` (see spec 0005).
 
 ### Security
 
 - Built SSRF protections for Ollama endpoints blocking cloud metadata IP addresses and internal database service ports (see spec 0004).
 - Implemented credential masking exposing only the last four characters of decrypted API keys in settings cards (see spec 0004).
 - Enforced session authentication guards across all provider Server Actions returning structured unauthorized responses before accessing the database (see spec 0004).
+- Session authentication guards on tailoring API route and candidate profile Server Actions enforcing user ownership (see spec 0005).
+- Server side active AI provider key decryption in memory without exposing provider credentials to browser client network requests (see spec 0005).
