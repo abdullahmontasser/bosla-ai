@@ -1,0 +1,43 @@
+{
+  "common": {
+    "brand": "CareerCraft AI",
+    "tagline": "Autonomous career agent for resumes, outreach, and interview prep",
+    "language": "Language",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "close": "Close",
+    "loading": "Loading...",
+    "search": "Search..."
+  },
+  "designSystem": {
+    "title": "Design System & Component Showcase",
+    "subtitle": "A unified, accessible visual foundation supporting bilingual Arabic and English layouts.",
+    "colors": "Semantic Color Palette",
+    "typography": "Typography & Fonts",
+    "buttons": "Buttons & Triggers",
+    "inputs": "Form Inputs",
+    "cards": "Compound Cards",
+    "badges": "Status Badges",
+    "dialogs": "Accessible Modals & Dialogs",
+    "dropdowns": "Dropdown Menus",
+    "icons": "Bidirectional Icons",
+    "openDialog": "Open Dialog Modal",
+    "openMenu": "Actions Menu",
+    "dialogTitle": "Example Modal Dialog",
+    "dialogDescription": "This modal dialog uses Radix UI headless primitives with proper focus trapping and keyboard navigation.",
+    "inputPlaceholder": "Enter your job title or keyword...",
+    "textareaPlaceholder": "Paste the target job description here...",
+    "cardTitle": "Tailored Resume Profile",
+    "cardDescription": "Senior Full-Stack Engineer with Next.js, TypeScript, and AI experience.",
+    "cardAction": "View Details",
+    "editItem": "Edit",
+    "duplicateItem": "Duplicate",
+    "deleteItem": "Delete"
+  }
+}
