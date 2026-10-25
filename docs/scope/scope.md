@@ -9,19 +9,19 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 
 ## At a glance
 
-| #   | Feature                                 | Phase      | Status      |
-| --- | --------------------------------------- | ---------- | ----------- |
-| 1   | Stack & architecture                    | Foundation | done        |
-| 2   | Coding standards & tooling              | Foundation | done        |
-| 3   | Data model                              | Foundation | done        |
-| 4   | Design system & bilingual UI foundation | Foundation | done        |
-| 5   | AI provider configuration (BYOK)        | Foundation | done        |
-| 6   | Core resume tailoring thread            | Slice 1    | done        |
-| 7   | Resume parsing and ingestion            | Slice 2    | in-progress |
-| 8   | ATS resume engine and PDF export        | Slice 3    | planned     |
-| 9   | Career outreach and interview prep      | Slice 4    | planned     |
-| 10  | Job application kanban tracker          | Slice 5    | planned     |
-| 11  | Public showcase and landing page        | Slice 6    | planned     |
+| #   | Feature                                 | Phase      | Status  |
+| --- | --------------------------------------- | ---------- | ------- |
+| 1   | Stack & architecture                    | Foundation | done    |
+| 2   | Coding standards & tooling              | Foundation | done    |
+| 3   | Data model                              | Foundation | done    |
+| 4   | Design system & bilingual UI foundation | Foundation | done    |
+| 5   | AI provider configuration (BYOK)        | Foundation | done    |
+| 6   | Core resume tailoring thread            | Slice 1    | done    |
+| 7   | Resume parsing and ingestion            | Slice 2    | done    |
+| 8   | ATS resume engine and PDF export        | Slice 3    | planned |
+| 9   | Career outreach and interview prep      | Slice 4    | planned |
+| 10  | Job application kanban tracker          | Slice 5    | planned |
+| 11  | Public showcase and landing page        | Slice 6    | planned |
 
 ## Foundations
 
@@ -111,20 +111,20 @@ The walking skeleton slice. A user signs in, saves an AI key, inputs a job descr
 
 ## Slice 2: Resume parsing and ingestion
 
-### 7. Resume parsing and ingestion · in-progress
+### 7. Resume parsing and ingestion · done
 
-spec [0005](../specs/0005-resume-parsing-and-ingestion/index.md)
+spec [0006](../specs/0006-resume-parsing-and-ingestion/index.md) · code in src/components/resume/
 Upload PDF and Word files in English or Arabic, extract structured candidate data, and present an interactive review screen.
 **Done when:** uploaded documents are converted into structured records, and users can review or correct fields before saving their master profile.
 
 - [x] Design it (spec): `/architect resume parsing and ingestion`
-- [ ] Build it: `/develop resume parsing and ingestion`
-  - [ ] Database schema migration for parsing lifecycle and error tracking (AC-5, AC-6)
-  - [ ] In memory text extraction service for PDF and DOCX with magic bytes validation and empty text detection (AC-1, AC-2)
-  - [ ] Server Actions for AI structured extraction, retry handling, and atomic profile commit with merge strategies (AC-1, AC-3, AC-5, AC-6, AC-7)
-  - [ ] Bilingual upload dropzone and interactive review screen with section level controls and inline editing (AC-1, AC-2, AC-4)
-- [ ] Verify it: `/check verify resume parsing and ingestion`
-- [ ] Test it: `/test resume parsing and ingestion`
+- [x] Build it: `/develop resume parsing and ingestion`
+  - [x] Database schema migration for parsing lifecycle and error tracking (AC-5, AC-6)
+  - [x] In memory text extraction service for PDF and DOCX with magic bytes validation and empty text detection (AC-1, AC-2)
+  - [x] Server Actions for AI structured extraction, retry handling, and atomic profile commit with merge strategies (AC-1, AC-3, AC-5, AC-6, AC-7)
+  - [x] Bilingual upload dropzone and interactive review screen with section level controls and inline editing (AC-1, AC-2, AC-4)
+- [x] Verify it: `/check verify resume parsing and ingestion`
+- [x] Test it: `/test resume parsing and ingestion`
 
 ## Slice 3: ATS resume engine and PDF export
 

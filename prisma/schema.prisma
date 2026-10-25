@@ -43,6 +43,13 @@ enum ResumeGenerationStatus {
   FAILED
 }
 
+enum ParsingStatus {
+  PROCESSING
+  REVIEWING
+  APPLIED
+  FAILED
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -234,9 +241,13 @@ model ParsedResume {
   profileId        String?        @map("profile_id")
   originalFileName String         @map("original_file_name") @db.VarChar(255)
   fileFormat       DocumentFormat @map("file_format")
-  rawText          String         @map("raw_text") @db.Text
-  parsedPayload    Json           @map("parsed_payload")
+  status           ParsingStatus  @default(PROCESSING)
+  errorCode        String?        @map("error_code") @db.VarChar(64)
+  errorMessage     String?        @map("error_message") @db.Text
+  rawText          String?        @map("raw_text") @db.Text
+  parsedPayload    Json?          @map("parsed_payload")
   createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
 
   user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   profile Profile? @relation(fields: [profileId], references: [id], onDelete: SetNull)

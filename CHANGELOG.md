@@ -39,6 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic persistence of tailored resume snapshots and job postings to PostgreSQL with generation status tracking upon stream completion (see spec 0005).
 - Bilingual resume tailoring studio workbench at `/[lang]/tailor` featuring candidate experience editing, job description input with character validation, inline provider switching, and live streaming output preview (see spec 0005).
 - Interactive sign in card with one click demo access and localized English and Arabic layout guidance (see spec 0005).
+- In memory resume text extraction engine in `src/lib/parsing/extract.ts` supporting PDF (via `unpdf`) and DOCX (via `mammoth`) with magic bytes validation (`%PDF` and `PK\x03\x04`), 10MB file size limit, 10 page limit for PDFs, 50,000 character limit for Word documents, and scanned image empty text detection (see spec 0006).
+- AI structured resume parser in `src/lib/ai/prompts/resume-parser.ts` using Vercel AI SDK `generateObject` with 60 second timeout and bilingual Arabic and English schema extraction against the active AI provider (see spec 0006).
+- Bilingual resume review workbench at `/[lang]/resume` and `/[lang]/resume/parse` wrapped with Radix `DirectionProvider` (`dir="rtl"` for Arabic, `dir="ltr"` for English) with interactive section level merge controls (`replace`, `append`, `skip`), inline field editing, and dynamic skill chip management (see spec 0006).
+- Server Actions in `src/app/actions/resume-actions.ts` handling resume upload parsing, inline retry from preserved raw text without re-upload, and atomic profile commit with case insensitive skill deduplication (see spec 0006).
+- First time applicant automatic master profile creation initializing a default profile during resume commit when no existing profile is found (see spec 0006).
 
 ### Changed
 
@@ -46,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configured PostCSS compilation via `@tailwindcss/postcss` for reliable Tailwind CSS v4 asset builds (see spec 0003).
 - Updated provider settings validations and database helpers to permit updating default models or endpoints without re-entering existing secret keys (see spec 0004).
 - Extended PostgreSQL schema with `passwordHash` field on `User` and `status` lifecycle tracking on `TailoredResume` (see spec 0005).
+- Extended Prisma schema `ParsedResume` model with `ParsingStatus` lifecycle enum (`PROCESSING`, `REVIEWING`, `APPLIED`, `FAILED`), structured error tracking fields (`errorCode`, `errorMessage`), raw text preservation, and JSON payload caching (see spec 0006).
+- Configured Next.js Server Actions body size limit to 10MB in `next.config.ts` to support document uploads (see spec 0006).
+- Added navigation header link to `/resume` in English and Arabic navigation menus (see spec 0006).
 
 ### Security
 
@@ -54,3 +62,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enforced session authentication guards across all provider Server Actions returning structured unauthorized responses before accessing the database (see spec 0004).
 - Session authentication guards on tailoring API route and candidate profile Server Actions enforcing user ownership (see spec 0005).
 - Server side active AI provider key decryption in memory without exposing provider credentials to browser client network requests (see spec 0005).
+- Enforced magic bytes validation on all uploaded resume buffers to prevent file extension spoofing and executable binary uploads (see spec 0006).
+- In memory text extraction discarding binary file buffers immediately after parsing without writing candidate resumes to cloud storage or temporary server disks (see spec 0006).
+- Strict user session authorization and tenant isolation across all resume upload, retry, and profile commit actions (see spec 0006).

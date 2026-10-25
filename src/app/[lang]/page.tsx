@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Sparkles, ArrowRight, Palette, Bot, ShieldCheck } from 'lucide-react'
+import { Sparkles, ArrowRight, Palette, Bot, ShieldCheck, FileText } from 'lucide-react'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { isSupportedLocale } from '@/lib/i18n/config'
 import {
@@ -46,6 +46,12 @@ export default async function HomePage({ params }: { params: Promise<{ lang: str
               >
                 <Sparkles className="h-4 w-4" />
                 <span>{lang === 'ar' ? 'استوديو التخصيص' : 'Tailor Studio'}</span>
+              </Button>
+            </Link>
+            <Link href={`/${lang}/resume`}>
+              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
+                <FileText className="h-4 w-4" />
+                <span>{lang === 'ar' ? 'استيراد السيرة' : 'Import Resume'}</span>
               </Button>
             </Link>
             <Link href={`/${lang}/settings/providers`}>

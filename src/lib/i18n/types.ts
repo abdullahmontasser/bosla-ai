@@ -120,5 +120,6 @@ export interface Dictionary {
     configureNow: string
   }
   tailor?: TailorDictionary
+  resume?: Record<string, string>
   [key: string]: unknown
 }
