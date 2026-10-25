@@ -285,14 +285,15 @@ model TailoredResume {
   status          ResumeGenerationStatus @default(GENERATING) @map("status")
   language        Language               @default(EN)
   title           String                 @db.VarChar(255)
-  atsScore        Float?   @map("ats_score")
-  missingSkills   String[] @map("missing_skills")
-  tailoredSummary String?  @map("tailored_summary") @db.Text
-  tailoredContent Json     @map("tailored_content")
-  outreachMessage Json?    @map("outreach_message")
-  interviewPrep   Json?    @map("interview_prep")
-  pdfExportPath   String?  @map("pdf_export_path") @db.Text
-  createdAt       DateTime @default(now()) @map("created_at")
+  atsScore        Float?                 @map("ats_score")
+  missingSkills   String[]               @map("missing_skills")
+  atsBreakdown    Json?                  @map("ats_breakdown")
+  tailoredSummary String?                @map("tailored_summary") @db.Text
+  tailoredContent Json                   @map("tailored_content")
+  outreachMessage Json?                  @map("outreach_message")
+  interviewPrep   Json?                  @map("interview_prep")
+  lastExportedAt  DateTime?              @map("last_exported_at")
+  createdAt       DateTime               @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)

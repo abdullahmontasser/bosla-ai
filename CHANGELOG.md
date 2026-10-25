@@ -44,6 +44,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bilingual resume review workbench at `/[lang]/resume` and `/[lang]/resume/parse` wrapped with Radix `DirectionProvider` (`dir="rtl"` for Arabic, `dir="ltr"` for English) with interactive section level merge controls (`replace`, `append`, `skip`), inline field editing, and dynamic skill chip management (see spec 0006).
 - Server Actions in `src/app/actions/resume-actions.ts` handling resume upload parsing, inline retry from preserved raw text without re-upload, and atomic profile commit with case insensitive skill deduplication (see spec 0006).
 - First time applicant automatic master profile creation initializing a default profile during resume commit when no existing profile is found (see spec 0006).
+- Deterministic ATS resume scoring engine computing match scores from 0 to 100 based on keyword match (50%), experience relevance (30%), and formatting compliance (20%) with support for English and Arabic tokens (see spec 0007).
+- Google XYZ experience bullet point rewriting prompt engine with zero hallucination enforcement to detect and remove fabricated numbers (see spec 0007).
+- Interactive ATS studio workbench in `src/components/ats/` displaying overall match score card, category meters, matched skills, interactive missing skill badges with add and dismiss actions, and Google XYZ single bullet rewrites (see spec 0007).
+- Server Actions in `src/app/actions/ats-engine.ts` for ATS scoring calculations, single bullet optimization, and missing skill profile additions with automatic deterministic fallback on AI timeouts (see spec 0007).
+- Ephemeral vector PDF export route handler at `GET /api/resumes/[id]/pdf` generating clean single column documents in server memory without saving binary files to disk, with RFC 5987 UTF-8 filename encoding and session ownership verification (see spec 0007).
+- Bilingual PDF rendering engine using `@react-pdf/renderer` with embedded Geist Sans and IBM Plex Sans Arabic static fonts, cursive glyph joining via `arabic-persian-reshaper`, and visual BiDi reordering via `bidi-js` (see spec 0007).
 
 ### Changed
 
@@ -54,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extended Prisma schema `ParsedResume` model with `ParsingStatus` lifecycle enum (`PROCESSING`, `REVIEWING`, `APPLIED`, `FAILED`), structured error tracking fields (`errorCode`, `errorMessage`), raw text preservation, and JSON payload caching (see spec 0006).
 - Configured Next.js Server Actions body size limit to 10MB in `next.config.ts` to support document uploads (see spec 0006).
 - Added navigation header link to `/resume` in English and Arabic navigation menus (see spec 0006).
+- Updated `TailoredResume` entity in `prisma/schema.prisma` with `atsBreakdown` (JSON) and `lastExportedAt` (DateTime) columns while dropping obsolete `pdfExportPath` (see spec 0007).
+- Integrated `AtsWorkbench` into the Resume Tailoring Studio at `/[lang]/tailor` (see spec 0007).
 
 ### Security
 
@@ -65,3 +73,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enforced magic bytes validation on all uploaded resume buffers to prevent file extension spoofing and executable binary uploads (see spec 0006).
 - In memory text extraction discarding binary file buffers immediately after parsing without writing candidate resumes to cloud storage or temporary server disks (see spec 0006).
 - Strict user session authorization and tenant isolation across all resume upload, retry, and profile commit actions (see spec 0006).
+- Enforced session authentication and ownership validation on PDF export endpoint `GET /api/resumes/[id]/pdf` and ATS scoring Server Actions (see spec 0007).
+- Ephemeral in memory PDF rendering streaming documents directly to clients without persisting generated PDF binary files to disk or storage (see spec 0007).

@@ -18,7 +18,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 5   | AI provider configuration (BYOK)        | Foundation | done    |
 | 6   | Core resume tailoring thread            | Slice 1    | done    |
 | 7   | Resume parsing and ingestion            | Slice 2    | done    |
-| 8   | ATS resume engine and PDF export        | Slice 3    | planned |
+| 8   | ATS resume engine and PDF export        | Slice 3    | done    |
 | 9   | Career outreach and interview prep      | Slice 4    | planned |
 | 10  | Job application kanban tracker          | Slice 5    | planned |
 | 11  | Public showcase and landing page        | Slice 6    | planned |
@@ -128,12 +128,21 @@ Upload PDF and Word files in English or Arabic, extract structured candidate dat
 
 ## Slice 3: ATS resume engine and PDF export
 
-### 8. ATS resume engine and PDF export · needs a decision
+### 8. ATS resume engine and PDF export · done
 
+spec [0007](../specs/0007-ats-resume-engine-pdf-export/index.md) · code in src/lib/ats/, src/lib/pdf/, src/components/ats/
 Analyze job descriptions for skill gaps, tailor experience bullets using the Google XYZ formula without hallucination, and export a clean single column searchable PDF.
 **Done when:** users see match scores and missing skills, review tailored bullet points, and download an ATS compliant PDF in either language.
 
-- [ ] Design it (spec): `/architect ATS resume engine and PDF export`
+- [x] Design it (spec): `/architect ATS resume engine and PDF export`
+- [x] Build it: `/develop ATS resume engine and PDF export`
+  - [x] Database schema migration for atsBreakdown and lastExportedAt with Zod schemas (AC-1, AC-4)
+  - [x] Deterministic ATS scoring engine and prompt engine for Google XYZ bullet optimization (AC-1, AC-2, AC-4)
+  - [x] Server Actions for scoring, single bullet rewrite, and missing skill management (AC-3, AC-4, AC-8)
+  - [x] Bilingual vector PDF export engine with React PDF and Arabic text shaping (AC-5, AC-6, AC-7)
+  - [x] Interactive ATS workbench studio components and streaming PDF route handler (AC-3, AC-5, AC-8)
+- [x] Verify it: `/check verify ATS resume engine and PDF export`
+- [x] Test it: `/test ATS resume engine and PDF export`
 
 ## Slice 4: Career outreach and interview prep
 

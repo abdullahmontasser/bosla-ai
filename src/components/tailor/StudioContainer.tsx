@@ -5,6 +5,7 @@ import type { AiProvider } from '@prisma/client'
 import { ExperienceForm } from './ExperienceForm'
 import { JobPostingForm } from './JobPostingForm'
 import { LiveTailorStream } from './LiveTailorStream'
+import { AtsWorkbench } from '@/components/ats'
 import { ProviderSwitcher } from '@/components/provider-settings/ProviderSwitcher'
 import { Button } from '@/components/ui/button'
 import { Sparkles, Square, AlertCircle, ArrowUpRight } from 'lucide-react'
@@ -93,6 +94,7 @@ Requirements:
   // Streaming State
   const [status, setStatus] = React.useState<'IDLE' | 'GENERATING' | 'COMPLETED' | 'FAILED'>('IDLE')
   const [streamText, setStreamText] = React.useState('')
+  const [tailoredResumeId, setTailoredResumeId] = React.useState<string | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const abortControllerRef = React.useRef<AbortController | null>(null)
 
@@ -183,6 +185,11 @@ Requirements:
           // fallback
         }
         throw new Error(errText)
+      }
+
+      const resumeId = response.headers?.get?.('x-tailored-resume-id')
+      if (resumeId) {
+        setTailoredResumeId(resumeId)
       }
 
       const reader = response.body?.getReader()
@@ -332,6 +339,25 @@ Requirements:
           />
         </div>
       </div>
+
+      {/* ATS Optimization Workbench Section */}
+      {tailoredResumeId && status === 'COMPLETED' && (
+        <div className="pt-6 border-t border-border/80">
+          <AtsWorkbench
+            tailoredResumeId={tailoredResumeId}
+            initialExperiences={experiences.map((exp) => ({
+              companyName: exp.companyName,
+              jobTitle: exp.jobTitle,
+              bullets: exp.bullets.map((b) => ({
+                original: b,
+                rewritten: b,
+              })),
+            }))}
+            lang={lang}
+            dict={dict}
+          />
+        </div>
+      )}
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { Prisma, type Language } from '@prisma/client'
 import {
   CreateTailoredResumeSnapshotSchema,
   type CreateTailoredResumeSnapshotInput,
+  type AtsBreakdown,
 } from '@/lib/validations/tailored-resume'
 
 /**
@@ -49,6 +50,9 @@ export async function createTailoredResumeSnapshot(
       title,
       atsScore: validated.atsScore ?? null,
       missingSkills: validated.missingSkills,
+      atsBreakdown: validated.atsBreakdown
+        ? (validated.atsBreakdown as unknown as Prisma.InputJsonValue)
+        : Prisma.JsonNull,
       tailoredSummary: validated.tailoredSummary || null,
       tailoredContent: validated.tailoredContent as unknown as Prisma.InputJsonValue,
       outreachMessage: validated.outreachMessage
@@ -57,7 +61,7 @@ export async function createTailoredResumeSnapshot(
       interviewPrep: validated.interviewPrep
         ? (validated.interviewPrep as unknown as Prisma.InputJsonValue)
         : Prisma.JsonNull,
-      pdfExportPath: validated.pdfExportPath || null,
+      lastExportedAt: validated.lastExportedAt || null,
     },
     include: {
       jobPosting: {
@@ -89,7 +93,13 @@ export async function getTailoredResumeById(userId: string, tailoredResumeId: st
     },
     include: {
       jobPosting: true,
-      profile: true,
+      profile: {
+        include: {
+          skills: true,
+          workExperiences: true,
+          educations: true,
+        },
+      },
     },
   })
 }
@@ -114,6 +124,132 @@ export async function getTailoredResumesByUser(userId: string, jobPostingId?: st
     },
     orderBy: {
       createdAt: 'desc',
+    },
+  })
+}
+
+/**
+ * Updates the ATS score and breakdown on a tailored resume.
+ */
+export async function updateTailoredResumeAtsScore(
+  userId: string,
+  tailoredResumeId: string,
+  atsScore: number,
+  atsBreakdown: AtsBreakdown,
+  missingSkills?: string[],
+) {
+  const existing = await prisma.tailoredResume.findFirst({
+    where: {
+      id: tailoredResumeId,
+      userId,
+    },
+  })
+
+  if (!existing) {
+    throw new Error('Tailored resume not found or access denied.')
+  }
+
+  return prisma.tailoredResume.update({
+    where: {
+      id: tailoredResumeId,
+    },
+    data: {
+      atsScore,
+      atsBreakdown: atsBreakdown as unknown as Prisma.InputJsonValue,
+      ...(missingSkills && { missingSkills }),
+    },
+  })
+}
+
+/**
+ * Updates the tailored content snapshot for a resume.
+ */
+export async function updateTailoredResumeContent(
+  userId: string,
+  tailoredResumeId: string,
+  tailoredContent: Record<string, unknown>,
+  markStale: boolean = true,
+) {
+  const existing = await prisma.tailoredResume.findFirst({
+    where: {
+      id: tailoredResumeId,
+      userId,
+    },
+  })
+
+  if (!existing) {
+    throw new Error('Tailored resume not found or access denied.')
+  }
+
+  let updatedBreakdown: Prisma.InputJsonValue | undefined = existing.atsBreakdown ?? undefined
+  if (markStale && existing.atsBreakdown && typeof existing.atsBreakdown === 'object') {
+    updatedBreakdown = {
+      ...(existing.atsBreakdown as Record<string, unknown>),
+      isStale: true,
+    } as unknown as Prisma.InputJsonValue
+  }
+
+  return prisma.tailoredResume.update({
+    where: {
+      id: tailoredResumeId,
+    },
+    data: {
+      tailoredContent: tailoredContent as unknown as Prisma.InputJsonValue,
+      ...(updatedBreakdown ? { atsBreakdown: updatedBreakdown } : {}),
+    },
+  })
+}
+
+/**
+ * Updates the missing skills array on a tailored resume.
+ */
+export async function updateTailoredResumeMissingSkills(
+  userId: string,
+  tailoredResumeId: string,
+  missingSkills: string[],
+) {
+  const existing = await prisma.tailoredResume.findFirst({
+    where: {
+      id: tailoredResumeId,
+      userId,
+    },
+  })
+
+  if (!existing) {
+    throw new Error('Tailored resume not found or access denied.')
+  }
+
+  return prisma.tailoredResume.update({
+    where: {
+      id: tailoredResumeId,
+    },
+    data: {
+      missingSkills,
+    },
+  })
+}
+
+/**
+ * Records the last exported timestamp when a user downloads the PDF resume.
+ */
+export async function recordResumeExportTimestamp(userId: string, tailoredResumeId: string) {
+  const existing = await prisma.tailoredResume.findFirst({
+    where: {
+      id: tailoredResumeId,
+      userId,
+    },
+  })
+
+  if (!existing) {
+    throw new Error('Tailored resume not found or access denied.')
+  }
+
+  return prisma.tailoredResume.update({
+    where: {
+      id: tailoredResumeId,
+    },
+    data: {
+      lastExportedAt: new Date(),
     },
   })
 }

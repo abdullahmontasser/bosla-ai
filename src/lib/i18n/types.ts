@@ -45,7 +45,38 @@ export interface TailorDictionary {
   [key: string]: string | undefined
 }
 
+export interface AtsDictionary {
+  title: string
+  subtitle: string
+  overallMatch: string
+  keywordMatch: string
+  experienceRelevance: string
+  formattingCompliance: string
+  matchedSkills: string
+  missingSkills: string
+  dismissedSkills: string
+  addToProfile: string
+  dismiss: string
+  restore: string
+  deepScanWithAi: string
+  deepScanning: string
+  recalculate: string
+  staleScoreNotice: string
+  exportPdf: string
+  exportingPdf: string
+  lastExported: string
+  optimizeBulletXyz: string
+  optimizingBullet: string
+  optimizedBadge: string
+  actionableFeedback: string
+  noMissingSkills: string
+  highMatch: string
+  mediumMatch: string
+  lowMatch: string
+}
+
 export interface Dictionary {
+  ats?: AtsDictionary
   common: {
     brand: string
     tagline: string

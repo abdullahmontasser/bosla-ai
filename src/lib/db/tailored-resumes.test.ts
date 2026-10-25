@@ -3,6 +3,9 @@ import {
   createTailoredResumeSnapshot,
   getTailoredResumeById,
   getTailoredResumesByUser,
+  updateTailoredResumeAtsScore,
+  updateTailoredResumeContent,
+  recordResumeExportTimestamp,
 } from './tailored-resumes'
 import { prisma } from '@/lib/prisma'
 import type { Profile, JobPosting, TailoredResume } from '@prisma/client'
@@ -19,6 +22,7 @@ vi.mock('@/lib/prisma', () => ({
       create: vi.fn(),
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      update: vi.fn(),
     },
   },
 }))
@@ -127,5 +131,85 @@ describe('Tailored Resumes Repository (covers: AC-6)', () => {
       orderBy: expect.any(Object),
     })
     expect(result).toEqual([])
+  })
+
+  it('updates ATS score and breakdown on tailored resume (covers: AC-1, AC-4)', async () => {
+    vi.mocked(prisma.tailoredResume.findFirst).mockResolvedValueOnce({
+      id: 'snap_1',
+      userId: 'user_1',
+    } as unknown as TailoredResume)
+    vi.mocked(prisma.tailoredResume.update).mockResolvedValueOnce({
+      id: 'snap_1',
+      atsScore: 82,
+    } as unknown as TailoredResume)
+
+    const breakdown = {
+      overallScore: 82,
+      categorySubscores: {
+        keywordMatch: 80,
+        experienceRelevance: 85,
+        formattingCompliance: 80,
+      },
+      matchedSkills: ['React'],
+      missingSkills: ['Docker'],
+      dismissedSkills: [],
+      actionableFeedback: [],
+      isStale: false,
+      evaluatedAt: '2026-10-25T14:00:00.000Z',
+    }
+
+    await updateTailoredResumeAtsScore('user_1', 'snap_1', 82, breakdown, ['Docker'])
+
+    expect(prisma.tailoredResume.update).toHaveBeenCalledWith({
+      where: { id: 'snap_1' },
+      data: {
+        atsScore: 82,
+        atsBreakdown: breakdown,
+        missingSkills: ['Docker'],
+      },
+    })
+  })
+
+  it('marks atsBreakdown as stale when updating resume content (covers: AC-4)', async () => {
+    vi.mocked(prisma.tailoredResume.findFirst).mockResolvedValueOnce({
+      id: 'snap_1',
+      userId: 'user_1',
+      atsBreakdown: {
+        overallScore: 80,
+        isStale: false,
+      },
+    } as unknown as TailoredResume)
+    vi.mocked(prisma.tailoredResume.update).mockResolvedValueOnce({
+      id: 'snap_1',
+    } as unknown as TailoredResume)
+
+    await updateTailoredResumeContent('user_1', 'snap_1', { summary: 'New summary' }, true)
+
+    expect(prisma.tailoredResume.update).toHaveBeenCalledWith({
+      where: { id: 'snap_1' },
+      data: expect.objectContaining({
+        atsBreakdown: expect.objectContaining({ isStale: true }),
+      }),
+    })
+  })
+
+  it('records last exported timestamp on PDF download (covers: AC-5)', async () => {
+    vi.mocked(prisma.tailoredResume.findFirst).mockResolvedValueOnce({
+      id: 'snap_1',
+      userId: 'user_1',
+    } as unknown as TailoredResume)
+    vi.mocked(prisma.tailoredResume.update).mockResolvedValueOnce({
+      id: 'snap_1',
+      lastExportedAt: new Date(),
+    } as unknown as TailoredResume)
+
+    await recordResumeExportTimestamp('user_1', 'snap_1')
+
+    expect(prisma.tailoredResume.update).toHaveBeenCalledWith({
+      where: { id: 'snap_1' },
+      data: {
+        lastExportedAt: expect.any(Date),
+      },
+    })
   })
 })

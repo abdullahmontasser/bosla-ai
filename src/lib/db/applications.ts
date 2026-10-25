@@ -30,7 +30,7 @@ export interface KanbanCardItem {
     title: string
     atsScore: number | null
     missingSkills: string[]
-    pdfExportPath: string | null
+    lastExportedAt: Date | null
   } | null
 }
 
@@ -199,7 +199,7 @@ export async function getKanbanBoard(userId: string): Promise<KanbanBoardGrouped
           title: true,
           atsScore: true,
           missingSkills: true,
-          pdfExportPath: true,
+          lastExportedAt: true,
         },
       },
     },

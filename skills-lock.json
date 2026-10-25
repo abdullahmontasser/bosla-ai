@@ -7,6 +7,24 @@
       "skillPath": "skills/use-ai-sdk/SKILL.md",
       "computedHash": "aee5bf7ecb066b54eae76799610fa8a9be9ff1ca9a000ea92d17c14ec862938b"
     },
+    "arabic-rtl-best-practices": {
+      "source": "almubarmij/arabic-ai-skills",
+      "sourceType": "github",
+      "skillPath": "arabic-rtl-best-practices/SKILL.md",
+      "computedHash": "7f40b161ecd6b408c8ace3c0d5b4a164c5d7e099c1c70d28e7cd3a53d0b781d5"
+    },
+    "arabic-rtl-mobile": {
+      "source": "almubarmij/arabic-ai-skills",
+      "sourceType": "github",
+      "skillPath": "arabic-rtl-mobile/SKILL.md",
+      "computedHash": "01a87171ada8686a034a40277fe63a760f47fb20a4bc91ea57537cac2a6c17db"
+    },
+    "arabic-terminal-rtl": {
+      "source": "almubarmij/arabic-ai-skills",
+      "sourceType": "github",
+      "skillPath": "arabic-terminal-rtl/SKILL.md",
+      "computedHash": "f03f914ac70d6fef0115b93b557beb48aab72216bdfe74da7e3c372f8827c577"
+    },
     "nextjs-app-router-patterns": {
       "source": "wshobson/agents",
       "sourceType": "github",
@@ -19,11 +37,71 @@
       "skillPath": "prisma-client-api/SKILL.md",
       "computedHash": "cbbabff961c8e16b2d59f8c1ffb4e7e20be52154e778ab95121e0211d6d09969"
     },
+    "react-pdf-kit-custom-layout": {
+      "source": "react-pdf-kit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-pdf-kit-custom-layout/SKILL.md",
+      "computedHash": "8c638f14fbbf1c4f11a87e3d6ae0171eabdefe1f5e858c77c733931cb33ba9c5"
+    },
+    "react-pdf-kit-nextjs-app-router": {
+      "source": "react-pdf-kit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-pdf-kit-nextjs-app-router/SKILL.md",
+      "computedHash": "eaeb9410cde30796777900ce96ea467d29dd3b7a2878c76ae273fe4498cd12b3"
+    },
+    "react-pdf-kit-nextjs-pages-router": {
+      "source": "react-pdf-kit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-pdf-kit-nextjs-pages-router/SKILL.md",
+      "computedHash": "64d79ec2c5d0dd8e0bf76c03418722c7fbc4c72051e721849b47ccf8f171d258"
+    },
+    "react-pdf-kit-nextjs14-pdfjs-override": {
+      "source": "react-pdf-kit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-pdf-kit-nextjs14-pdfjs-override/SKILL.md",
+      "computedHash": "b6c94a4d048dce0a2074859699d7869d23061989a59a6fdab2f009709efef929"
+    },
+    "react-pdf-kit-setup": {
+      "source": "react-pdf-kit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-pdf-kit-setup/SKILL.md",
+      "computedHash": "a6015e0473690ceefdc07c4be0c6a3f80037d17f77cf6a313745708cf913f4d6"
+    },
+    "react-pdf-kit-toolbar-customization": {
+      "source": "react-pdf-kit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-pdf-kit-toolbar-customization/SKILL.md",
+      "computedHash": "9d95db39fa4c47c7a2834589a20b37d1d7e3d63fce6a631145369ccd845212af"
+    },
+    "react-pdf-kit-vite": {
+      "source": "react-pdf-kit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-pdf-kit-vite/SKILL.md",
+      "computedHash": "745b43a0a9b40685ad5731cc03330e8fc783d787123167d18617cacab4a4eaaf"
+    },
+    "react-pdf-kit-worker-config": {
+      "source": "react-pdf-kit/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-pdf-kit-worker-config/SKILL.md",
+      "computedHash": "d47a48fefbe5302302babfebf6f7c4d0176459eae7652aa763c3d9dccb5bf5d1"
+    },
+    "rtl-document-translation": {
+      "source": "almubarmij/arabic-ai-skills",
+      "sourceType": "github",
+      "skillPath": "rtl-document-translation/SKILL.md",
+      "computedHash": "0f94bb8c1314ab04e209435d5fea151239c7e5aebbec571558703aeaa9e54111"
+    },
     "tailwind-4-docs": {
       "source": "lombiq/tailwind-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/tailwind-4-docs/SKILL.md",
       "computedHash": "de756f5f03cc20a029983875b00b9dfef9d0ba8567d242c5cbb0262037d0a134"
+    },
+    "ux-writing-arabic": {
+      "source": "almubarmij/arabic-ai-skills",
+      "sourceType": "github",
+      "skillPath": "ux-writing-arabic/SKILL.md",
+      "computedHash": "c366b60f342dd8a61c66cb86598b8f65db3e851ad047c3699c84c2959450b24a"
     },
     "vitest": {
       "source": "antfu/skills",
