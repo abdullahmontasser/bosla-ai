@@ -54,6 +54,8 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title/index.md`.
 ## Agent skills
 
 - [ai-sdk](.agents/skills/ai-sdk/): `vercel/ai`, multi provider streaming and agent workflows
+- [arabic-rtl-best-practices](.agents/skills/arabic-rtl-best-practices/): `almubarmij/arabic-ai-skills`, right to left layouts and Arabic typography
+- [react-pdf-kit-nextjs-app-router](.agents/skills/react-pdf-kit-nextjs-app-router/): `react-pdf-kit/agent-skills`, React PDF export and Next.js App Router integration
 - [nextjs-app-router-patterns](.agents/skills/nextjs-app-router-patterns/): `wshobson/agents`, Next.js App Router and Server Components
 - [prisma-client-api](.agents/skills/prisma-client-api/): `prisma/skills`, Prisma Client queries and data patterns
 - [vitest](.agents/skills/vitest/): `antfu/skills`, Vitest unit testing conventions
