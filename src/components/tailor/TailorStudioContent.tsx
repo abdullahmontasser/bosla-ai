@@ -1,51 +1,79 @@
-import { auth } from '@/auth'
-import { getDefaultProfile } from '@/lib/db/profiles'
-import { getProviderConfigurations } from '@/app/actions/provider-settings'
+'use client'
+
+import { startTransition, useCallback, useEffect, useState } from 'react'
 import { StudioContainer } from './StudioContainer'
 import { SignInCard } from './SignInCard'
+import { getTailorStudioInitialData, type TailorStudioData } from '@/app/actions/tailor'
 import type { Dictionary } from '@/lib/i18n/types'
 
-export async function TailorStudioContent({ lang, dict }: { lang: string; dict: Dictionary }) {
-  const session = await auth()
+export function TailorStudioSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse" data-testid="tailor-skeleton">
+      <div className="h-10 w-64 bg-muted/60 rounded" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-6 space-y-4">
+          <div className="h-64 rounded-lg bg-card/60 border border-border/40 p-4" />
+          <div className="h-48 rounded-lg bg-card/60 border border-border/40 p-4" />
+        </div>
+        <div className="lg:col-span-6">
+          <div className="h-96 rounded-lg bg-card/60 border border-border/40 p-4" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
-  if (!session?.user?.id) {
+export interface TailorStudioContentProps {
+  lang: string
+  dict: Dictionary
+  initialData?: TailorStudioData | null
+}
+
+export function TailorStudioContent({ lang, dict, initialData }: TailorStudioContentProps) {
+  const [data, setData] = useState<TailorStudioData | null>(initialData ?? null)
+  const language = lang === 'ar' ? 'AR' : 'EN'
+
+  const refreshData = useCallback(() => {
+    startTransition(async () => {
+      try {
+        const result = await getTailorStudioInitialData(language)
+        setData(result)
+      } catch {
+        setData({
+          session: null,
+          profile: null,
+          activeProvider: null,
+          defaultModel: null,
+          configuredProviders: [],
+        })
+      }
+    })
+  }, [language])
+
+  useEffect(() => {
+    if (initialData === undefined) {
+      refreshData()
+    }
+  }, [initialData, refreshData])
+
+  if (!data) {
+    return <TailorStudioSkeleton />
+  }
+
+  if (!data.session?.user?.id) {
     return (
       <div className="flex items-center justify-center py-6">
-        <SignInCard lang={lang} dict={dict} />
+        <SignInCard lang={lang} dict={dict} onSuccess={refreshData} />
       </div>
     )
   }
 
-  const language = lang === 'ar' ? 'AR' : 'EN'
-  const profile = await getDefaultProfile(session.user.id, language)
-
-  const providerConfigs = await getProviderConfigurations()
-  const activeSetting = Array.isArray(providerConfigs)
-    ? providerConfigs.find((p) => p.isActive)
-    : null
-  const configuredProviders = Array.isArray(providerConfigs)
-    ? providerConfigs.filter((p) => p.isConfigured).map((p) => p.provider)
-    : []
-
   return (
     <StudioContainer
-      initialProfile={
-        profile
-          ? {
-              id: profile.id,
-              headline: profile.headline,
-              summary: profile.summary,
-              workExperiences: profile.workExperiences.map((w) => ({
-                companyName: w.companyName,
-                jobTitle: w.jobTitle,
-                bullets: w.bullets,
-              })),
-            }
-          : null
-      }
-      initialActiveProvider={activeSetting?.provider || null}
-      initialDefaultModel={activeSetting?.defaultModel || null}
-      configuredProviders={configuredProviders}
+      initialProfile={data.profile}
+      initialActiveProvider={data.activeProvider}
+      initialDefaultModel={data.defaultModel}
+      configuredProviders={data.configuredProviders}
       lang={lang as 'en' | 'ar'}
       dict={dict}
     />

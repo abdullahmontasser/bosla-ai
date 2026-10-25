@@ -4,7 +4,8 @@ import { auth } from '@/auth'
 import { getDefaultProfile, upsertTailoringCandidateProfile } from '@/lib/db/profiles'
 import { SaveCandidateProfileSchema } from '@/lib/validations/tailor'
 import { getSampleCandidate } from '@/lib/fixtures/sample-candidate'
-import type { Language } from '@prisma/client'
+import { getProviderConfigurations } from '@/app/actions/provider-settings'
+import type { Language, AiProvider } from '@prisma/client'
 
 export async function getCandidateProfile(language: 'EN' | 'AR' = 'EN') {
   const session = await auth()
@@ -58,4 +59,74 @@ export async function loadSampleCandidateProfile(language: 'EN' | 'AR' = 'EN') {
 
   const sample = getSampleCandidate(language)
   return { success: true, profile: sample }
+}
+
+export interface TailorStudioData {
+  session: {
+    user: {
+      id: string
+      email?: string | null
+    }
+  } | null
+  profile: {
+    id: string
+    headline?: string | null
+    summary?: string | null
+    workExperiences: Array<{
+      companyName: string
+      jobTitle: string
+      bullets: string[]
+    }>
+  } | null
+  activeProvider: AiProvider | null
+  defaultModel: string | null
+  configuredProviders: AiProvider[]
+}
+
+export async function getTailorStudioInitialData(
+  language: 'EN' | 'AR' = 'EN',
+): Promise<TailorStudioData> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return {
+      session: null,
+      profile: null,
+      activeProvider: null,
+      defaultModel: null,
+      configuredProviders: [],
+    }
+  }
+
+  const profile = await getDefaultProfile(session.user.id, language as Language)
+  const providerConfigs = await getProviderConfigurations()
+  const activeSetting = Array.isArray(providerConfigs)
+    ? providerConfigs.find((p) => p.isActive)
+    : null
+  const configuredProviders = Array.isArray(providerConfigs)
+    ? providerConfigs.filter((p) => p.isConfigured).map((p) => p.provider)
+    : []
+
+  return {
+    session: {
+      user: {
+        id: session.user.id,
+        email: session.user.email,
+      },
+    },
+    profile: profile
+      ? {
+          id: profile.id,
+          headline: profile.headline,
+          summary: profile.summary,
+          workExperiences: profile.workExperiences.map((w) => ({
+            companyName: w.companyName,
+            jobTitle: w.jobTitle,
+            bullets: w.bullets,
+          })),
+        }
+      : null,
+    activeProvider: activeSetting?.provider || null,
+    defaultModel: activeSetting?.defaultModel || null,
+    configuredProviders,
+  }
 }

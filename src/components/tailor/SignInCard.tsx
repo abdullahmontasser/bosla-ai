@@ -12,9 +12,10 @@ import type { Dictionary } from '@/lib/i18n/types'
 export interface SignInCardProps {
   lang: string
   dict: Partial<Dictionary>
+  onSuccess?: () => void
 }
 
-export function SignInCard({ lang }: SignInCardProps) {
+export function SignInCard({ lang, onSuccess }: SignInCardProps) {
   const router = useRouter()
   const [email, setEmail] = React.useState('demo@careercraft.ai')
   const [password, setPassword] = React.useState('password123')
@@ -29,6 +30,7 @@ export function SignInCard({ lang }: SignInCardProps) {
     try {
       const res = await signInCredentials(email, password)
       if (res.success) {
+        onSuccess?.()
         router.refresh()
       } else {
         setError(res.error || 'Invalid credentials')
@@ -49,6 +51,7 @@ export function SignInCard({ lang }: SignInCardProps) {
     try {
       const res = await signInCredentials('demo@careercraft.ai', 'password123')
       if (res.success) {
+        onSuccess?.()
         router.refresh()
       } else {
         setError(res.error || 'Failed to sign in with demo credentials')

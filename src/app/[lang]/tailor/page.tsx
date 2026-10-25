@@ -3,26 +3,9 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { isSupportedLocale } from '@/lib/i18n/config'
-import { TailorStudioContent } from '@/components/tailor'
+import { TailorStudioContent, TailorStudioSkeleton } from '@/components/tailor'
 import { LanguageSwitcher, ThemeSwitcher, Button } from '@/components/ui'
 import { ArrowLeft, Sparkles } from 'lucide-react'
-
-function TailorStudioSkeleton() {
-  return (
-    <div className="space-y-6 animate-pulse">
-      <div className="h-10 w-64 bg-muted/60 rounded" />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-6 space-y-4">
-          <div className="h-64 rounded-lg bg-card/60 border border-border/40 p-4" />
-          <div className="h-48 rounded-lg bg-card/60 border border-border/40 p-4" />
-        </div>
-        <div className="lg:col-span-6">
-          <div className="h-96 rounded-lg bg-card/60 border border-border/40 p-4" />
-        </div>
-      </div>
-    </div>
-  )
-}
 
 export default async function TailorStudioPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params
