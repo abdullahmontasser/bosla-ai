@@ -55,6 +55,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Interactive studio workbenches for outreach and interview prep integrated into `StudioContainer` with live character counters, copy to clipboard feedback, and `@media print` stylesheets (see spec 0008).
 - Server Actions in `src/app/actions/outreach-actions.ts` and `src/app/actions/interview-prep-actions.ts` for generation, atomic autosaving with 1000ms debounce, and single item regeneration (see spec 0008).
 - Bilingual localization strings for outreach and interview prep interfaces in English and Arabic dictionaries (see spec 0008).
+- Responsive five column job application kanban tracker at `/[lang]/tracker` supporting right to left Arabic and left to right English layouts (see spec 0009).
+- Accessible drag and drop reordering between and within columns using `@dnd-kit` with 8px pointer activation threshold, keyboard navigation with inverted right to left coordinates for Arabic, and live screen reader announcements (see spec 0009).
+- Client fractional indexing midpoint sorting calculations persisting card positions without mass renumbering transactions (see spec 0009).
+- Optimistic UI updates using React 19 `useOptimistic` hook with automatic rollback and error feedback on server failure (see spec 0009).
+- Automatic `appliedAt` timestamp recording when transitioning application cards into `APPLIED` status (see spec 0009).
+- Interactive kanban cards with quick status dropdown menu, ATS match score badge linking to studio, and one click outreach copy button (see spec 0009).
+- Slide over details drawer for inspecting job descriptions, attached tailored resumes, compensation, location, interview date, recruiter contact details, and editable personal notes (see spec 0009).
+- Follow up staleness warning badges identifying applications in `APPLIED` over seven days or `INTERVIEWING` past scheduled interview date (see spec 0009).
+- Real time filter toolbar featuring text search, minimum ATS match threshold filtering, follow up filter toggle, and automatic drag reordering pausing (see spec 0009).
+- Quick add modal on the kanban board and Add to Tracker button in Tailor Studio linking tailored resumes to tracked applications (see spec 0009).
 
 ### Changed
 
@@ -68,6 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `TailoredResume` entity in `prisma/schema.prisma` with `atsBreakdown` (JSON) and `lastExportedAt` (DateTime) columns while dropping obsolete `pdfExportPath` (see spec 0007).
 - Integrated `AtsWorkbench` into the Resume Tailoring Studio at `/[lang]/tailor` (see spec 0007).
 - Extended `StudioContainer` sub navigation tabs with Outreach Messages and Interview Prep tabs and initial data loading status badges (see spec 0008).
+- Extended Prisma schema `Application` model with `interviewDate`, `compensation`, `location`, `contactName`, `contactEmail` fields and composite index on `[userId, interviewDate]` (see spec 0009).
+- Updated Tailor Studio header in `src/components/tailor/StudioContainer.tsx` with one click Add to Tracker action button (see spec 0009).
 
 ### Security
 
@@ -83,3 +95,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ephemeral in memory PDF rendering streaming documents directly to clients without persisting generated PDF binary files to disk or storage (see spec 0007).
 - Session authentication guards and resume ownership verification on outreach and interview prep Server Actions in memory without key logging (see spec 0008).
 - Server side active AI provider key decryption in ephemeral memory via AES 256 GCM without exposing keys to browser client requests (see spec 0008).
+- Enforced session authentication guards and user ownership verification across all application kanban Server Actions (see spec 0009).

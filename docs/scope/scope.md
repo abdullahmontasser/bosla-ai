@@ -9,19 +9,19 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 
 ## At a glance
 
-| #   | Feature                                 | Phase      | Status  |
-| --- | --------------------------------------- | ---------- | ------- |
-| 1   | Stack & architecture                    | Foundation | done    |
-| 2   | Coding standards & tooling              | Foundation | done    |
-| 3   | Data model                              | Foundation | done    |
-| 4   | Design system & bilingual UI foundation | Foundation | done    |
-| 5   | AI provider configuration (BYOK)        | Foundation | done    |
-| 6   | Core resume tailoring thread            | Slice 1    | done    |
-| 7   | Resume parsing and ingestion            | Slice 2    | done    |
-| 8   | ATS resume engine and PDF export        | Slice 3    | done    |
-| 9   | Career outreach and interview prep      | Slice 4    | done    |
-| 10  | Job application kanban tracker          | Slice 5    | planned |
-| 11  | Public showcase and landing page        | Slice 6    | planned |
+| #   | Feature                                 | Phase      | Status      |
+| --- | --------------------------------------- | ---------- | ----------- |
+| 1   | Stack & architecture                    | Foundation | done        |
+| 2   | Coding standards & tooling              | Foundation | done        |
+| 3   | Data model                              | Foundation | done        |
+| 4   | Design system & bilingual UI foundation | Foundation | done        |
+| 5   | AI provider configuration (BYOK)        | Foundation | done        |
+| 6   | Core resume tailoring thread            | Slice 1    | done        |
+| 7   | Resume parsing and ingestion            | Slice 2    | done        |
+| 8   | ATS resume engine and PDF export        | Slice 3    | done        |
+| 9   | Career outreach and interview prep      | Slice 4    | done        |
+| 10  | Job application kanban tracker          | Slice 5    | done        |
+| 11  | Public showcase and landing page        | Slice 6    | in-progress |
 
 ## Foundations
 
@@ -164,21 +164,39 @@ Generate customized LinkedIn connection notes, InMail messages, and an interview
 
 ## Slice 5: Job application kanban tracker
 
-### 10. Job application kanban tracker · needs a decision
+### 10. Job application kanban tracker · done
 
+spec [0009](../specs/0009-job-application-kanban-tracker/index.md) · code in src/components/tracker/, src/app/[lang]/tracker/, src/app/actions/application-actions.ts
 A kanban board tracking application stages from saved to offer, connecting each card to its specific tailored resume version and follow up message templates.
 **Done when:** users can move application cards across stages, inspect the tailored resume attached to each company, and copy follow up messages.
 
-- [ ] Design it (spec): `/architect job application kanban tracker`
+- [x] Design it (spec): `/architect job application kanban tracker`
+- [x] Build it: `/develop job application kanban tracker`
+  - [x] Prisma schema migration and application Server Actions with fractional indexing (AC-3, AC-5)
+  - [x] Bilingual kanban layout and accessible drag and drop integration with optimistic updates (AC-1, AC-2, AC-4)
+  - [x] Interactive application cards, quick actions, and slide over details drawer (AC-6, AC-7)
+  - [x] Search and filter toolbar, follow up staleness indicators, and empty states (AC-8, AC-9)
+  - [x] Quick add application modal and Studio integration action (AC-10)
+- [x] Verify it: `/check verify job application kanban tracker`
+- [x] Test it: `/test job application kanban tracker`
 
 ## Slice 6: Public showcase and landing page
 
-### 11. Public showcase and landing page · needs a decision
+### 11. Public showcase and landing page · in-progress
 
+spec [0010](../specs/0010-public-showcase-and-landing-page/index.md)
 A public landing page showcasing the open source application, architecture highlights, GitHub repository links, SEO metadata, and product analytics.
 **Done when:** visitors and recruiters can explore product features, access the GitHub repository, and activation events are tracked.
 
-- [ ] Design it (spec): `/architect public showcase and landing page`
+- [x] Design it (spec): `/architect public showcase and landing page`
+- [ ] Build it: `/develop public showcase and landing page`
+  - [ ] Prisma schema migration and telemetry route handler with in memory rate limiting (AC-7, AC-8, AC-9)
+  - [ ] Interactive ATS benchmark showcase component and bilingual preset dataset (AC-3)
+  - [ ] Architecture blueprint card, developer quickstart, and feature breakdown sections (AC-4, AC-5, AC-6)
+  - [ ] Public showcase page assembly and bilingual responsive layout (AC-1, AC-2)
+  - [ ] Dynamic Open Graph image generation and JSON LD software application metadata (AC-10)
+- [ ] Verify it: `/check verify public showcase and landing page`
+- [ ] Test it: `/test public showcase and landing page`
 
 ## Deferred
 

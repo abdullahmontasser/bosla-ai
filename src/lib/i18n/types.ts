@@ -75,8 +75,79 @@ export interface AtsDictionary {
   lowMatch: string
 }
 
+export interface TrackerDictionary {
+  title: string
+  subtitle: string
+  saved: string
+  applied: string
+  interviewing: string
+  offer: string
+  rejected: string
+  emptySaved: string
+  emptyApplied: string
+  emptyInterviewing: string
+  emptyOffer: string
+  emptyRejected: string
+  searchPlaceholder: string
+  minAtsScore: string
+  allScores: string
+  filterFollowUp: string
+  filterFollowUpActive: string
+  dragDisabledNotice: string
+  addApplication: string
+  modalTitle: string
+  modalDescription: string
+  jobTitle: string
+  jobTitlePlaceholder: string
+  companyName: string
+  companyNamePlaceholder: string
+  jobUrl: string
+  jobUrlPlaceholder: string
+  initialStatus: string
+  saving: string
+  followUpBadge: string
+  daysAgo: string
+  today: string
+  copyOutreach: string
+  copied: string
+  noOutreach: string
+  atsNotCalculated: string
+  viewDetails: string
+  changeStatus: string
+  deleteCard: string
+  deleteConfirm: string
+  drawerTitle: string
+  drawerSubtitle: string
+  jobDetailsSection: string
+  trackingSection: string
+  compensationLabel: string
+  compensationPlaceholder: string
+  locationLabel: string
+  locationPlaceholder: string
+  interviewDateLabel: string
+  recruiterSection: string
+  contactNameLabel: string
+  contactEmailLabel: string
+  notesLabel: string
+  notesPlaceholder: string
+  attachedResume: string
+  noResumeAttached: string
+  tailorResumeNow: string
+  saveChanges: string
+  savedChanges: string
+  visitJobPosting: string
+  rawJobDescription: string
+  appliedAtLabel: string
+  addToTracker: string
+  addedToTracker: string
+  inTrackerNotice: string
+  viewInTracker: string
+  [key: string]: string | undefined
+}
+
 export interface Dictionary {
   ats?: AtsDictionary
+  tracker?: TrackerDictionary
   common: {
     brand: string
     tagline: string

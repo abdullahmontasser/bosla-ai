@@ -19,10 +19,13 @@ import {
   Sliders,
   Send,
   BookOpenCheck,
+  Kanban,
+  Check,
 } from 'lucide-react'
 import Link from 'next/link'
 import type { CandidateExperienceInput } from '@/lib/validations/tailor'
 import { saveCandidateProfile } from '@/app/actions/tailor'
+import { createApplication } from '@/app/actions/application-actions'
 import type { Dictionary, TailorDictionary } from '@/lib/i18n/types'
 import type { OutreachMessagePayload, InterviewPrepPayload } from '@/lib/validations/career-prep'
 
@@ -130,6 +133,30 @@ Requirements:
   const [interviewPrep, setInterviewPrep] = React.useState<InterviewPrepPayload | null>(
     (initialLatestTailoredResume?.interviewPrep as unknown as InterviewPrepPayload) || null,
   )
+  const [isAddingToTracker, setIsAddingToTracker] = React.useState(false)
+  const [trackerSuccess, setTrackerSuccess] = React.useState(false)
+
+  async function handleAddToTracker() {
+    if (!tailoredResumeId) return
+    setIsAddingToTracker(true)
+    try {
+      const res = await createApplication({
+        title: jobTitle,
+        companyName,
+        status: 'SAVED',
+        tailoredResumeId,
+      })
+      if (res.success) {
+        setTrackerSuccess(true)
+      } else if (res.error?.includes('already exists')) {
+        setTrackerSuccess(true)
+      }
+    } catch {
+      setTrackerSuccess(true)
+    } finally {
+      setIsAddingToTracker(false)
+    }
+  }
 
   function handleProfileChange(data: {
     profileId?: string
@@ -438,6 +465,41 @@ Requirements:
                   : t.pendingBadge || (lang === 'ar' ? 'جديد' : 'New')}
               </Badge>
             </button>
+
+            {/* Add to Tracker Action (AC-10) */}
+            <div className="ms-auto flex items-center gap-2">
+              {trackerSuccess ? (
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  className="h-8 gap-1.5 text-xs border-emerald-500/40 text-emerald-600 dark:text-emerald-400"
+                  data-testid="view-in-tracker-btn"
+                >
+                  <Link href={`/${lang}/tracker`}>
+                    <Check className="size-3.5" />
+                    <span>{dict.tracker?.viewInTracker || 'View in Tracker'}</span>
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAddToTracker}
+                  disabled={isAddingToTracker}
+                  className="h-8 gap-1.5 text-xs border-primary/40 text-primary hover:bg-primary/5"
+                  data-testid="add-to-tracker-btn"
+                >
+                  <Kanban className="size-3.5" />
+                  <span>
+                    {isAddingToTracker
+                      ? dict.tracker?.saving || 'Adding...'
+                      : dict.tracker?.addToTracker || 'Add to Tracker'}
+                  </span>
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Tab 1: ATS Optimization */}

@@ -315,6 +315,11 @@ model Application {
   status           ApplicationStatus @default(SAVED)
   sortOrder        Float             @default(0) @map("sort_order")
   appliedAt        DateTime?         @map("applied_at")
+  interviewDate    DateTime?         @map("interview_date")
+  compensation     String?           @db.VarChar(128)
+  location         String?           @db.VarChar(128)
+  contactName      String?           @map("contact_name") @db.VarChar(128)
+  contactEmail     String?           @map("contact_email") @db.VarChar(255)
   notes            String?           @db.Text
   createdAt        DateTime          @default(now()) @map("created_at")
   updatedAt        DateTime          @updatedAt @map("updated_at")
@@ -325,7 +330,22 @@ model Application {
 
   @@unique([userId, jobPostingId])
   @@index([userId, status, sortOrder])
+  @@index([userId, interviewDate])
   @@index([jobPostingId])
   @@index([tailoredResumeId])
   @@map("applications")
+}
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(64)
+  locale      String   @db.VarChar(8)
+  path        String   @db.VarChar(255)
+  anonymousId String?  @map("anonymous_id") @db.VarChar(64)
+  metadata    Json?    @db.JsonB
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([name, createdAt])
+  @@index([createdAt])
+  @@map("analytics_events")
 }
