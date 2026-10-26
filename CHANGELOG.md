@@ -50,6 +50,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Server Actions in `src/app/actions/ats-engine.ts` for ATS scoring calculations, single bullet optimization, and missing skill profile additions with automatic deterministic fallback on AI timeouts (see spec 0007).
 - Ephemeral vector PDF export route handler at `GET /api/resumes/[id]/pdf` generating clean single column documents in server memory without saving binary files to disk, with RFC 5987 UTF-8 filename encoding and session ownership verification (see spec 0007).
 - Bilingual PDF rendering engine using `@react-pdf/renderer` with embedded Geist Sans and IBM Plex Sans Arabic static fonts, cursive glyph joining via `arabic-persian-reshaper`, and visual BiDi reordering via `bidi-js` (see spec 0007).
+- Cold career outreach message generator producing LinkedIn connection notes under 300 characters, InMail pitches, and cold emails with tone and recipient controls (see spec 0008).
+- Interview preparation cheat sheet generator providing 3 targeted STAR questions grounded in authentic candidate records with zero hallucination enforcement and 3 strategic interviewer questions (see spec 0008).
+- Interactive studio workbenches for outreach and interview prep integrated into `StudioContainer` with live character counters, copy to clipboard feedback, and `@media print` stylesheets (see spec 0008).
+- Server Actions in `src/app/actions/outreach-actions.ts` and `src/app/actions/interview-prep-actions.ts` for generation, atomic autosaving with 1000ms debounce, and single item regeneration (see spec 0008).
+- Bilingual localization strings for outreach and interview prep interfaces in English and Arabic dictionaries (see spec 0008).
 
 ### Changed
 
@@ -62,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added navigation header link to `/resume` in English and Arabic navigation menus (see spec 0006).
 - Updated `TailoredResume` entity in `prisma/schema.prisma` with `atsBreakdown` (JSON) and `lastExportedAt` (DateTime) columns while dropping obsolete `pdfExportPath` (see spec 0007).
 - Integrated `AtsWorkbench` into the Resume Tailoring Studio at `/[lang]/tailor` (see spec 0007).
+- Extended `StudioContainer` sub navigation tabs with Outreach Messages and Interview Prep tabs and initial data loading status badges (see spec 0008).
 
 ### Security
 
@@ -75,3 +81,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Strict user session authorization and tenant isolation across all resume upload, retry, and profile commit actions (see spec 0006).
 - Enforced session authentication and ownership validation on PDF export endpoint `GET /api/resumes/[id]/pdf` and ATS scoring Server Actions (see spec 0007).
 - Ephemeral in memory PDF rendering streaming documents directly to clients without persisting generated PDF binary files to disk or storage (see spec 0007).
+- Session authentication guards and resume ownership verification on outreach and interview prep Server Actions in memory without key logging (see spec 0008).
+- Server side active AI provider key decryption in ephemeral memory via AES 256 GCM without exposing keys to browser client requests (see spec 0008).

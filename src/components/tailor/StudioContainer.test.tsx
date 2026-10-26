@@ -10,6 +10,26 @@ vi.mock('@/app/actions/tailor', () => ({
   loadSampleCandidateProfile: vi.fn(),
 }))
 
+vi.mock('@/app/actions/ats-engine', () => ({
+  calculateAtsScoreAction: vi.fn().mockResolvedValue({
+    success: true,
+    atsScore: 85,
+    breakdown: {
+      overallScore: 85,
+      keywordMatchScore: 80,
+      experienceRelevanceScore: 90,
+      formattingScore: 85,
+      matchedKeywords: ['Next.js'],
+      missingKeywords: [],
+      dismissedKeywords: [],
+      feedback: [],
+    },
+  }),
+  addMissingSkillAction: vi.fn().mockResolvedValue({ success: true }),
+  dismissMissingSkillAction: vi.fn().mockResolvedValue({ success: true }),
+  rewriteBulletWithXyzAction: vi.fn().mockResolvedValue({ success: true }),
+}))
+
 vi.mock('@/components/provider-settings/ProviderSwitcher', () => ({
   ProviderSwitcher: ({ onProviderChange }: { onProviderChange: (p: string | null) => void }) => (
     <div data-testid="provider-switcher">
@@ -225,5 +245,57 @@ describe('StudioContainer (covers: AC-2, AC-5, AC-8, AC-9, AC-10)', () => {
     })
 
     vi.unstubAllGlobals()
+  })
+
+  it('renders sub-navigation tabs and switches between ATS, Outreach, and Interview Prep (covers: AC-3, AC-CO-3, AC-IP-3)', async () => {
+    const mockInitialResume = {
+      id: 'res_test_1',
+      atsScore: 85,
+      outreachMessage: {
+        version: 1,
+        generatedAt: '2026-10-26T00:00:00.000Z',
+        updatedAt: '2026-10-26T00:00:00.000Z',
+        language: 'EN',
+        tone: 'PROFESSIONAL',
+        recipientType: 'RECRUITER',
+        connectionNote: { text: 'Connection note', charCount: 15 },
+        inMail: { subject: 'InMail Subject', body: 'InMail Body' },
+        email: { subject: 'Email Subject', body: 'Email Body' },
+      },
+      interviewPrep: null,
+    }
+
+    render(
+      <StudioContainer
+        initialProfile={initialProfile}
+        initialActiveProvider="OPENAI"
+        configuredProviders={['OPENAI']}
+        initialLatestTailoredResume={mockInitialResume}
+        lang="en"
+        dict={dummyDict as unknown as Partial<Dictionary>}
+      />,
+    )
+
+    // Verify sub navigation tabs are rendered
+    expect(screen.getByTestId('studio-workbenches')).toBeDefined()
+    expect(screen.getByRole('button', { name: /ATS Optimization/i })).toBeDefined()
+    expect(screen.getByRole('button', { name: /Outreach Messages/i })).toBeDefined()
+    expect(screen.getByRole('button', { name: /Interview Prep/i })).toBeDefined()
+
+    // Default tab is ATS
+    expect(screen.getByTestId('ats-workbench')).toBeDefined()
+
+    // Switch to Outreach Messages tab
+    const outreachTabBtn = screen.getByRole('button', { name: /Outreach Messages/i })
+    fireEvent.click(outreachTabBtn)
+
+    expect(screen.getByTestId('outreach-workbench')).toBeDefined()
+    expect(screen.getByDisplayValue('Connection note')).toBeDefined()
+
+    // Switch to Interview Prep tab
+    const interviewTabBtn = screen.getByRole('button', { name: /Interview Prep/i })
+    fireEvent.click(interviewTabBtn)
+
+    expect(screen.getByTestId('interview-prep-workbench')).toBeDefined()
   })
 })

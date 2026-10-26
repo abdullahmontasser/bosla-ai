@@ -6,13 +6,25 @@ import { ExperienceForm } from './ExperienceForm'
 import { JobPostingForm } from './JobPostingForm'
 import { LiveTailorStream } from './LiveTailorStream'
 import { AtsWorkbench } from '@/components/ats'
+import { OutreachWorkbench } from '@/components/outreach'
+import { InterviewPrepWorkbench } from '@/components/interview-prep'
 import { ProviderSwitcher } from '@/components/provider-settings/ProviderSwitcher'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Square, AlertCircle, ArrowUpRight } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import {
+  Sparkles,
+  Square,
+  AlertCircle,
+  ArrowUpRight,
+  Sliders,
+  Send,
+  BookOpenCheck,
+} from 'lucide-react'
 import Link from 'next/link'
 import type { CandidateExperienceInput } from '@/lib/validations/tailor'
 import { saveCandidateProfile } from '@/app/actions/tailor'
 import type { Dictionary, TailorDictionary } from '@/lib/i18n/types'
+import type { OutreachMessagePayload, InterviewPrepPayload } from '@/lib/validations/career-prep'
 
 export interface StudioContainerProps {
   initialProfile?: {
@@ -28,6 +40,13 @@ export interface StudioContainerProps {
   initialActiveProvider?: AiProvider | null
   initialDefaultModel?: string | null
   configuredProviders?: AiProvider[]
+  initialLatestTailoredResume?: {
+    id: string
+    atsScore?: number | null
+    atsBreakdown?: unknown | null
+    outreachMessage?: unknown | null
+    interviewPrep?: unknown | null
+  } | null
   lang: 'en' | 'ar'
   dict: Partial<Dictionary>
 }
@@ -37,6 +56,7 @@ export function StudioContainer({
   initialActiveProvider = null,
   initialDefaultModel = null,
   configuredProviders = [],
+  initialLatestTailoredResume = null,
   lang,
   dict,
 }: StudioContainerProps) {
@@ -91,12 +111,25 @@ Requirements:
 - Strong proficiency in TypeScript, React, and PostgreSQL.`,
   )
 
-  // Streaming State
-  const [status, setStatus] = React.useState<'IDLE' | 'GENERATING' | 'COMPLETED' | 'FAILED'>('IDLE')
+  // Streaming & Workbench State
+  const [status, setStatus] = React.useState<'IDLE' | 'GENERATING' | 'COMPLETED' | 'FAILED'>(
+    initialLatestTailoredResume?.id ? 'COMPLETED' : 'IDLE',
+  )
   const [streamText, setStreamText] = React.useState('')
-  const [tailoredResumeId, setTailoredResumeId] = React.useState<string | null>(null)
+  const [tailoredResumeId, setTailoredResumeId] = React.useState<string | null>(
+    initialLatestTailoredResume?.id || null,
+  )
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const abortControllerRef = React.useRef<AbortController | null>(null)
+
+  // Sub-Navigation Tabs State (ATS, Outreach, Interview Prep)
+  const [activeTab, setActiveTab] = React.useState<'ats' | 'outreach' | 'interviewPrep'>('ats')
+  const [outreachMessage, setOutreachMessage] = React.useState<OutreachMessagePayload | null>(
+    (initialLatestTailoredResume?.outreachMessage as unknown as OutreachMessagePayload) || null,
+  )
+  const [interviewPrep, setInterviewPrep] = React.useState<InterviewPrepPayload | null>(
+    (initialLatestTailoredResume?.interviewPrep as unknown as InterviewPrepPayload) || null,
+  )
 
   function handleProfileChange(data: {
     profileId?: string
@@ -340,22 +373,110 @@ Requirements:
         </div>
       </div>
 
-      {/* ATS Optimization Workbench Section */}
+      {/* Studio Post-Tailoring Workbenches: ATS, Outreach, Interview Prep */}
       {tailoredResumeId && status === 'COMPLETED' && (
-        <div className="pt-6 border-t border-border/80">
-          <AtsWorkbench
-            tailoredResumeId={tailoredResumeId}
-            initialExperiences={experiences.map((exp) => ({
-              companyName: exp.companyName,
-              jobTitle: exp.jobTitle,
-              bullets: exp.bullets.map((b) => ({
-                original: b,
-                rewritten: b,
-              })),
-            }))}
-            lang={lang}
-            dict={dict}
-          />
+        <div className="pt-6 border-t border-border/80 space-y-6" data-testid="studio-workbenches">
+          {/* Sub Navigation Tabs */}
+          <div className="flex items-center gap-2 border-b border-border/60 pb-3 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setActiveTab('ats')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'ats'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-card border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent'
+              }`}
+            >
+              <Sliders className="size-3.5" />
+              <span>
+                {t.atsTab || (lang === 'ar' ? 'تحسين التوافق مع ATS' : 'ATS Optimization')}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('outreach')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'outreach'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-card border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent'
+              }`}
+            >
+              <Send className="size-3.5" />
+              <span>
+                {t.outreachTab || (lang === 'ar' ? 'رسائل التواصل المهني' : 'Outreach Messages')}
+              </span>
+              <Badge
+                variant={activeTab === 'outreach' ? 'secondary' : 'outline'}
+                className="text-[10px] px-1.5 py-0 font-normal"
+              >
+                {outreachMessage
+                  ? t.readyBadge || (lang === 'ar' ? 'جاهز' : 'Ready')
+                  : t.pendingBadge || (lang === 'ar' ? 'جديد' : 'New')}
+              </Badge>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('interviewPrep')}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'interviewPrep'
+                  ? 'bg-primary text-primary-foreground shadow-xs'
+                  : 'bg-card border border-border/60 text-muted-foreground hover:text-foreground hover:bg-accent'
+              }`}
+            >
+              <BookOpenCheck className="size-3.5" />
+              <span>
+                {t.interviewPrepTab || (lang === 'ar' ? 'التحضير للمقابلات' : 'Interview Prep')}
+              </span>
+              <Badge
+                variant={activeTab === 'interviewPrep' ? 'secondary' : 'outline'}
+                className="text-[10px] px-1.5 py-0 font-normal"
+              >
+                {interviewPrep
+                  ? t.readyBadge || (lang === 'ar' ? '3 أسئلة' : '3 Questions')
+                  : t.pendingBadge || (lang === 'ar' ? 'جديد' : 'New')}
+              </Badge>
+            </button>
+          </div>
+
+          {/* Tab 1: ATS Optimization */}
+          {activeTab === 'ats' && (
+            <AtsWorkbench
+              tailoredResumeId={tailoredResumeId}
+              initialExperiences={experiences.map((exp) => ({
+                companyName: exp.companyName,
+                jobTitle: exp.jobTitle,
+                bullets: exp.bullets.map((b) => ({
+                  original: b,
+                  rewritten: b,
+                })),
+              }))}
+              lang={lang}
+              dict={dict}
+            />
+          )}
+
+          {/* Tab 2: Outreach Messages */}
+          {activeTab === 'outreach' && (
+            <OutreachWorkbench
+              tailoredResumeId={tailoredResumeId}
+              initialOutreach={outreachMessage}
+              lang={lang}
+              onPayloadChange={setOutreachMessage}
+            />
+          )}
+
+          {/* Tab 3: Interview Prep */}
+          {activeTab === 'interviewPrep' && (
+            <InterviewPrepWorkbench
+              tailoredResumeId={tailoredResumeId}
+              initialInterviewPrep={interviewPrep}
+              hasRecordedExperiences={experiences.length > 0}
+              lang={lang}
+              onPayloadChange={setInterviewPrep}
+            />
+          )}
         </div>
       )}
     </div>

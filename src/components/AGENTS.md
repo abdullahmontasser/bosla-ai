@@ -22,6 +22,8 @@ Foundational UI components, layout primitives, and theme controls for CareerCraf
 - `src/components/ui/theme-switcher.tsx`: Dark, light, and system theme selector with zero unstyled flash.
 - `src/components/ui/rtl-icon.tsx`: SVG wrapper applying `rtl:rotate-180` to directional icons.
 - `src/components/ats/`: ATS match score card, category subscores, skills gap badges, Google XYZ bullet list, and PDF export button.
+- `src/components/outreach/`: Cold outreach message cards, connection note editor with character counters, and one click copy.
+- `src/components/interview-prep/`: Interview prep workbench, STAR response cards, and interviewer questions list.
 
 ## Rules & Constraints
 
@@ -34,5 +36,6 @@ Foundational UI components, layout primitives, and theme controls for CareerCraf
 
 - [0003. Design System and Bilingual UI Foundation](../../docs/specs/0003-design-system-and-bilingual-ui/index.md)
 - [0007. ATS resume engine and PDF export](../../docs/specs/0007-ats-resume-engine-pdf-export/index.md)
+- [0008. Career outreach and interview prep](../../docs/specs/0008-career-outreach-and-interview-prep/index.md)
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

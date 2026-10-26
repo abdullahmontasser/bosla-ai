@@ -60,6 +60,7 @@ Stored in `docs/specs/`. Format: `docs/specs/NNNN-title/index.md`.
 - [prisma-client-api](.agents/skills/prisma-client-api/): `prisma/skills`, Prisma Client queries and data patterns
 - [vitest](.agents/skills/vitest/): `antfu/skills`, Vitest unit testing conventions
 - [tailwind-4-docs](.agents/skills/tailwind-4-docs/): `lombiq/tailwind-agent-skills`, Tailwind CSS v4 documentation and patterns
+- [ux-writing-arabic](.agents/skills/ux-writing-arabic/): `almubarmij/arabic-ai-skills`, Arabic UX writing, microcopy, and tone guidelines
   MCP servers: @modelcontextprotocol/server-postgres (recommended)
 
 ## Context files

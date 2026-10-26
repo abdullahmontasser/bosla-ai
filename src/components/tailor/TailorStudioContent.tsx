@@ -74,6 +74,7 @@ export function TailorStudioContent({ lang, dict, initialData }: TailorStudioCon
       initialActiveProvider={data.activeProvider}
       initialDefaultModel={data.defaultModel}
       configuredProviders={data.configuredProviders}
+      initialLatestTailoredResume={data.latestTailoredResume}
       lang={lang as 'en' | 'ar'}
       dict={dict}
     />

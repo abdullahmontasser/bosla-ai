@@ -152,5 +152,7 @@ export interface Dictionary {
   }
   tailor?: TailorDictionary
   resume?: Record<string, string>
+  outreach?: Record<string, string>
+  interviewPrep?: Record<string, string>
   [key: string]: unknown
 }

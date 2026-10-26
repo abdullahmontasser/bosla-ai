@@ -19,7 +19,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 6   | Core resume tailoring thread            | Slice 1    | done    |
 | 7   | Resume parsing and ingestion            | Slice 2    | done    |
 | 8   | ATS resume engine and PDF export        | Slice 3    | done    |
-| 9   | Career outreach and interview prep      | Slice 4    | planned |
+| 9   | Career outreach and interview prep      | Slice 4    | done    |
 | 10  | Job application kanban tracker          | Slice 5    | planned |
 | 11  | Public showcase and landing page        | Slice 6    | planned |
 
@@ -146,12 +146,21 @@ Analyze job descriptions for skill gaps, tailor experience bullets using the Goo
 
 ## Slice 4: Career outreach and interview prep
 
-### 9. Career outreach and interview prep · needs a decision
+### 9. Career outreach and interview prep · done
 
+spec [0008](../specs/0008-career-outreach-and-interview-prep/index.md)
 Generate customized LinkedIn connection notes, InMail messages, and an interview preparation cheat sheet with STAR questions based on real user projects.
 **Done when:** users can copy tailored outreach messages and review targeted interview questions with STAR answers in both languages.
 
-- [ ] Design it (spec): `/architect career outreach and interview prep`
+- [x] Design it (spec): `/architect career outreach and interview prep`
+- [x] Build it: `/develop career outreach and interview prep`
+  - [x] Zod schemas, TypeScript types, and AI prompt templates for outreach and STAR interview answers (AC-1, AC-2, AC-3, AC-4)
+  - [x] Server Actions for generation, saving, and single item regeneration with character and error safeguards (AC-1, AC-2, AC-3, AC-4, AC-5)
+  - [x] Interactive outreach cards and interview prep workbench with live character counters, print styles, and studio tab integration (AC-1, AC-2, AC-3, AC-4, AC-5)
+  - [x] Comprehensive bilingual unit and integration test suite with dictionary localization (AC-1, AC-2, AC-3, AC-4, AC-5)
+        code in `src/components/outreach/`, `src/components/interview-prep/`, `src/app/actions/outreach-actions.ts`, `src/app/actions/interview-prep-actions.ts`
+- [x] Verify it: `/check verify career outreach and interview prep`
+- [x] Test it: `/test career outreach and interview prep`
 
 ## Slice 5: Job application kanban tracker
 

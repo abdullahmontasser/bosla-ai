@@ -1,6 +1,7 @@
 'use server'
 
 import { auth } from '@/auth'
+import { prisma } from '@/lib/prisma'
 import { getDefaultProfile, upsertTailoringCandidateProfile } from '@/lib/db/profiles'
 import { SaveCandidateProfileSchema } from '@/lib/validations/tailor'
 import { getSampleCandidate } from '@/lib/fixtures/sample-candidate'
@@ -81,6 +82,13 @@ export interface TailorStudioData {
   activeProvider: AiProvider | null
   defaultModel: string | null
   configuredProviders: AiProvider[]
+  latestTailoredResume?: {
+    id: string
+    atsScore?: number | null
+    atsBreakdown?: unknown | null
+    outreachMessage?: unknown | null
+    interviewPrep?: unknown | null
+  } | null
 }
 
 export async function getTailorStudioInitialData(
@@ -94,6 +102,7 @@ export async function getTailorStudioInitialData(
       activeProvider: null,
       defaultModel: null,
       configuredProviders: [],
+      latestTailoredResume: null,
     }
   }
 
@@ -105,6 +114,23 @@ export async function getTailorStudioInitialData(
   const configuredProviders = Array.isArray(providerConfigs)
     ? providerConfigs.filter((p) => p.isConfigured).map((p) => p.provider)
     : []
+
+  const latestResume = await prisma.tailoredResume.findFirst({
+    where: {
+      userId: session.user.id,
+      language: language as Language,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    select: {
+      id: true,
+      atsScore: true,
+      atsBreakdown: true,
+      outreachMessage: true,
+      interviewPrep: true,
+    },
+  })
 
   return {
     session: {
@@ -128,5 +154,14 @@ export async function getTailorStudioInitialData(
     activeProvider: activeSetting?.provider || null,
     defaultModel: activeSetting?.defaultModel || null,
     configuredProviders,
+    latestTailoredResume: latestResume
+      ? {
+          id: latestResume.id,
+          atsScore: latestResume.atsScore,
+          atsBreakdown: latestResume.atsBreakdown,
+          outreachMessage: latestResume.outreachMessage,
+          interviewPrep: latestResume.interviewPrep,
+        }
+      : null,
   }
 }

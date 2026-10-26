@@ -115,7 +115,14 @@
     "generatingBadge": "Streaming Live",
     "completedBadge": "Completed & Saved",
     "failedBadge": "Generation Failed",
-    "savedNotice": "Tailored snapshot saved to database."
+    "savedNotice": "Tailored snapshot saved to database.",
+    "atsTab": "ATS Optimization",
+    "outreachTab": "Outreach Messages",
+    "interviewPrepTab": "Interview Prep",
+    "outreachBadge": "Outreach",
+    "interviewBadge": "Cheat Sheet",
+    "readyBadge": "Ready",
+    "pendingBadge": "New"
   },
   "resume": {
     "title": "Resume Ingestion & Parsing",
@@ -202,5 +209,33 @@
     "highMatch": "Strong Match",
     "mediumMatch": "Moderate Match",
     "lowMatch": "Needs Optimization"
+  },
+  "outreach": {
+    "title": "Career Outreach",
+    "subtitle": "Customized LinkedIn connection notes, InMail messages, and cold emails.",
+    "generate": "Generate Outreach Messages",
+    "regenerate": "Regenerate All",
+    "tone": "Outreach Tone",
+    "recipient": "Target Recipient",
+    "connectionNote": "LinkedIn Connection Note",
+    "inMail": "LinkedIn InMail Pitch",
+    "email": "Cold Email Pitch",
+    "copy": "Copy",
+    "copied": "Copied",
+    "charCount": "characters",
+    "limitWarning": "Exceeds 300 character limit"
+  },
+  "interviewPrep": {
+    "title": "Interview Prep Cheat Sheet",
+    "subtitle": "Targeted STAR questions grounded in your authentic achievements.",
+    "generate": "Generate Cheat Sheet",
+    "print": "Print Cheat Sheet (PDF)",
+    "whyAsked": "Why this is asked",
+    "situation": "Situation",
+    "task": "Task",
+    "action": "Action",
+    "result": "Result",
+    "strategicQuestions": "Questions for Interviewer",
+    "guidanceBanner": "No work experiences or projects recorded yet. STAR answers will use structured guidance placeholders."
   }
 }
