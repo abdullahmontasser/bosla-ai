@@ -25,6 +25,7 @@ Foundational UI components, layout primitives, and theme controls for CareerCraf
 - `src/components/outreach/`: Cold outreach message cards, connection note editor with character counters, and one click copy.
 - `src/components/interview-prep/`: Interview prep workbench, STAR response cards, and interviewer questions list.
 - `src/components/tracker/`: Kanban board columns, cards with ATS badges, slide over details drawer, filter toolbar, and quick add modal.
+- `src/components/landing/`: public landing sections, GSAP motion, bilingual copy, and sample workflow data.
 
 ## Rules & Constraints
 
@@ -44,6 +45,6 @@ Foundational UI components, layout primitives, and theme controls for CareerCraf
 ## Quality Assurance & Visual QA
 
 - Multi viewport screenshots (desktop, tablet, mobile) and RTL parity are captured via `scripts/visual-qa.sh` into `scratch/qa/`.
-- All showcase components must avoid generic AI tropes and adhere to the award level guidelines in `design.md`.
+- All landing components must avoid generic AI tropes and adhere to the award level guidelines in `design.md`.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

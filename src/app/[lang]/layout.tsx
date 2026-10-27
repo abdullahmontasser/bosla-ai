@@ -33,6 +33,7 @@ export default async function LocaleLayout({
     <html
       lang={lang}
       dir={dir}
+      data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${ibmPlexArabic.variable} ${newsreader.variable} ${alexandria.variable} ${amiri.variable} h-full antialiased`}
       suppressHydrationWarning
     >

@@ -225,6 +225,5 @@ export interface Dictionary {
   resume?: Record<string, string>
   outreach?: Record<string, string>
   interviewPrep?: Record<string, string>
-  showcase?: Record<string, string>
   [key: string]: unknown
 }

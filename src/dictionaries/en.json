@@ -305,30 +305,5 @@
     "addedToTracker": "Added to Tracker",
     "inTrackerNotice": "This role is tracked on your Kanban board.",
     "viewInTracker": "View in Tracker"
-  },
-  "showcase": {
-    "badge": "Next-Gen Career Intelligence · Zero-Hallucination",
-    "heroTitle1": "Cut the Distraction.",
-    "heroHighlight": "Land Job Faster",
-    "heroTitle2": "with Bosla AI",
-    "heroSubtitle": "Bosla AI directs your job search with zero distraction: tailor resumes in 30 seconds with Google XYZ metrics, beat ATS screenings, and double your interviews.",
-    "openStudio": "Start Tailoring Free",
-    "viewGithub": "View on GitHub",
-    "exploreDocs": "See Live Demo",
-    "statsPreserved": "100% Grounded in Truth (No Hallucinations)",
-    "statsPrivacy": "BYOK Private & Secure (AES-256)",
-    "statsBilingual": "Bilingual First: Arabic RTL & English LTR",
-    "livePreviewBadge": "Interactive Product Studio",
-    "livePreviewTitle": "Experience the AI Studio in Action",
-    "livePreviewDesc": "Test live Google XYZ bullet optimization, review real-time ATS match scoring, and inspect recruiter outreach pitches.",
-    "featuresTitle": "Engineered for Every Step of Your Career Journey",
-    "featureTailorTitle": "Live Streaming Tailor Studio",
-    "featureTailorDesc": "Stream tailored professional summaries and Google XYZ bullet rewrites in real time using OpenAI, Anthropic, Gemini, Groq, or local Ollama.",
-    "featureAtsTitle": "Deterministic ATS Match Engine",
-    "featureAtsDesc": "Analyze keyword gaps across hard skills and tools with mathematical scoring (50% keywords, 30% relevance, 20% formatting) and one-click vector PDF export.",
-    "featureTrackerTitle": "Job Application Kanban Tracker",
-    "featureTrackerDesc": "Track application status with drag-and-drop reordering, fractional indexing, attached tailored resumes, and automated follow-up staleness alerts.",
-    "openFeature": "Explore Feature",
-    "footerNotice": "Built for ambitious tech candidates. Open source career platform under MIT license."
   }
 }
