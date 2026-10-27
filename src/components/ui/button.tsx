@@ -8,16 +8,15 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-[#326cd6] active:scale-[0.98]',
-        black:
-          'bg-[#000000] text-[#ffffff] hover:bg-[#1a1a1a] dark:bg-[#ffffff] dark:text-[#000000] dark:hover:bg-[#e1e3e6] active:scale-[0.98]',
+        default: 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98]',
+        black: 'bg-foreground text-background hover:bg-foreground/90 active:scale-[0.98]',
         secondary:
-          'bg-secondary border border-border text-foreground hover:bg-[#e5e7eb] dark:hover:bg-[#242424]',
+          'bg-secondary border border-border text-secondary-foreground hover:bg-accent active:scale-[0.98]',
         outline:
-          'border border-border bg-card hover:border-[#b8bfc8] dark:hover:border-[#686868] text-foreground',
-        ghost: 'hover:bg-[#f5f5f7] dark:hover:bg-[#1f1f1f] text-foreground',
+          'border border-border bg-card hover:bg-accent hover:border-foreground/20 text-foreground',
+        ghost: 'hover:bg-accent text-foreground',
         destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-        link: 'text-[#006be6] underline-offset-4 hover:underline p-0 h-auto',
+        link: 'text-primary underline-offset-4 hover:underline p-0 h-auto',
       },
       size: {
         default: 'h-9 px-4 py-2 text-sm',

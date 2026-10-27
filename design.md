@@ -62,3 +62,52 @@ All colors map to CSS custom variables in `src/app/globals.css`:
 - **Inputs & Textareas**: 1px border using `--border`, subtle focus ring in `--ring`, with labels aligned to logical start.
 - **Cards**: Compound pattern (`Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`) with 8px radius and hairline borders.
 - **Badges**: 2px radius (`rounded-xs`), uppercase tracking for metrics and status chips.
+
+---
+
+## 5. Award Level Art Direction and Reference Principles
+
+To maintain an award caliber, distinctive experience and avoid generic AI design tropes (such as repetitive three card grids, decorative purple/pink gradients, and meaningless icon cards), all showcase and marketing surfaces follow principles derived from curated design benchmarks (Notion, Slite, Voicenotes, Aboard):
+
+1. **Thesis Driven Hero**:
+   - The hero is a thesis, not a template. Open with the subject's concrete instrument (the interactive resume tailoring engine, the live ATS match dial, and the candidate workbench).
+   - High impact display typography with tight letter spacing (`tracking-tight` or `-0.02em` to `-0.03em`), paired with warm editorial secondary copy.
+   - Inline keyword pills: highlight key verbs or terms using soft tinted pills (e.g. Notion style background `#f6d5b8` or Electric Cobalt tint) directly within sentences.
+
+2. **Tactile Surfaces and Layered Depth**:
+   - Pure white canvas (`#ffffff`) in light mode with subtle warm paper card containers (`#f6f5f4` or `#fafafa`), and obsidian canvas (`#111111`) in dark mode with `#1a1a1a` surfaces.
+   - Structural division uses crisp 1px hairline rules (`rgba(0,0,0,0.08)` or `--border`) rather than heavy blurred drop shadows.
+   - Floating product mockups use focused, subtle shadows (`0px 4px 12px rgba(0,0,0,0.08)`) to establish real spatial layering.
+
+3. **Authentic Product Previews Over Abstract Icons**:
+   - Never replace interface evidence with generic stock icons.
+   - Showcase interactive ATS score dials, live bullet rewrites with Google XYZ badges, actual kanban status pills, and telemetry latency meters.
+
+4. **Bilingual Symmetry**:
+   - Every showcase card and grid must mirror gracefully between English (LTR) and Arabic (RTL) using CSS logical properties (`ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`).
+
+---
+
+## 6. Motion Architecture and Micro Interactions
+
+- **CSS Transitions First**: Use CSS keyframe animations and Tailwind utility transitions for hover lifts, subtle borders, and fade ins.
+- **Motion for React**: For stateful, gesture driven physics or synchronized staggered lists, use `motion` (Motion for React 12, compatible with React 19). Avoid conflicting animation libraries.
+- **Accessibility**: Always wrap animations with `@media (prefers-reduced-motion: reduce)` or Tailwind's `motion-reduce:` utilities. Never introduce disorienting parallax or persistent layout jitter.
+
+---
+
+## 7. Visual QA and Screenshot Testing
+
+- **Viewports**: All primary surfaces must be inspected across three standard viewports:
+  1. Desktop: `1440x900`
+  2. Tablet: `768x1024`
+  3. Mobile: `375x812`
+- **Directionality**: Verify both `/en` (LTR) and `/ar` (RTL) for alignment, icon orientation, and text clipping.
+- **Runner**: Automated capture is driven by `scripts/visual-qa.sh` using headless Google Chrome, saving evidence to `scratch/qa/`.
+
+---
+
+## 8. Redesign Execution Modes
+
+- **Full Redesign**: End to end overhaul of a surface or page. Runs discovery, visual reference extraction, token definition, Server Component architecture, and responsive screenshot QA.
+- **Targeted Improvement**: Focused polish on a specific section, responsive defect, micro interaction, or theme inconsistency without restructuring unaffected code.

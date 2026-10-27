@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { DirectionProvider } from '@radix-ui/react-direction'
 import { ThemeProvider } from '@/components/theme-provider'
-import { geistSans, ibmPlexArabic } from '@/lib/fonts'
+import { geistSans, ibmPlexArabic, newsreader, alexandria, amiri } from '@/lib/fonts'
 import { isSupportedLocale, getDirection, supportedLocales } from '@/lib/i18n/config'
 import '@/app/globals.css'
 
 export const metadata: Metadata = {
-  title: 'CareerCraft AI',
-  description: 'Autonomous career agent for resumes, outreach, and interview prep',
+  title: 'Bosla AI',
+  description: 'Autonomous career compass for resumes, outreach, and interview prep',
 }
 
 export function generateStaticParams() {
@@ -33,7 +33,7 @@ export default async function LocaleLayout({
     <html
       lang={lang}
       dir={dir}
-      className={`${geistSans.variable} ${ibmPlexArabic.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${ibmPlexArabic.variable} ${newsreader.variable} ${alexandria.variable} ${amiri.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body

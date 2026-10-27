@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { defaultLocale, isSupportedLocale, LOCALE_COOKIE_NAME, Locale } from '@/lib/i18n/config'
 
-// Known ISO-639-1 language codes that are not supported in CareerCraft AI.
+// Known ISO-639-1 language codes that are not supported in Bosla AI.
 // When encountered as the first path segment (e.g. /fr, /de/overview), they pass
 // through to the localized layout which triggers notFound() per AC-1.
 // Application routes (like /cv, /me, /ai) are NOT in this set and redirect properly.

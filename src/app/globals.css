@@ -3,54 +3,52 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Exact https://orm.drizzle.team light palette */
-  --background: #ffffff;
-  --foreground: #000000;
-  --card: #fafafa;
-  --card-foreground: #000000;
+  --background: #fbfbfc;
+  --foreground: #090a0f;
+  --card: #ffffff;
+  --card-foreground: #090a0f;
   --popover: #ffffff;
-  --popover-foreground: #000000;
-  --primary: #3e7ff0; /* Electric Cobalt */
+  --popover-foreground: #090a0f;
+  --primary: #090a0f;
   --primary-foreground: #ffffff;
-  --secondary: #f1f2f3;
-  --secondary-foreground: #000000;
-  --muted: #f5f5f7;
-  --muted-foreground: #7e868c;
-  --accent: #f1f2f3;
-  --accent-foreground: #000000;
+  --secondary: #f0f2f5;
+  --secondary-foreground: #090a0f;
+  --muted: #f4f5f8;
+  --muted-foreground: #64748b;
+  --accent: #f0f2f5;
+  --accent-foreground: #090a0f;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --success: #15803d;
+  --success: #10b981;
   --success-foreground: #ffffff;
-  --border: rgba(33, 39, 46, 0.12);
-  --input: rgba(33, 39, 46, 0.12);
-  --ring: #3e7ff0;
-  --radius: 8px;
+  --border: rgba(9, 10, 15, 0.09);
+  --input: rgba(9, 10, 15, 0.12);
+  --ring: #090a0f;
+  --radius: 10px;
 }
 
 .dark {
-  /* Exact https://orm.drizzle.team dark palette */
-  --background: #111111;
-  --foreground: #ffffff;
-  --card: #1a1a1a;
-  --card-foreground: #ffffff;
-  --popover: #161616;
-  --popover-foreground: #ffffff;
-  --primary: #3e7ff0;
-  --primary-foreground: #ffffff;
-  --secondary: #222222;
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #909090;
-  --accent: #242424;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
+  --background: #08090d; /* Deep Obsidian Noir matching Hero */
+  --foreground: #f8fafc;
+  --card: #0d0f15;
+  --card-foreground: #f8fafc;
+  --popover: #0f1118;
+  --popover-foreground: #f8fafc;
+  --primary: #ffffff; /* Crisp Solid White in Dark Mode */
+  --primary-foreground: #08090d;
+  --secondary: #13151f;
+  --secondary-foreground: #f1f5f9;
+  --muted: #11131c;
+  --muted-foreground: #94a3b8;
+  --accent: #171a26;
+  --accent-foreground: #f8fafc;
+  --destructive: #f43f5e;
   --destructive-foreground: #ffffff;
-  --success: #22c55e;
-  --success-foreground: #111111;
-  --border: #292929;
-  --input: #292929;
-  --ring: #3e7ff0;
+  --success: #10b981;
+  --success-foreground: #08090d;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #ffffff;
 }
 
 @theme inline {
@@ -75,15 +73,109 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: 2px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: var(--font-ibm-plex-arabic), var(--font-geist-sans), sans-serif;
+  --font-arabic: var(--font-alexandria), var(--font-ibm-plex-arabic), sans-serif;
+  --font-arabic-serif: var(--font-amiri), 'Amiri', serif;
+  --font-serif: var(--font-newsreader), ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+}
+
+/* Award-Level Atmosphere & Animations */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes float-slow {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+}
+
+.glass-card {
+  background: radial-gradient(
+    120% 120% at 50% 0%,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  border: 1px solid var(--border);
+}
+
+.dark .glass-card {
+  background: radial-gradient(
+    120% 120% at 50% 0%,
+    rgba(99, 102, 241, 0.07) 0%,
+    rgba(15, 17, 24, 0.8) 100%
+  );
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
+  overflow-x: hidden;
+}
+
+@keyframes laser-sweep {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.animate-laser-sweep {
+  will-change: top;
+  animation: laser-sweep 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-laser-sweep,
+  .animate-pulse-glow,
+  .animate-float-slow {
+    animation: none !important;
+  }
 }

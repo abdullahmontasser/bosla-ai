@@ -19,7 +19,7 @@ vi.mock('@/app/actions/application-actions', () => ({
 
 const mockDict: Dictionary = {
   common: {
-    brand: 'CareerCraft AI',
+    brand: 'Bosla AI',
     tagline: 'Autonomous career agent',
     language: 'Language',
     theme: 'Theme',
