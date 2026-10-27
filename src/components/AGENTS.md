@@ -39,5 +39,11 @@ Foundational UI components, layout primitives, and theme controls for CareerCraf
 - [0007. ATS resume engine and PDF export](../../docs/specs/0007-ats-resume-engine-pdf-export/index.md)
 - [0008. Career outreach and interview prep](../../docs/specs/0008-career-outreach-and-interview-prep/index.md)
 - [0009. Job application kanban tracker](../../docs/specs/0009-job-application-kanban-tracker/index.md)
+- [0010. Public showcase and landing page](../../docs/specs/0010-public-showcase-and-landing-page/index.md)
+
+## Quality Assurance & Visual QA
+
+- Multi viewport screenshots (desktop, tablet, mobile) and RTL parity are captured via `scripts/visual-qa.sh` into `scratch/qa/`.
+- All showcase components must avoid generic AI tropes and adhere to the award level guidelines in `design.md`.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

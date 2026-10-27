@@ -184,17 +184,17 @@ A kanban board tracking application stages from saved to offer, connecting each 
 
 ### 11. Public showcase and landing page · in-progress
 
-spec [0010](../specs/0010-public-showcase-and-landing-page/index.md)
+spec [0010](../specs/0010-public-showcase-and-landing-page/index.md) · code in src/components/showcase/, src/app/[lang]/page.tsx
 A public landing page showcasing the open source application, architecture highlights, GitHub repository links, SEO metadata, and product analytics.
 **Done when:** visitors and recruiters can explore product features, access the GitHub repository, and activation events are tracked.
 
 - [x] Design it (spec): `/architect public showcase and landing page`
-- [ ] Build it: `/develop public showcase and landing page`
-  - [ ] Prisma schema migration and telemetry route handler with in memory rate limiting (AC-7, AC-8, AC-9)
-  - [ ] Interactive ATS benchmark showcase component and bilingual preset dataset (AC-3)
-  - [ ] Architecture blueprint card, developer quickstart, and feature breakdown sections (AC-4, AC-5, AC-6)
-  - [ ] Public showcase page assembly and bilingual responsive layout (AC-1, AC-2)
-  - [ ] Dynamic Open Graph image generation and JSON LD software application metadata (AC-10)
+- [x] Build it: `/develop public showcase and landing page`
+  - [x] Prisma schema migration and telemetry route handler with in memory rate limiting (AC-7, AC-8, AC-9)
+  - [x] Interactive ATS benchmark showcase component and bilingual preset dataset (AC-3)
+  - [x] Architecture blueprint card, developer quickstart, and feature breakdown sections (AC-4, AC-5, AC-6)
+  - [x] Public showcase page assembly and bilingual responsive layout (AC-1, AC-2)
+  - [x] Dynamic Open Graph image generation and JSON LD software application metadata (AC-10)
 - [ ] Verify it: `/check verify public showcase and landing page`
 - [ ] Test it: `/test public showcase and landing page`
 
