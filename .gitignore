@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# local QA artifacts (screenshots from scripts/visual-qa.sh)
+/scratch/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
