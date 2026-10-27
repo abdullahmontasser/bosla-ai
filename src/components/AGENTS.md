@@ -1,6 +1,6 @@
 # Components Context (src/components)
 
-Foundational UI components, layout primitives, and theme controls for CareerCraft AI.
+Foundational UI components, layout primitives, and theme controls for Bosla AI.
 
 ## Architecture
 
@@ -32,7 +32,8 @@ Foundational UI components, layout primitives, and theme controls for CareerCraf
 - Always use logical CSS utilities (`ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`, `text-start`, `text-end`). Never write physical `ml-`, `mr-`, `pl-`, `pr-`, `left-`, or `right-`.
 - Preserve keyboard focus rings (`focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`).
 - Directional icons must use `RtlIcon` or `rtl:rotate-180`. Symmetric icons (magnifying glass, checkmark) must remain unrotated.
-- Unit tests are colocated in `src/components/ui/components.test.tsx`.
+- Animated heading line reveals must use the `line-mask` utility (overflow clip with an extended clip margin), never a bare `overflow-hidden`, so Arabic hamza and tashkeel are not cut off.
+- Unit tests are colocated beside the components they cover as `*.test.tsx` files.
 
 ## Specs
 

@@ -196,7 +196,7 @@ A public landing page showcasing the open source application, architecture highl
   - [x] Public showcase page assembly and bilingual responsive layout (AC-1, AC-2)
   - [x] Dynamic Open Graph image generation and JSON LD software application metadata (AC-10)
 - [ ] Verify it: `/check verify public showcase and landing page`
-- [ ] Test it: `/test public showcase and landing page`
+- [x] Test it: `/test public showcase and landing page`
 
 ## Deferred
 
