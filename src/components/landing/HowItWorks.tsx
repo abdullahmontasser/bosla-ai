@@ -33,17 +33,17 @@ export function HowItWorks({ lang, copy }: HowItWorksProps) {
                     : 'text-[clamp(2.3rem,4.6vw,4rem)] font-semibold leading-[1.02] tracking-[-0.04em]',
                 )}
               >
-                <span className="block overflow-hidden pb-[0.06em]">
+                <span className="line-mask">
                   <span data-line-inner className="block">
                     {isAr ? 'مسار واضح' : 'A clear path'}
                   </span>
                 </span>
-                <span className="block overflow-hidden pb-[0.06em]">
+                <span className="line-mask">
                   <span data-line-inner className="block">
                     {isAr ? 'من الإعلان' : 'from posting'}
                   </span>
                 </span>
-                <span className="block overflow-hidden pb-[0.06em]">
+                <span className="line-mask">
                   <span data-line-inner className="block text-muted-foreground">
                     {isAr ? 'إلى التحضير.' : 'to preparation.'}
                   </span>

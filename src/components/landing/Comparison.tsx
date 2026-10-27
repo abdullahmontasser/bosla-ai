@@ -30,7 +30,7 @@ export function Comparison({ copy }: ComparisonProps) {
                   .split('. ')
                   .filter(Boolean)
                   .map((line, index, lines) => (
-                    <span key={line} className="block overflow-hidden pb-[0.06em]">
+                    <span key={line} className="line-mask">
                       <span
                         data-line-inner
                         className={cn(

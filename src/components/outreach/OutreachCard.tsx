@@ -44,6 +44,7 @@ export function OutreachCard({
   lang,
 }: OutreachCardProps) {
   const isArabic = lang === 'ar'
+  const fieldId = React.useId()
   const [copiedBody, setCopiedBody] = React.useState(false)
   const [copiedAll, setCopiedAll] = React.useState(false)
 
@@ -111,11 +112,14 @@ export function OutreachCard({
       <CardContent className="space-y-3">
         {/* Subject Line */}
         <div className="space-y-1">
-          <label htmlFor="outreach-subject" className="text-xs font-medium text-muted-foreground">
+          <label
+            htmlFor={`${fieldId}-subject`}
+            className="text-xs font-medium text-muted-foreground"
+          >
             {isArabic ? 'عنوان الرسالة / الموضوع' : 'Subject Line'}
           </label>
           <Input
-            id="outreach-subject"
+            id={`${fieldId}-subject`}
             value={subject}
             onChange={(e) => onSubjectChange(e.target.value)}
             dir={isArabic ? 'rtl' : 'ltr'}
@@ -126,11 +130,11 @@ export function OutreachCard({
 
         {/* Message Body */}
         <div className="space-y-1">
-          <label htmlFor="outreach-body" className="text-xs font-medium text-muted-foreground">
+          <label htmlFor={`${fieldId}-body`} className="text-xs font-medium text-muted-foreground">
             {isArabic ? 'نص الرسالة' : 'Message Body'}
           </label>
           <Textarea
-            id="outreach-body"
+            id={`${fieldId}-body`}
             value={body}
             onChange={(e) => onBodyChange(e.target.value)}
             dir={isArabic ? 'rtl' : 'ltr'}

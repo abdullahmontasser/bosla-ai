@@ -69,12 +69,12 @@ export function FinalCta({ lang, copy }: FinalCtaProps) {
                 : 'text-[clamp(2.6rem,6vw,5.1rem)] font-semibold leading-[0.98] tracking-[-0.045em]',
             )}
           >
-            <span className="block overflow-hidden pb-[0.06em]">
+            <span className="line-mask">
               <span data-line-inner className="block">
                 {isAr ? 'اجعل طلبك القادم' : 'Make the next application'}
               </span>
             </span>
-            <span className="block overflow-hidden pb-[0.06em]">
+            <span className="line-mask">
               <span data-line-inner className="block">
                 {isAr ? (
                   'أوضح طلباتك.'

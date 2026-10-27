@@ -47,7 +47,7 @@ export function Hero({ lang, copy }: HeroProps) {
       if (lines.length) {
         timeline.fromTo(
           lines,
-          { yPercent: 110 },
+          { yPercent: 170 },
           { yPercent: 0, duration: 1.15, stagger: 0.085, ease: 'power2.out' },
           0,
         )
@@ -145,13 +145,13 @@ export function Hero({ lang, copy }: HeroProps) {
             )}
           >
             {copy.hero.headline.lines.map((line) => (
-              <span key={line} className="block overflow-hidden pb-[0.06em]">
+              <span key={line} className="line-mask">
                 <span data-hero-line className="block">
                   {line}
                 </span>
               </span>
             ))}
-            <span className="block overflow-hidden pb-[0.06em]">
+            <span className="line-mask">
               <span data-hero-line className="block">
                 <em
                   className={cn(

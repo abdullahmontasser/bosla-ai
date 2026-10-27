@@ -101,6 +101,18 @@ describe('landing sections', () => {
     expect(screen.getByText('Illustrative workspace')).toBeDefined()
   })
 
+  it('keeps Arabic hamza and tashkeel inside the animated line masks', () => {
+    render(<Hero lang="ar" copy={getLandingCopy('ar')} />)
+
+    const heading = screen.getByRole('heading', { level: 1 })
+
+    expect(screen.getByText('سيرةٌ أدقّ')).toBeDefined()
+    expect(screen.getByText(/حقاً/)).toBeDefined()
+    // The reveal clips each line vertically; every line must use the mask that
+    // leaves room for marks that sit above and below the Arabic line box.
+    expect(heading.querySelectorAll('.line-mask')).toHaveLength(3)
+  })
+
   it('renders the trust strip and its limitation note', () => {
     render(<TrustStrip copy={getLandingCopy('en')} />)
 

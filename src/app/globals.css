@@ -232,6 +232,18 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
 }
 
+/*
+ * Clipped line masks drive the vertical type reveals. Arabic hamza and tashkeel
+ * marks sit above the line box, and a few descenders sit below it, so the clip
+ * edge is extended rather than padded — padding would change the line rhythm.
+ */
+.line-mask {
+  display: block;
+  overflow: clip;
+  overflow-clip-margin: 0.3em;
+  padding-bottom: 0.06em;
+}
+
 .landing-link-underline {
   background-image: linear-gradient(currentColor, currentColor);
   background-position: 0 100%;

@@ -56,7 +56,7 @@ export function Reveal({
       if (variant === 'lines' && lineItems.length) {
         timeline.fromTo(
           lineItems,
-          { yPercent: 110 },
+          { yPercent: 170 },
           {
             yPercent: 0,
             duration: 1.05,
