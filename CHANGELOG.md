@@ -65,6 +65,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Follow up staleness warning badges identifying applications in `APPLIED` over seven days or `INTERVIEWING` past scheduled interview date (see spec 0009).
 - Real time filter toolbar featuring text search, minimum ATS match threshold filtering, follow up filter toggle, and automatic drag reordering pausing (see spec 0009).
 - Quick add modal on the kanban board and Add to Tracker button in Tailor Studio linking tailored resumes to tracked applications (see spec 0009).
+- Bilingual public landing page at `/[lang]` that follows one sample role from job description to tailored draft, ATS coverage review, achievement rewrite, interview preparation, and next step, with localized English and Arabic copy and sample workspace data (see spec 0010).
+- Shared light and dark appearance for the public site with a compact control in the desktop and mobile navigation that uses the same stored theme preference as the workspace (see spec 0010).
+- Scroll driven workflow story with a pinned desktop stage, a stacked reading layout for small screens and reduced motion, direct stage navigation, and a progress indicator (see spec 0010).
 
 ### Changed
 
@@ -80,6 +83,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extended `StudioContainer` sub navigation tabs with Outreach Messages and Interview Prep tabs and initial data loading status badges (see spec 0008).
 - Extended Prisma schema `Application` model with `interviewDate`, `compensation`, `location`, `contactName`, `contactEmail` fields and composite index on `[userId, interviewDate]` (see spec 0009).
 - Updated Tailor Studio header in `src/components/tailor/StudioContainer.tsx` with one click Add to Tracker action button (see spec 0009).
+- Rebuilt the public home page around one role walkthrough with hero, trust, orientation, workflow, capabilities, comparison, closing action, and footer sections in place of the previous feature grid (see spec 0010).
+- Updated public page metadata with localized titles, descriptions, structured data, and social preview fields for both languages (see spec 0010).
+- Applied a warm gallery light palette and a noir dark palette to the landing page while keeping resume paper surfaces light and readable in both themes (see spec 0010).
+- Softened landing motion with calmer easing, shorter travel, lighter parallax, and no brightness pulsing between workflow panels (see spec 0010).
 
 ### Security
 
