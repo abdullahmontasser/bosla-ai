@@ -425,10 +425,11 @@ export function ResumeReviewWorkbench({
             <CardContent className="pt-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
+                  <label htmlFor="resume-fullName" className="text-xs font-medium text-foreground">
                     {r.fullName || 'Full Name'}
                   </label>
                   <Input
+                    id="resume-fullName"
                     value={data.fullName || ''}
                     onChange={(e) => handleScalarChange('fullName', e.target.value)}
                     placeholder="Full name"
@@ -437,10 +438,11 @@ export function ResumeReviewWorkbench({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
+                  <label htmlFor="resume-headline" className="text-xs font-medium text-foreground">
                     {r.headline || 'Headline'}
                   </label>
                   <Input
+                    id="resume-headline"
                     value={data.headline || ''}
                     onChange={(e) => handleScalarChange('headline', e.target.value)}
                     placeholder="e.g. Senior Full Stack Engineer"
@@ -450,10 +452,11 @@ export function ResumeReviewWorkbench({
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-foreground">
+                <label htmlFor="resume-summary" className="text-xs font-medium text-foreground">
                   {r.summary || 'Summary'}
                 </label>
                 <Textarea
+                  id="resume-summary"
                   value={data.summary || ''}
                   onChange={(e) => handleScalarChange('summary', e.target.value)}
                   placeholder="Professional summary statement..."
@@ -464,10 +467,11 @@ export function ResumeReviewWorkbench({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
+                  <label htmlFor="resume-email" className="text-xs font-medium text-foreground">
                     {r.email || 'Email'}
                   </label>
                   <Input
+                    id="resume-email"
                     value={data.email || ''}
                     onChange={(e) => handleScalarChange('email', e.target.value)}
                     placeholder="email@example.com"
@@ -476,10 +480,11 @@ export function ResumeReviewWorkbench({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
+                  <label htmlFor="resume-phone" className="text-xs font-medium text-foreground">
                     {r.phone || 'Phone'}
                   </label>
                   <Input
+                    id="resume-phone"
                     value={data.phone || ''}
                     onChange={(e) => handleScalarChange('phone', e.target.value)}
                     placeholder="+1 555-0100"
@@ -488,10 +493,11 @@ export function ResumeReviewWorkbench({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
+                  <label htmlFor="resume-location" className="text-xs font-medium text-foreground">
                     {r.location || 'Location'}
                   </label>
                   <Input
+                    id="resume-location"
                     value={data.location || ''}
                     onChange={(e) => handleScalarChange('location', e.target.value)}
                     placeholder="City, Country"
@@ -502,10 +508,11 @@ export function ResumeReviewWorkbench({
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
+                  <label htmlFor="resume-website" className="text-xs font-medium text-foreground">
                     {r.websiteUrl || 'Website / Portfolio'}
                   </label>
                   <Input
+                    id="resume-website"
                     value={data.websiteUrl || ''}
                     onChange={(e) => handleScalarChange('websiteUrl', e.target.value)}
                     placeholder="https://..."
@@ -513,10 +520,11 @@ export function ResumeReviewWorkbench({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
+                  <label htmlFor="resume-linkedin" className="text-xs font-medium text-foreground">
                     {r.linkedinUrl || 'LinkedIn URL'}
                   </label>
                   <Input
+                    id="resume-linkedin"
                     value={data.linkedinUrl || ''}
                     onChange={(e) => handleScalarChange('linkedinUrl', e.target.value)}
                     placeholder="https://linkedin.com/in/..."
@@ -524,10 +532,11 @@ export function ResumeReviewWorkbench({
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-foreground">
+                  <label htmlFor="resume-github" className="text-xs font-medium text-foreground">
                     {r.githubUrl || 'GitHub URL'}
                   </label>
                   <Input
+                    id="resume-github"
                     value={data.githubUrl || ''}
                     onChange={(e) => handleScalarChange('githubUrl', e.target.value)}
                     placeholder="https://github.com/..."

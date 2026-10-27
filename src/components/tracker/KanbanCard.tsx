@@ -56,6 +56,7 @@ export function KanbanCard({
   const style: React.CSSProperties = {
     transform: CSS.Translate.toString(transform),
     transition,
+    touchAction: 'pan-y',
   }
 
   // Extract connection note if available

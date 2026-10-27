@@ -111,10 +111,11 @@ export function OutreachCard({
       <CardContent className="space-y-3">
         {/* Subject Line */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">
+          <label htmlFor="outreach-subject" className="text-xs font-medium text-muted-foreground">
             {isArabic ? 'عنوان الرسالة / الموضوع' : 'Subject Line'}
           </label>
           <Input
+            id="outreach-subject"
             value={subject}
             onChange={(e) => onSubjectChange(e.target.value)}
             dir={isArabic ? 'rtl' : 'ltr'}
@@ -125,10 +126,11 @@ export function OutreachCard({
 
         {/* Message Body */}
         <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">
+          <label htmlFor="outreach-body" className="text-xs font-medium text-muted-foreground">
             {isArabic ? 'نص الرسالة' : 'Message Body'}
           </label>
           <Textarea
+            id="outreach-body"
             value={body}
             onChange={(e) => onBodyChange(e.target.value)}
             dir={isArabic ? 'rtl' : 'ltr'}

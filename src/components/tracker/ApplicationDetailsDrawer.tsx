@@ -321,10 +321,11 @@ function ApplicationDetailsContent({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-foreground">
+              <label htmlFor="drawer-title" className="text-[11px] font-medium text-foreground">
                 {t.jobTitle || 'Job Title'}
               </label>
               <Input
+                id="drawer-title"
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -333,10 +334,11 @@ function ApplicationDetailsContent({
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-foreground">
+              <label htmlFor="drawer-company" className="text-[11px] font-medium text-foreground">
                 {t.companyName || 'Company Name'}
               </label>
               <Input
+                id="drawer-company"
                 type="text"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
@@ -347,10 +349,11 @@ function ApplicationDetailsContent({
           </div>
 
           <div className="space-y-1">
-            <label className="text-[11px] font-medium text-foreground">
+            <label htmlFor="drawer-job-url" className="text-[11px] font-medium text-foreground">
               {t.jobUrl || 'Job URL'}
             </label>
             <Input
+              id="drawer-job-url"
               type="url"
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
@@ -370,11 +373,15 @@ function ApplicationDetailsContent({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Compensation */}
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-foreground flex items-center gap-1">
+              <label
+                htmlFor="drawer-compensation"
+                className="text-[11px] font-medium text-foreground flex items-center gap-1"
+              >
                 <DollarSign className="size-3 text-muted-foreground" />
                 {t.compensationLabel || 'Compensation'}
               </label>
               <Input
+                id="drawer-compensation"
                 type="text"
                 value={compensation}
                 onChange={(e) => setCompensation(e.target.value)}
@@ -386,11 +393,15 @@ function ApplicationDetailsContent({
 
             {/* Location */}
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-foreground flex items-center gap-1">
+              <label
+                htmlFor="drawer-location"
+                className="text-[11px] font-medium text-foreground flex items-center gap-1"
+              >
                 <MapPin className="size-3 text-muted-foreground" />
                 {t.locationLabel || 'Location'}
               </label>
               <Input
+                id="drawer-location"
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -403,11 +414,15 @@ function ApplicationDetailsContent({
 
           {/* Interview Date */}
           <div className="space-y-1">
-            <label className="text-[11px] font-medium text-foreground flex items-center gap-1">
+            <label
+              htmlFor="drawer-interview-date"
+              className="text-[11px] font-medium text-foreground flex items-center gap-1"
+            >
               <Calendar className="size-3 text-muted-foreground" />
               {t.interviewDateLabel || 'Interview Date & Time'}
             </label>
             <Input
+              id="drawer-interview-date"
               type="datetime-local"
               value={interviewDate}
               onChange={(e) => setInterviewDate(e.target.value)}
@@ -425,11 +440,15 @@ function ApplicationDetailsContent({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-foreground flex items-center gap-1">
+              <label
+                htmlFor="drawer-contact-name"
+                className="text-[11px] font-medium text-foreground flex items-center gap-1"
+              >
                 <User className="size-3 text-muted-foreground" />
                 {t.contactNameLabel || 'Contact Name'}
               </label>
               <Input
+                id="drawer-contact-name"
                 type="text"
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
@@ -440,11 +459,15 @@ function ApplicationDetailsContent({
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-medium text-foreground flex items-center gap-1">
+              <label
+                htmlFor="drawer-contact-email"
+                className="text-[11px] font-medium text-foreground flex items-center gap-1"
+              >
                 <Mail className="size-3 text-muted-foreground" />
                 {t.contactEmailLabel || 'Contact Email'}
               </label>
               <Input
+                id="drawer-contact-email"
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
@@ -458,11 +481,15 @@ function ApplicationDetailsContent({
 
         {/* Section: Personal Notes */}
         <div className="space-y-1.5">
-          <label className="text-[11px] font-medium text-foreground flex items-center gap-1">
+          <label
+            htmlFor="drawer-notes"
+            className="text-[11px] font-medium text-foreground flex items-center gap-1"
+          >
             <FileText className="size-3 text-muted-foreground" />
             {t.notesLabel || 'Personal Notes'}
           </label>
           <Textarea
+            id="drawer-notes"
             rows={4}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

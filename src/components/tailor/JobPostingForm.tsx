@@ -47,10 +47,11 @@ export function JobPostingForm({
       <CardContent className="space-y-4 pt-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">
+            <label htmlFor="job-title-input" className="text-xs font-medium text-foreground">
               {t.jobTitleLabel || 'Target Role Title'}
             </label>
             <Input
+              id="job-title-input"
               value={jobTitle}
               onChange={(e) =>
                 onChange({
@@ -65,10 +66,11 @@ export function JobPostingForm({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">
+            <label htmlFor="company-name-input" className="text-xs font-medium text-foreground">
               {t.companyNameLabel || 'Company Name'}
             </label>
             <Input
+              id="company-name-input"
               value={companyName}
               onChange={(e) =>
                 onChange({
@@ -85,7 +87,7 @@ export function JobPostingForm({
 
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-foreground">
+            <label htmlFor="job-desc-input" className="text-xs font-medium text-foreground">
               {t.jobDescriptionLabel || 'Target Job Description'}
             </label>
             <span
@@ -98,6 +100,7 @@ export function JobPostingForm({
           </div>
 
           <Textarea
+            id="job-desc-input"
             value={rawJobDescription}
             onChange={(e) =>
               onChange({

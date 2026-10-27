@@ -90,10 +90,11 @@ export function SignInCard({ lang, onSuccess }: SignInCardProps) {
 
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-foreground">
+              <label htmlFor="signin-email" className="text-xs font-medium text-foreground">
                 {lang === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}
               </label>
               <Input
+                id="signin-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -104,10 +105,11 @@ export function SignInCard({ lang, onSuccess }: SignInCardProps) {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-medium text-foreground">
+              <label htmlFor="signin-password" className="text-xs font-medium text-foreground">
                 {lang === 'ar' ? 'كلمة المرور' : 'Password'}
               </label>
               <Input
+                id="signin-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

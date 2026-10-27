@@ -221,10 +221,11 @@ export function ExperienceForm({
       <CardContent className="space-y-4 pt-4">
         {/* Headline */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">
+          <label htmlFor="profile-headline" className="text-xs font-medium text-foreground">
             {t.headline || 'Professional Headline'}
           </label>
           <Input
+            id="profile-headline"
             value={headline}
             onChange={(e) =>
               onProfileChange({ profileId, headline: e.target.value, summary, experiences })
@@ -236,10 +237,11 @@ export function ExperienceForm({
 
         {/* Summary */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-foreground">
+          <label htmlFor="profile-summary" className="text-xs font-medium text-foreground">
             {t.summary || 'Professional Summary'}
           </label>
           <Textarea
+            id="profile-summary"
             value={summary}
             onChange={(e) =>
               onProfileChange({ profileId, headline, summary: e.target.value, experiences })

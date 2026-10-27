@@ -100,20 +100,20 @@ export function SkillsGapCard({
                       disabled={isUpdating}
                       onClick={() => onAddSkill(skill)}
                       title={t.addToProfile || 'Add to profile'}
-                      className="rounded-full p-1 text-emerald-600 hover:bg-emerald-500/20 transition-colors"
+                      className="rounded-full p-1.5 text-emerald-600 hover:bg-emerald-500/20 transition-colors relative min-w-[32px] min-h-[32px] flex items-center justify-center after:absolute after:-inset-1.5 cursor-pointer"
                       aria-label={`${t.addToProfile || 'Add'} ${skill}`}
                     >
-                      <Plus className="h-3 w-3" />
+                      <Plus className="h-3.5 w-3.5" />
                     </button>
                     <button
                       type="button"
                       disabled={isUpdating}
                       onClick={() => onDismissSkill(skill)}
                       title={t.dismiss || 'Dismiss'}
-                      className="rounded-full p-1 text-muted-foreground hover:bg-muted transition-colors"
+                      className="rounded-full p-1.5 text-muted-foreground hover:bg-muted transition-colors relative min-w-[32px] min-h-[32px] flex items-center justify-center after:absolute after:-inset-1.5 cursor-pointer"
                       aria-label={`${t.dismiss || 'Dismiss'} ${skill}`}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 </div>
