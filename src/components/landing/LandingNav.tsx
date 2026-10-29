@@ -9,9 +9,10 @@ import type { LandingCopy } from './content'
 interface LandingNavProps {
   lang: string
   copy: LandingCopy
+  signedIn?: boolean
 }
 
-export function LandingNav({ lang, copy }: LandingNavProps) {
+export function LandingNav({ lang, copy, signedIn = false }: LandingNavProps) {
   const isAr = lang === 'ar'
 
   return (
@@ -57,22 +58,28 @@ export function LandingNav({ lang, copy }: LandingNavProps) {
 
           <LandingThemeToggle labels={copy.nav.theme} className="hidden sm:inline-flex" />
 
-          <Link
-            href={`/${lang}/tailor`}
-            className="hidden h-9 items-center gap-2 rounded-[6px] px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:inline-flex"
-          >
-            {copy.nav.workspace}
-          </Link>
+          {!signedIn ? (
+            <Link
+              href={`/${lang}/login`}
+              className="hidden h-9 items-center rounded-[6px] px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:inline-flex"
+            >
+              {copy.nav.signIn}
+            </Link>
+          ) : null}
 
           <Link
-            href={`/${lang}/tailor`}
+            href={
+              signedIn
+                ? `/${lang}/tailor`
+                : `/${lang}/signup?callbackUrl=${encodeURIComponent(`/${lang}/tailor`)}`
+            }
             className="hidden h-10 items-center gap-2 rounded-[6px] bg-primary px-4 text-[13px] font-bold text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.18)_inset] transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:inline-flex"
           >
-            {copy.nav.start}
+            {signedIn ? copy.nav.workspace : copy.nav.start}
             <RtlIcon icon={ArrowRight} className="h-3.5 w-3.5" />
           </Link>
 
-          <LandingMobileNav lang={lang} copy={copy} />
+          <LandingMobileNav lang={lang} copy={copy} signedIn={signedIn} />
         </div>
       </div>
     </header>

@@ -2,9 +2,9 @@
 
 ## Context
 
-CareerCraft AI has reached Slice 6, having built the full functional pipeline from resume parsing to AI tailoring, deterministic ATS scoring, PDF export, outreach generation, interview preparation, and kanban application tracking. The existing landing page at `/[lang]` was a preliminary placeholder built with generic artificial intelligence patterns: a centered badge with text hero, three uniform feature cards, and simple navigation links. It lacked visual hierarchy, tactile depth, interactive demonstration, and brand distinction.
+Bosla AI had reached Slice 6 with a working pipeline from resume parsing to tailoring, ATS scoring, PDF export, outreach, interview preparation, and kanban tracking. The existing landing page at `/[lang]` was a placeholder built from generic patterns: a centered badge with a text hero, three uniform feature cards, and simple navigation links. It described the product without showing it.
 
-To present an award level public showcase, the landing page must demonstrate the application's capabilities directly. Visitors and recruiters should experience the product's value proposition without needing an account or API key, while technical evaluators can inspect the open source architecture, developer quickstart, and telemetry pipeline.
+The first pass at this spec built an interactive benchmark studio under `src/components/showcase/`, including score dials, an architecture card, and a developer quickstart. The page read as a dashboard tour. Each instrument competed for attention, and a visitor still had to assemble the product story alone. The studio was removed and the page was rebuilt around one sample role.
 
 ## Visual Reference Analysis
 
@@ -33,13 +33,13 @@ We analyzed four benchmark design systems from Refero:
    - Electric sky blue actions (`#008ae8`) with soft pastel tag accents.
    - Structured card containers with dense data chips and clean pill buttons.
 
-## Generic Pattern Audit of the Existing Page
+## Generic Pattern Audit of the Original Page
 
 Our audit of `src/app/[lang]/page.tsx` revealed four generic patterns:
 
 1. **The Centered Badge and Headline Hero**: An icon inside a pill badge followed by a generic headline and a short paragraph. It describes the product rather than demonstrating it.
 2. **The Repetitive Three Column Grid**: Three uniform cards with an icon box, title, description, and subtext. This is the most common artificial intelligence generated UI pattern, creating visual fatigue.
-3. **Absence of Real Interface Evidence**: Visitors cannot see or test the ATS scoring engine, the bilingual resume output, or the kanban tracker without signing in.
+3. **Absence of Real Interface Evidence**: Visitors cannot see the tailoring flow, the ATS review, the bilingual output, or the tracker without signing in.
 4. **Lack of Motion and Depth**: The page is completely static with flat 1px borders and no spatial hierarchy.
 
 ## Options Considered
@@ -49,24 +49,29 @@ Our audit of `src/app/[lang]/page.tsx` revealed four generic patterns:
 - Build a traditional marketing page using vector illustrations, feature lists, testimonials, and static call to action buttons.
 - _Tradeoffs_: Fast to build, but fails to showcase the actual engineering depth of the open source product. Does not give recruiters immediate proof of capability.
 
-### Option 2: Full Interactive Product Showcase with Live Previews (Recommended)
+### Option 2: Interactive Product Benchmark Studio
 
-- Build an award caliber showcase featuring an interactive ATS match benchmark tool with sample job postings and candidate profiles, an interactive architecture blueprint, a bilingual interactive component preview, developer quickstart commands, and privacy preserving telemetry.
-- _Tradeoffs_: Requires client component islands for interactive benchmarks, but directly demonstrates value and engineering quality while preserving server component architecture.
+- Build an award caliber studio with an interactive ATS match benchmark, an architecture blueprint, a developer quickstart, and a bilingual component preview.
+- _Tradeoffs_: Demonstrates individual features, but asks visitors to operate several instruments before they understand the product. The first implementation of this option shipped in the branch and was then removed for that reason.
 
 ### Option 3: Heavy 3D WebGL Canvas Hero
 
 - Integrate Three.js and React Three Fiber to render a rotating 3D resume or neural network mesh.
 - _Tradeoffs_: Significant bundle weight (over 150kb gzipped), high mobile battery usage, and potential frame drops on low power devices. Conflicts with the clean, developer grade workbench aesthetic established in `design.md`.
 
+### Option 4: One Role Walkthrough (Selected)
+
+- Follow a single sample role from job description to tailored resume, ATS coverage, achievement rewrite, interview preparation, and next step. Keep the page shell server rendered and isolate scroll motion in client islands.
+- _Tradeoffs_: The story is illustrative rather than live, and the pinned desktop sequence needs a stacked fallback for small screens and reduced motion. In exchange, the page communicates the whole product in one reading path.
+
 ## Decision and Rationale
 
-We selected **Option 2**. It directly solves the generic design problem by replacing abstract cards with real, interactive product instruments:
+We selected **Option 4**. It solves the generic design problem by replacing abstract cards with a concrete sequence a visitor already understands: a job, a resume, a gap review, a stronger bullet, an interview, and a next action.
 
-- An interactive ATS benchmark workbench allowing visitors to compare candidate resumes against real job postings in English and Arabic.
-- A technical architecture card illustrating the autonomous agent pipeline (PostgreSQL, Prisma, Vercel AI SDK, React PDF vector rendering, and Auth.js).
-- Tactile paper surfaces, high contrast typography, and inline keyword pills inspired by Notion and Slite.
-- Zero extra heavy dependencies: pure CSS transitions and keyframes, with headless Chrome driving automated visual QA across three viewports and both language directions.
+- The story is one role, not a feature menu, so each section answers the question the previous section raises.
+- Tactile paper surfaces, high contrast typography, editorial serif display type, and inline keyword pills come from Notion, Slite, and Voicenotes.
+- GSAP and ScrollTrigger drive the pinned desktop story; reduced motion and small screens get a stacked reading layout.
+- The telemetry endpoint and `AnalyticsEvent` model already existed before this slice. The page does not dispatch activation events yet, so the spec records that as follow up rather than delivered scope.
 
 ## References
 

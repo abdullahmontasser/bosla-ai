@@ -15,7 +15,7 @@ export function HowItWorks({ lang, copy }: HowItWorksProps) {
 
   return (
     <section id="how" className="scroll-mt-24 border-b border-border/70">
-      <div className="mx-auto w-full max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28 lg:px-10 lg:py-32">
+      <div className="mx-auto w-full max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20 lg:px-10 lg:py-24">
         <Reveal variant="lines">
           <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end lg:gap-20">
             <div>
@@ -29,8 +29,8 @@ export function HowItWorks({ lang, copy }: HowItWorksProps) {
                 className={cn(
                   'mt-5 max-w-[13ch] text-balance text-foreground',
                   isAr
-                    ? 'font-arabic text-[clamp(2.15rem,4.6vw,3.9rem)] font-extrabold leading-[1.28]'
-                    : 'text-[clamp(2.3rem,4.6vw,4rem)] font-semibold leading-[1.02] tracking-[-0.04em]',
+                    ? 'font-arabic text-[clamp(1.9rem,3.8vw,3rem)] font-extrabold leading-[1.28]'
+                    : 'text-[clamp(1.9rem,3.8vw,3rem)] font-semibold leading-[1.04] tracking-[-0.04em]',
                 )}
               >
                 <span className="line-mask">
@@ -62,13 +62,13 @@ export function HowItWorks({ lang, copy }: HowItWorksProps) {
             </p>
           </div>
 
-          <div className="mt-14 grid gap-0 border-t border-border/80 md:grid-cols-3 lg:mt-20">
+          <div className="mt-10 grid gap-0 border-t border-border/80 md:grid-cols-3 lg:mt-14">
             {copy.how.steps.map((step, index) => (
               <div
                 key={step.title}
                 data-reveal
                 className={cn(
-                  'group relative flex min-h-[260px] flex-col justify-between border-border/80 px-0 py-7 md:px-7 md:py-8',
+                  'group relative flex min-h-[200px] flex-col justify-between border-border/80 px-0 py-7 md:px-7 md:py-8',
                   index > 0 && 'border-t md:border-s md:border-t-0',
                   index === 0 && 'md:ps-0',
                   index === 2 && 'md:pe-0',

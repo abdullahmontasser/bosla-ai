@@ -1,36 +1,40 @@
-# Verify: Public showcase and landing page · spec 0010 · updated 2026-10-26
+# Verify: Public showcase and landing page · spec 0010 · updated 2026-10-27
 
 Steps derived from spec 0010 acceptance criteria. `/check verify` runs these; `/test` locks the durable ones.
 
 ## UI / manual
 
-- [ ] Navigate to `/[lang]` (both `/en` and `/ar`) → verify thesis driven hero, tactile palette, and bilingual symmetry render without layout shift → AC-1, AC-2
-- [ ] On the ATS benchmark preview, toggle between preset job profiles (Software Engineer, Product Manager, Designer) → verify score dial, keyword breakdown, and Google XYZ bullet comparisons update instantly without page reloads → AC-3
-- [ ] In Arabic locale (`/ar`), verify all benchmark progress bars, score dials, and XYZ bullets mirror from right to left with correct Arabic font shaping → AC-2, AC-3
-- [ ] Inspect the Architecture Blueprint section → verify interactive layers expand to show tech stack details (PostgreSQL, Prisma, Vercel AI SDK, React PDF) → AC-4
-- [ ] Click the Copy Command button on the Developer Quickstart card → verify clipboard receives command string and visual confirmation appears → AC-5
-- [ ] Click feature links to Tailor Studio, Resume Ingestion, and Kanban Tracker → verify routes load cleanly → AC-6
-- [ ] Run `scripts/visual-qa.sh` → inspect captured screenshots across desktop (1440x900), tablet (768x1024), and mobile (375x812) in both languages → AC-1, AC-2
-- [ ] Send sample telemetry event via client beacon → verify database record in `TelemetryEvent` with anonymized IP and valid payload → AC-7, AC-9
-- [ ] Send sixty one requests within one minute to `/api/telemetry` from single IP → verify HTTP 429 Too Many Requests response on sixty first request → AC-8
-- [ ] Inspect `<head>` tags on `/[lang]` → verify Open Graph tags, Twitter card tags, and JSON LD software application schema are present and localized → AC-10
+- [x] Navigate to `/[lang]` in both `/en` and `/ar` → verify the navigation, hero, trust strip, orientation, story, capabilities, comparison, closing action, and footer render in order → AC-1, AC-2
+- [x] In Arabic locale (`/ar`), inspect the hero heading → verify every hamza and tashkeel mark is visible inside the animated line masks → AC-2, AC-6
+- [x] Scroll through the product story on desktop → verify the pinned stage advances through all six stages, the progress indicator updates, and the stage buttons jump to the matching panel → AC-4, AC-5
+- [x] Resize to tablet and mobile → verify the story becomes a stacked reading layout and no section overflows horizontally → AC-4, AC-9
+- [x] Enable reduced motion in the operating system → verify the story renders as static stacked content and no reveal animation hides copy → AC-5
+- [x] Toggle the theme in the navigation → verify the warm paper and dark palettes both apply, the choice persists after reload, and resume paper surfaces stay readable → AC-3, AC-8
+- [x] Switch language in the navigation → verify the route keeps the current page, the direction flips, and Arabic fonts (Alexandria, Amiri) apply → AC-2, AC-8
+- [x] Open the mobile navigation → verify it opens, closes, and links to the correct locale routes → AC-8, AC-9
+- [ ] Follow the hero, story, and footer calls to action → verify they land on `/[lang]/tailor`, `/[lang]/resume`, and `/[lang]/tracker` → AC-1
+- [x] Inspect `<head>` on both locales → verify localized title, description, Open Graph, Twitter, and `SoftwareApplication` JSON LD are present → AC-7
+- [x] Send a sample telemetry event to `/api/telemetry` → verify a record is written to `AnalyticsEvent` with no personal data, and that exceeding the hourly limit returns HTTP 429 → AC-1 note (existing foundation)
+- [x] Run `scripts/visual-qa.sh` → inspect desktop (`1440x900`), tablet (`768x1024`), and mobile (`375x812`) captures in both directions → AC-9
 
 ## Commands
 
-- [ ] `npm run lint && npx tsc --noEmit` → exit code 0, zero errors → AC-1 through AC-10
-- [ ] `npm run test` → all unit and component test suites pass cleanly → AC-1 through AC-10
-- [ ] `npm run build` → Next.js production build completes cleanly → AC-1 through AC-10
-- [ ] `scripts/visual-qa.sh` → captures all responsive screenshots to `scratch/qa/` → AC-1, AC-2
+- [x] `npm run typecheck` → exit code 0, zero errors → AC-1 through AC-10
+- [x] `npm run lint` → exit code 0, zero warnings → AC-1 through AC-10
+- [x] `npm run format:check` → all files match Prettier style → AC-1 through AC-10
+- [x] `npm run test` → 72 files and 526 tests pass → AC-2, AC-5, AC-6, AC-10
+- [x] `npm run build` → Next.js production build completes and all routes prerender → AC-1, AC-7
+- [x] `scripts/visual-qa.sh` → captures all responsive screenshots to `scratch/qa/` → AC-9 (captures produced; the shots miss animated copy and clip the mobile header, see the verify notes)
 
 ## Acceptance criteria coverage
 
-- AC-1 covered by UI steps 1, 7 and Command steps 1, 3, 4
-- AC-2 covered by UI steps 1, 3, 7 and Command steps 1, 3, 4
-- AC-3 covered by UI steps 2, 3 and Command steps 1, 2, 3
-- AC-4 covered by UI step 4 and Command steps 1, 2, 3
-- AC-5 covered by UI step 5 and Command steps 1, 2, 3
-- AC-6 covered by UI step 6 and Command steps 1, 3
-- AC-7 covered by UI step 8 and Command steps 1, 2, 3
-- AC-8 covered by UI step 9 and Command steps 1, 2, 3
-- AC-9 covered by UI step 8 and Command steps 1, 2, 3
-- AC-10 covered by UI step 10 and Command steps 1, 3
+- AC-1 covered by UI steps 1, 9 and Command steps 1, 5
+- AC-2 covered by UI steps 1, 2, 7 and Command step 4
+- AC-3 covered by UI step 6 and Command steps 1, 5
+- AC-4 covered by UI steps 3, 4
+- AC-5 covered by UI steps 3, 5 and Command step 4
+- AC-6 covered by UI step 2 and Command step 4
+- AC-7 covered by UI step 10 and Command step 5
+- AC-8 covered by UI steps 6, 7, 8
+- AC-9 covered by UI steps 4, 8, 11
+- AC-10 covered by Command steps 1 through 6

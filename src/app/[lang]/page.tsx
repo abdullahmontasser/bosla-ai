@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { isSupportedLocale } from '@/lib/i18n/config'
 import { Comparison } from '@/components/landing/Comparison'
 import { Features } from '@/components/landing/Features'
@@ -8,6 +9,7 @@ import { Hero } from '@/components/landing/Hero'
 import { HowItWorks } from '@/components/landing/HowItWorks'
 import { LandingFooter } from '@/components/landing/LandingFooter'
 import { LandingNav } from '@/components/landing/LandingNav'
+import { LandingNavWithSession } from '@/components/landing/LandingNavWithSession'
 import { ProductStory } from '@/components/landing/ProductStory'
 import { TrustStrip } from '@/components/landing/TrustStrip'
 import { getLandingCopy } from '@/components/landing/content'
@@ -91,7 +93,9 @@ export default async function HomePage({ params }: PageProps) {
         {isAr ? 'انتقل إلى المحتوى' : 'Skip to content'}
       </a>
 
-      <LandingNav lang={lang} copy={copy} />
+      <Suspense fallback={<LandingNav lang={lang} copy={copy} />}>
+        <LandingNavWithSession lang={lang} copy={copy} />
+      </Suspense>
 
       <main id="main" className="flex-1">
         <Hero lang={lang} copy={copy} />

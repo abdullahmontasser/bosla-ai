@@ -13,6 +13,14 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/en/tailor',
 }))
 
+vi.mock('@/lib/auth/require-session', () => ({
+  requireSession: vi.fn().mockResolvedValue({ user: { id: 'usr_test' } }),
+}))
+
+vi.mock('@/components/workspace', () => ({
+  WorkspaceHeader: () => <header data-testid="workspace-header" />,
+}))
+
 vi.mock('@/app/actions/tailor', () => ({
   getTailorStudioInitialData: vi.fn(),
   saveCandidateProfile: vi.fn().mockResolvedValue({ success: true }),

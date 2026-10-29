@@ -50,6 +50,29 @@ enum ParsingStatus {
   FAILED
 }
 
+enum HealthCategory {
+  IMPACT_METRICS
+  ACTION_VERBS
+  ATS_COMPLETENESS
+  CONTENT_DEPTH
+}
+
+enum HealthSuggestionStatus {
+  PENDING
+  ACCEPTED
+  DISMISSED
+}
+
+enum HealthTargetKind {
+  WORK_EXPERIENCE_BULLET
+  WORK_EXPERIENCE
+  PROFILE_SUMMARY
+  PROFILE_CONTACT
+  PROFILE_SKILLS
+  PROFILE_EDUCATION
+  PROFILE_GENERAL
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -68,6 +91,7 @@ model User {
   jobPostings      JobPosting[]
   tailoredResumes  TailoredResume[]
   applications     Application[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
 }
@@ -157,6 +181,8 @@ model Profile {
   projects         Project[]
   parsedResumes    ParsedResume[]
   tailoredResumes  TailoredResume[]
+  healthAudit      ResumeHealthAudit?
+  healthSuggestions ResumeHealthSuggestion[]
 
   @@index([userId, language])
   @@map("profiles")
@@ -348,4 +374,63 @@ model AnalyticsEvent {
   @@index([name, createdAt])
   @@index([createdAt])
   @@map("analytics_events")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model ResumeHealthAudit {
+  id             String   @id @default(cuid())
+  profileId      String   @unique @map("profile_id")
+  overallScore   Int      @map("overall_score")
+  breakdown      Json
+  ruleSetVersion String   @map("rule_set_version") @db.VarChar(32)
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  profile     Profile                  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  suggestions ResumeHealthSuggestion[]
+
+  @@map("resume_health_audits")
+}
+
+model ResumeHealthSuggestion {
+  id            String                 @id @default(cuid())
+  profileId     String                 @map("profile_id")
+  auditId       String?                @map("audit_id")
+  category      HealthCategory
+  title         String                 @db.VarChar(200)
+  rationale     String                 @db.Text
+  targetKind    HealthTargetKind       @map("target_kind")
+  targetId      String?                @map("target_id")
+  targetIndex   Int?                   @map("target_index")
+  targetField   String?                @map("target_field") @db.VarChar(64)
+  originalText  String                 @map("original_text") @db.Text
+  proposedText  String?                @map("proposed_text") @db.Text
+  status        HealthSuggestionStatus @default(PENDING)
+  isAiGenerated Boolean                @default(false) @map("is_ai_generated")
+  isAiStale     Boolean                @default(false) @map("is_ai_stale")
+  fingerprint   String                 @db.VarChar(64)
+  decidedAt     DateTime?              @map("decided_at")
+  createdAt     DateTime               @default(now()) @map("created_at")
+  updatedAt     DateTime               @updatedAt @map("updated_at")
+
+  profile Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  audit   ResumeHealthAudit? @relation(fields: [auditId], references: [id], onDelete: SetNull)
+
+  @@unique([profileId, fingerprint])
+  @@index([profileId, status])
+  @@index([auditId])
+  @@map("resume_health_suggestions")
 }

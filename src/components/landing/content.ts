@@ -10,6 +10,7 @@ export interface LandingCopy {
     links: NavLink[]
     workspace: string
     start: string
+    signIn: string
     menu: string
     menuLabel: string
     theme: {
@@ -137,6 +138,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
       ],
       workspace: 'Open workspace',
       start: 'Tailor a resume',
+      signIn: 'Sign in',
       menu: 'Menu',
       menuLabel: 'Open navigation',
       theme: {
@@ -427,6 +429,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
       ],
       workspace: 'افتح مساحة العمل',
       start: 'خصّص سيرتك',
+      signIn: 'تسجيل الدخول',
       menu: 'القائمة',
       menuLabel: 'فتح التنقل',
       theme: {

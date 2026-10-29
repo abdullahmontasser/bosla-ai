@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Deterministic base resume health audit engine in `src/lib/health/` scoring resumes across impact metrics, action verbs, ATS completeness, and content depth with localized issue detection for English and Arabic (see spec 0014).
+- Bilingual health audit surface at `/[lang]/resume` and summary card at `/[lang]/profile` displaying overall score, score band badge, category meters, and prioritized issue cards with severity levels (see spec 0014).
+- Interactive issue resolution allowing one click accept with master profile updates and 10 second undo, dismiss and restore with score recalculation, and AI bullet rewriting with grounding verification against hallucinations (see spec 0014).
+- Real time profile language switch synchronization across both `/resume` and `/profile` views via cookie persistence, URL search params, and reactive client dispatch events (see spec 0014).
+- PostgreSQL schema extension and Prisma migration adding `ProfileHealthAudit` and `ResumeHealthIssueAction` models (see spec 0014).
+- Dedicated candidate profile hub at `/[lang]/profile` allowing candidates to manage personal identity, headline, summary, and contact information decoupled from tailoring (see spec 0013).
+- Client side avatar photo crop modal with interactive HTML5 Canvas circle mask, zoom slider, and WebP compression persisted to `User.image` (see spec 0013).
+- Structured profile management cards for work experiences, education, skills, and projects with up and down drag reordering and REST endpoints under `/api/profile/` (see spec 0013).
+- Dedicated authentication pages at `/[lang]/login` and `/[lang]/signup` supporting email, password, and Google OAuth with bilingual English and Arabic layout (see spec 0011).
+- Production transactional email delivery engine via Resend supporting password reset tokens and email verification workflows (see spec 0011).
+- Workspace shell featuring `WorkspaceHeader`, `WorkspaceNav`, mobile drawer, and session aware `AccountMenu` with avatar display and sign out (see spec 0011).
+- Promoted warm paper and deep emerald green palette to root CSS design tokens, unifying workspace and landing page aesthetics (see spec 0012).
 - Core application foundation bootstrapped with Next.js App Router, React 19, TypeScript strict mode, and Tailwind CSS (see spec 0001).
 - Local containerized PostgreSQL 16 service configured via Docker Compose with persistent storage volume (see spec 0001).
 - Prisma ORM data layer configuration targeting PostgreSQL with development client singleton pattern (see spec 0001).

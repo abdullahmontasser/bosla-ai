@@ -3,52 +3,89 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #fbfbfc;
-  --foreground: #090a0f;
-  --card: #ffffff;
-  --card-foreground: #090a0f;
-  --popover: #ffffff;
-  --popover-foreground: #090a0f;
-  --primary: #090a0f;
-  --primary-foreground: #ffffff;
-  --secondary: #f0f2f5;
-  --secondary-foreground: #090a0f;
-  --muted: #f4f5f8;
-  --muted-foreground: #64748b;
-  --accent: #f0f2f5;
-  --accent-foreground: #090a0f;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --success: #10b981;
-  --success-foreground: #ffffff;
-  --border: rgba(9, 10, 15, 0.09);
-  --input: rgba(9, 10, 15, 0.12);
-  --ring: #090a0f;
+  /* Warm gallery paper and deep green, the Bosla identity across every surface. */
+  --background: #f3f1ea;
+  --foreground: #0c130f;
+  --card: #fbfaf5;
+  --card-foreground: #0c130f;
+  --popover: #fffdf8;
+  --popover-foreground: #0c130f;
+  --primary: #0a6b4b;
+  --primary-foreground: #f7fbf8;
+  --secondary: #e9e6dd;
+  --secondary-foreground: #0c130f;
+  --muted: #eae7de;
+  --muted-foreground: #4c5851;
+  --accent: #e4ebe5;
+  --accent-foreground: #08130d;
+  --destructive: #b42318;
+  --destructive-foreground: #fff8f6;
+  --success: #0a6b4b;
+  --success-foreground: #f7fbf8;
+  --border: rgba(12, 19, 15, 0.12);
+  --input: rgba(12, 19, 15, 0.16);
+  --ring: #0a6b4b;
   --radius: 10px;
+  color-scheme: light;
+
+  --landing-paper: #fffdf8;
+  --landing-paper-deep: #f0eee6;
+  --landing-paper-ink: #111812;
+  --landing-panel: #faf8f2;
+  --landing-panel-deep: #f5f2ea;
+  --landing-raised: #efebe1;
+  --landing-surface: #ebe8e0;
+  --landing-footer: #e6e2d8;
+  --landing-final: #e4efe7;
+  --landing-line: rgba(12, 19, 15, 0.1);
+  --landing-faint: #66716a;
+  --landing-glow: rgba(10, 107, 74, 0.1);
+  --landing-selection: rgba(10, 107, 74, 0.16);
+  --landing-shadow-color: rgba(20, 31, 24, 0.1);
+  --landing-shadow-color-strong: rgba(20, 31, 24, 0.16);
+  --landing-shadow-color-soft: rgba(20, 31, 24, 0.08);
 }
 
 .dark {
-  --background: #08090d; /* Deep Obsidian Noir matching Hero */
-  --foreground: #f8fafc;
-  --card: #0d0f15;
-  --card-foreground: #f8fafc;
-  --popover: #0f1118;
-  --popover-foreground: #f8fafc;
-  --primary: #ffffff; /* Crisp Solid White in Dark Mode */
-  --primary-foreground: #08090d;
-  --secondary: #13151f;
-  --secondary-foreground: #f1f5f9;
-  --muted: #11131c;
-  --muted-foreground: #94a3b8;
-  --accent: #171a26;
-  --accent-foreground: #f8fafc;
-  --destructive: #f43f5e;
-  --destructive-foreground: #ffffff;
-  --success: #10b981;
-  --success-foreground: #08090d;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.12);
-  --ring: #ffffff;
+  --background: #070908;
+  --foreground: #f3f5f1;
+  --card: #0b0f0d;
+  --card-foreground: #f3f5f1;
+  --popover: #0d1210;
+  --popover-foreground: #f3f5f1;
+  --primary: #45d99a;
+  --primary-foreground: #05110b;
+  --secondary: #111713;
+  --secondary-foreground: #e7eee9;
+  --muted: #0f1411;
+  --muted-foreground: #98a39c;
+  --accent: #151d18;
+  --accent-foreground: #f3f5f1;
+  --destructive: #f87171;
+  --destructive-foreground: #150606;
+  --success: #45d99a;
+  --success-foreground: #05110b;
+  --border: rgba(235, 245, 238, 0.09);
+  --input: rgba(235, 245, 238, 0.14);
+  --ring: #45d99a;
+  color-scheme: dark;
+
+  --landing-paper: #ecebe4;
+  --landing-paper-deep: #e4e3dc;
+  --landing-paper-ink: #121612;
+  --landing-panel: #0b0f0d;
+  --landing-panel-deep: #0a0f0c;
+  --landing-raised: #0e1410;
+  --landing-surface: #080b09;
+  --landing-footer: #050706;
+  --landing-final: #0b1a13;
+  --landing-line: rgba(235, 245, 238, 0.1);
+  --landing-faint: #87928b;
+  --landing-glow: rgba(69, 217, 154, 0.09);
+  --landing-selection: rgba(69, 217, 154, 0.24);
+  --landing-shadow-color: rgba(0, 0, 0, 0.3);
+  --landing-shadow-color-strong: rgba(0, 0, 0, 0.5);
+  --landing-shadow-color-soft: rgba(0, 0, 0, 0.28);
 }
 
 @theme inline {
@@ -101,99 +138,7 @@ body {
   overflow-x: hidden;
 }
 
-/*
- * Landing surface
- *
- * The public site has its own art-directed palette, but it follows the
- * workspace theme. Light is a warm gallery paper; dark is the original noir
- * chrome. Tokens are scoped here so the rest of the app keeps its own scale.
- */
-.landing-shell {
-  --background: #f3f1ea;
-  --foreground: #0c130f;
-  --card: #fbfaf5;
-  --card-foreground: #0c130f;
-  --popover: #fffdf8;
-  --popover-foreground: #0c130f;
-  --primary: #0a6b4b;
-  --primary-foreground: #f7fbf8;
-  --secondary: #e9e6dd;
-  --secondary-foreground: #0c130f;
-  --muted: #eae7de;
-  --muted-foreground: #4c5851;
-  --accent: #e4ebe5;
-  --accent-foreground: #08130d;
-  --destructive: #b42318;
-  --destructive-foreground: #fff8f6;
-  --success: #0a6b4b;
-  --success-foreground: #f7fbf8;
-  --border: rgba(12, 19, 15, 0.12);
-  --input: rgba(12, 19, 15, 0.16);
-  --ring: #0a6b4b;
-  --landing-paper: #fffdf8;
-  --landing-paper-deep: #f0eee6;
-  --landing-paper-ink: #111812;
-  --landing-panel: #faf8f2;
-  --landing-panel-deep: #f5f2ea;
-  --landing-raised: #efebe1;
-  --landing-surface: #ebe8e0;
-  --landing-footer: #e6e2d8;
-  --landing-final: #e4efe7;
-  --landing-line: rgba(12, 19, 15, 0.1);
-  --landing-faint: #66716a;
-  --landing-glow: rgba(10, 107, 74, 0.1);
-  --landing-selection: rgba(10, 107, 74, 0.16);
-  --landing-shadow-color: rgba(20, 31, 24, 0.1);
-  --landing-shadow-color-strong: rgba(20, 31, 24, 0.16);
-  --landing-shadow-color-soft: rgba(20, 31, 24, 0.08);
-  color-scheme: light;
-  background-color: var(--background);
-  color: var(--foreground);
-  overflow-x: clip;
-}
-
-.dark .landing-shell {
-  --background: #070908;
-  --foreground: #f3f5f1;
-  --card: #0b0f0d;
-  --card-foreground: #f3f5f1;
-  --popover: #0d1210;
-  --popover-foreground: #f3f5f1;
-  --primary: #45d99a;
-  --primary-foreground: #05110b;
-  --secondary: #111713;
-  --secondary-foreground: #e7eee9;
-  --muted: #0f1411;
-  --muted-foreground: #98a39c;
-  --accent: #151d18;
-  --accent-foreground: #f3f5f1;
-  --destructive: #f87171;
-  --destructive-foreground: #150606;
-  --success: #45d99a;
-  --success-foreground: #05110b;
-  --border: rgba(235, 245, 238, 0.09);
-  --input: rgba(235, 245, 238, 0.14);
-  --ring: #45d99a;
-  --landing-paper: #ecebe4;
-  --landing-paper-deep: #e4e3dc;
-  --landing-paper-ink: #121612;
-  --landing-panel: #0b0f0d;
-  --landing-panel-deep: #0a0f0c;
-  --landing-raised: #0e1410;
-  --landing-surface: #080b09;
-  --landing-footer: #050706;
-  --landing-final: #0b1a13;
-  --landing-line: rgba(235, 245, 238, 0.1);
-  --landing-faint: #87928b;
-  --landing-glow: rgba(69, 217, 154, 0.09);
-  --landing-selection: rgba(69, 217, 154, 0.24);
-  --landing-shadow-color: rgba(0, 0, 0, 0.3);
-  --landing-shadow-color-strong: rgba(0, 0, 0, 0.5);
-  --landing-shadow-color-soft: rgba(0, 0, 0, 0.28);
-  color-scheme: dark;
-}
-
-.landing-shell ::selection {
+::selection {
   background: var(--landing-selection);
   color: var(--foreground);
 }

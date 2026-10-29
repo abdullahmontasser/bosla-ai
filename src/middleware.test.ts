@@ -147,5 +147,32 @@ describe('Middleware i18n & locale negotiation', () => {
       expect(res.status).toBe(307)
       expect(res.headers.get('location')).toBe('http://localhost:3000/ar/design-system')
     })
+
+    it('intercepts unauthenticated visits to protected workspace routes and redirects to login with callbackUrl (covers: Hardening Item 6)', () => {
+      const unauthReq = new NextRequest('http://localhost:3000/en/tailor?job=123')
+      const res = middleware(unauthReq)
+      expect(res.status).toBe(307)
+      expect(res.headers.get('location')).toBe(
+        'http://localhost:3000/en/login?callbackUrl=%2Fen%2Ftailor%3Fjob%3D123',
+      )
+
+      const unauthTracker = new NextRequest('http://localhost:3000/ar/tracker')
+      const resTracker = middleware(unauthTracker)
+      expect(resTracker.status).toBe(307)
+      expect(resTracker.headers.get('location')).toBe(
+        'http://localhost:3000/ar/login?callbackUrl=%2Far%2Ftracker',
+      )
+    })
+
+    it('permits authenticated requests with session cookie to protected workspace routes', () => {
+      const authReq = new NextRequest('http://localhost:3000/en/tailor', {
+        headers: {
+          cookie: 'authjs.session-token=valid-jwt-token',
+        },
+      })
+      const res = middleware(authReq)
+      expect(res.status).toBe(200)
+      expect(res.headers.get('location')).toBeNull()
+    })
   })
 })

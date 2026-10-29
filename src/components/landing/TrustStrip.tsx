@@ -12,7 +12,7 @@ const icons = [KeyRound, Languages, ScanSearch, FileText]
 export function TrustStrip({ copy }: TrustStripProps) {
   return (
     <section aria-labelledby="trust-title" className="border-b border-border/70 bg-landing-surface">
-      <div className="mx-auto w-full max-w-[1320px] px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+      <div className="mx-auto w-full max-w-[1320px] px-5 py-10 sm:px-8 sm:py-12 lg:px-10">
         <Reveal className="w-full">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <h2
@@ -30,14 +30,14 @@ export function TrustStrip({ copy }: TrustStripProps) {
             </span>
           </div>
 
-          <div className="mt-8 grid gap-px border-y border-border/70 bg-border/50 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-px border-y border-border/70 bg-border/50 sm:grid-cols-2 lg:grid-cols-4">
             {copy.trust.items.map((item, index) => {
               const Icon = icons[index] ?? KeyRound
               return (
                 <div
                   key={item.title}
                   data-reveal
-                  className="group flex min-h-[164px] flex-col justify-between gap-6 bg-background px-5 py-5 transition-colors duration-300 hover:bg-landing-panel sm:px-6"
+                  className="group flex min-h-[132px] flex-col justify-between gap-4 bg-background px-5 py-4 transition-colors duration-300 hover:bg-landing-panel sm:px-6"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <Icon

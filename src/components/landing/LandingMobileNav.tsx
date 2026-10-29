@@ -10,9 +10,10 @@ import { LandingThemeToggle } from './LandingThemeToggle'
 interface LandingMobileNavProps {
   lang: string
   copy: LandingCopy
+  signedIn?: boolean
 }
 
-export function LandingMobileNav({ lang, copy }: LandingMobileNavProps) {
+export function LandingMobileNav({ lang, copy, signedIn = false }: LandingMobileNavProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null)
 
   const close = () => {
@@ -66,12 +67,26 @@ export function LandingMobileNav({ lang, copy }: LandingMobileNavProps) {
           ))}
         </nav>
 
+        {!signedIn ? (
+          <Link
+            href={`/${lang}/login`}
+            onClick={close}
+            className="mt-1 flex min-h-11 items-center rounded-[6px] px-3 text-sm font-medium text-popover-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {copy.nav.signIn}
+          </Link>
+        ) : null}
+
         <Link
-          href={`/${lang}/tailor`}
+          href={
+            signedIn
+              ? `/${lang}/tailor`
+              : `/${lang}/signup?callbackUrl=${encodeURIComponent(`/${lang}/tailor`)}`
+          }
           onClick={close}
           className="mt-2 flex min-h-11 items-center justify-between rounded-[6px] bg-primary px-3 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-popover"
         >
-          {copy.nav.start}
+          {signedIn ? copy.nav.workspace : copy.nav.start}
           <RtlIcon icon={ArrowRight} className="h-4 w-4" />
         </Link>
       </div>

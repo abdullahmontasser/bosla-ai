@@ -10,6 +10,14 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/en/settings/providers',
 }))
 
+vi.mock('@/lib/auth/require-session', () => ({
+  requireSession: vi.fn().mockResolvedValue({ user: { id: 'usr_test' } }),
+}))
+
+vi.mock('@/components/workspace', () => ({
+  WorkspaceHeader: () => <header data-testid="workspace-header" />,
+}))
+
 vi.mock('@/app/actions/provider-settings', () => ({
   getProviderConfigurations: vi.fn().mockResolvedValue([
     {

@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
-import { ArrowDown } from 'lucide-react'
+import { ArrowDown, ChevronDown } from 'lucide-react'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { cn } from '@/lib/utils'
@@ -105,7 +105,7 @@ export function ProductStory({ lang, copy, sample }: ProductStoryProps) {
           scrollTrigger: {
             trigger: section,
             start: 'top top',
-            end: () => `+=${Math.round(window.innerHeight * 3.6)}`,
+            end: () => `+=${Math.round(window.innerHeight * 2.6)}`,
             pin: section,
             pinSpacing: true,
             scrub: 0.9,
@@ -319,74 +319,88 @@ export function ProductStory({ lang, copy, sample }: ProductStoryProps) {
         </div>
       </div>
 
-      {/* Mobile, tablet, and reduced motion: the same story, stacked. */}
+      {/* Mobile, tablet, and reduced motion: the same story as a compact accordion. */}
       <div className="story-static">
-        <div className="mx-auto w-full max-w-[1320px] px-5 py-20 sm:px-8 sm:py-24 lg:px-10">
-          <div className="max-w-[760px]">
-            <div className="flex items-center gap-3">
-              <span className="h-px w-7 bg-primary" aria-hidden />
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
-                {copy.showcase.label}
-              </p>
+        <div className="mx-auto w-full max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20 lg:px-10">
+          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-16">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="h-px w-7 bg-primary" aria-hidden />
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+                  {copy.showcase.label}
+                </p>
+              </div>
+              <h2
+                className={cn(
+                  'mt-4 text-balance text-foreground',
+                  isAr
+                    ? 'font-arabic text-[clamp(1.9rem,4vw,2.7rem)] font-extrabold leading-[1.3]'
+                    : 'text-[clamp(1.9rem,4vw,2.8rem)] font-semibold leading-[1.04] tracking-[-0.038em]',
+                )}
+              >
+                {copy.showcase.title}
+              </h2>
             </div>
-            <h2
-              className={cn(
-                'mt-5 text-balance text-foreground',
-                isAr
-                  ? 'font-arabic text-[clamp(2.1rem,5vw,3.6rem)] font-extrabold leading-[1.3]'
-                  : 'text-[clamp(2.2rem,5vw,3.7rem)] font-semibold leading-[1.02] tracking-[-0.04em]',
-              )}
-            >
-              {copy.showcase.title}
-            </h2>
-            <p
-              className={cn(
-                'mt-5 max-w-[56ch] text-sm text-muted-foreground sm:text-base',
-                isAr ? 'font-arabic leading-[1.95]' : 'leading-[1.75]',
-              )}
-            >
-              {copy.showcase.body}
-            </p>
-            <div className="mt-6">
-              <SampleTag>{copy.showcase.sampleNote}</SampleTag>
+            <div className="max-w-[52ch] lg:justify-self-end">
+              <p
+                className={cn(
+                  'text-sm text-muted-foreground',
+                  isAr ? 'font-arabic leading-[1.95]' : 'leading-[1.75]',
+                )}
+              >
+                {copy.showcase.body}
+              </p>
+              <div className="mt-4">
+                <SampleTag>{copy.showcase.sampleNote}</SampleTag>
+              </div>
             </div>
           </div>
 
-          <div className="mt-12 space-y-12 sm:mt-16 sm:space-y-16">
+          <div className="mt-10 border-y border-border/70">
             {panelKeys.map((key, index) => {
               const stage = stages[index]
               return (
-                <article key={key} className="min-w-0">
-                  <div className="flex items-start gap-4 border-t border-border/80 pt-5 sm:gap-6">
-                    <span className="pt-1 font-serif text-[1.6rem] leading-none tabular-nums text-muted-foreground/35 sm:text-[2rem]">
+                <details
+                  key={key}
+                  open={index === 0}
+                  className="group border-b border-border/70 last:border-b-0"
+                >
+                  <summary className="flex cursor-pointer list-none items-start gap-4 py-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background [&::-webkit-details-marker]:hidden sm:gap-6">
+                    <span className="pt-0.5 font-serif text-[1.4rem] leading-none tabular-nums text-muted-foreground/35 sm:text-[1.6rem]">
                       0{index + 1}
                     </span>
-                    <div className="min-w-0">
-                      <h3
+                    <span className="min-w-0 flex-1">
+                      <span
                         className={cn(
-                          'text-lg font-semibold tracking-[-0.02em] text-foreground sm:text-xl',
+                          'block text-[15px] font-semibold tracking-[-0.02em] text-foreground sm:text-base',
                           isAr && 'font-arabic leading-[1.5]',
                         )}
                       >
                         {stage.title}
-                      </h3>
-                      <p
+                      </span>
+                      <span
                         className={cn(
-                          'mt-2 max-w-[52ch] text-[13px] leading-[1.7] text-muted-foreground',
+                          'mt-1 block max-w-[62ch] text-[12.5px] leading-[1.65] text-muted-foreground',
                           isAr && 'font-arabic leading-[1.9]',
                         )}
                       >
                         {stage.summary}
-                      </p>
-                    </div>
-                  </div>
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-open:rotate-180"
+                      aria-hidden
+                    />
+                  </summary>
 
-                  <div className="mt-5 overflow-hidden rounded-[10px] border border-border/80 bg-landing-surface p-2">
-                    <div className="overflow-hidden rounded-[7px] landing-shadow-soft border border-landing-line bg-landing-panel-deep">
-                      <StagePanel stage={key} sample={sample} lang={lang} />
+                  <div className="pb-6 sm:ps-11">
+                    <div className="overflow-hidden rounded-[10px] border border-border/80 bg-landing-surface p-2">
+                      <div className="overflow-hidden rounded-[7px] landing-shadow-soft border border-landing-line bg-landing-panel-deep">
+                        <StagePanel stage={key} sample={sample} lang={lang} />
+                      </div>
                     </div>
                   </div>
-                </article>
+                </details>
               )
             })}
           </div>

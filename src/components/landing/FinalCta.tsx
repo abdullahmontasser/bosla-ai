@@ -52,7 +52,7 @@ export function FinalCta({ lang, copy }: FinalCtaProps) {
         <circle cx="360" cy="360" r="3.5" fill="var(--primary)" fillOpacity="0.7" />
       </svg>
 
-      <div className="relative mx-auto w-full max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28 lg:px-10 lg:py-36">
+      <div className="relative mx-auto w-full max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20 lg:px-10 lg:py-24">
         <Reveal variant="lines" className="max-w-[880px]">
           <div data-reveal className="flex items-center gap-3">
             <span className="h-px w-8 bg-primary" aria-hidden />
@@ -65,8 +65,8 @@ export function FinalCta({ lang, copy }: FinalCtaProps) {
             className={cn(
               'mt-6 text-balance text-foreground',
               isAr
-                ? 'font-arabic text-[clamp(2.35rem,6vw,4.8rem)] font-extrabold leading-[1.24]'
-                : 'text-[clamp(2.6rem,6vw,5.1rem)] font-semibold leading-[0.98] tracking-[-0.045em]',
+                ? 'font-arabic text-[clamp(2rem,4.6vw,3.6rem)] font-extrabold leading-[1.26]'
+                : 'text-[clamp(2.1rem,4.8vw,3.8rem)] font-semibold leading-[1] tracking-[-0.045em]',
             )}
           >
             <span className="line-mask">
@@ -132,7 +132,7 @@ export function FinalCta({ lang, copy }: FinalCtaProps) {
           </ul>
         </Reveal>
 
-        <div className="mt-16 flex items-center gap-4 border-t border-border/70 pt-5 lg:mt-24">
+        <div className="mt-12 flex items-center gap-4 border-t border-border/70 pt-5 lg:mt-16">
           <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-landing-faint">
             BOSLA / 06
           </span>

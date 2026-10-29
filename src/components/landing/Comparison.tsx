@@ -10,7 +10,7 @@ interface ComparisonProps {
 export function Comparison({ copy }: ComparisonProps) {
   return (
     <section id="compare" className="scroll-mt-24 border-b border-border/70">
-      <div className="mx-auto w-full max-w-[1320px] px-5 py-20 sm:px-8 sm:py-28 lg:px-10 lg:py-32">
+      <div className="mx-auto w-full max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20 lg:px-10 lg:py-24">
         <Reveal variant="lines">
           <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
             <div>
@@ -23,7 +23,7 @@ export function Comparison({ copy }: ComparisonProps) {
               <h2
                 className={cn(
                   'mt-5 max-w-[14ch] text-balance text-foreground',
-                  'text-[clamp(2.3rem,4.6vw,4rem)] font-semibold leading-[1.02] tracking-[-0.04em]',
+                  'text-[clamp(1.9rem,3.8vw,3rem)] font-semibold leading-[1.04] tracking-[-0.038em]',
                 )}
               >
                 {copy.comparison.title
@@ -54,7 +54,7 @@ export function Comparison({ copy }: ComparisonProps) {
           </div>
         </Reveal>
 
-        <div className="mt-12 border-t border-border/80">
+        <div className="mt-9 border-t border-border/80">
           <div className="hidden grid-cols-[170px_minmax(0,1fr)_minmax(0,1fr)] md:grid">
             <span className="py-4 text-[9px] font-semibold uppercase tracking-[0.16em] text-landing-faint">
               —
@@ -71,7 +71,7 @@ export function Comparison({ copy }: ComparisonProps) {
             {copy.comparison.rows.map((row, index) => (
               <Reveal key={row.dimension}>
                 <div className="grid border-b border-border/60 md:grid-cols-[170px_minmax(0,1fr)_minmax(0,1fr)]">
-                  <div data-reveal className="flex items-baseline gap-2.5 pb-2 pt-5 md:py-6">
+                  <div data-reveal className="flex items-baseline gap-2.5 pb-2 pt-4 md:py-4">
                     <span className="text-[9px] font-semibold tabular-nums text-muted-foreground/35">
                       0{index + 1}
                     </span>
@@ -82,7 +82,7 @@ export function Comparison({ copy }: ComparisonProps) {
 
                   <div
                     data-reveal
-                    className="flex items-start gap-2.5 pb-4 md:border-s md:border-border/60 md:px-6 md:py-6"
+                    className="flex items-start gap-2.5 pb-4 md:border-s md:border-border/60 md:px-6 md:py-4"
                   >
                     <Minus
                       className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/35"
@@ -93,7 +93,7 @@ export function Comparison({ copy }: ComparisonProps) {
 
                   <div
                     data-reveal
-                    className="flex items-start gap-2.5 border-t border-border/40 pb-5 pt-4 md:border-s md:border-t-0 md:border-primary/15 md:bg-primary/[0.025] md:px-6 md:py-6"
+                    className="flex items-start gap-2.5 border-t border-border/40 pb-5 pt-4 md:border-s md:border-t-0 md:border-primary/15 md:bg-primary/[0.025] md:px-6 md:py-4"
                   >
                     <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-primary/25 bg-primary/10">
                       <Check className="h-2.5 w-2.5 text-primary" strokeWidth={2.5} aria-hidden />

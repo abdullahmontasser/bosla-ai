@@ -93,14 +93,40 @@ export function getPreferredLocale(request: NextRequest): Locale {
   return defaultLocale
 }
 
+export const PROTECTED_WORKSPACE_ROUTES = new Set([
+  'tailor',
+  'tracker',
+  'resume',
+  'profile',
+  'settings',
+])
+
+export function hasSessionCookie(request: NextRequest): boolean {
+  const cookies = request.cookies
+  return (
+    cookies.has('authjs.session-token') ||
+    cookies.has('__Secure-authjs.session-token') ||
+    cookies.has('next-auth.session-token') ||
+    cookies.has('__Secure-next-auth.session-token')
+  )
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const segments = pathname.split('/')
   const firstSegment = segments[1] || ''
 
-  // 1. If path begins with a supported locale (/en, /ar), let it proceed
+  // 1. If path begins with a supported locale (/en, /ar):
   if (isSupportedLocale(firstSegment)) {
+    const routeSlug = segments[2] || ''
+    // Defense-in-depth: intercept unauthenticated requests to protected workspace routes
+    if (PROTECTED_WORKSPACE_ROUTES.has(routeSlug) && !hasSessionCookie(request)) {
+      const loginUrl = new URL(`/${firstSegment}/login`, request.url)
+      const targetPath = pathname + (request.nextUrl.search || '')
+      loginUrl.searchParams.set('callbackUrl', targetPath)
+      return NextResponse.redirect(loginUrl, 307)
+    }
     return NextResponse.next()
   }
 
