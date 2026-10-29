@@ -45,7 +45,7 @@ export function PdfExportButton({
 
       // Extract filename from Content-Disposition header if available
       const disposition = response.headers.get('Content-Disposition')
-      let filename = `CareerCraft_Resume_${lang.toUpperCase()}.pdf`
+      let filename = `Bosla_Resume_${lang.toUpperCase()}.pdf`
       if (disposition) {
         const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/)
         if (utf8Match && utf8Match[1]) {

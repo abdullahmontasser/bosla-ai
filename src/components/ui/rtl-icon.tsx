@@ -1,7 +1,7 @@
 import { ComponentType, SVGProps } from 'react'
 import { cn } from '@/lib/utils'
 
-export interface RtlIconProps extends SVGProps<SVGSVGElement> {
+interface RtlIconProps extends SVGProps<SVGSVGElement> {
   icon: ComponentType<
     SVGProps<SVGSVGElement> & { size?: number | string; strokeWidth?: number | string }
   >

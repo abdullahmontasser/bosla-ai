@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Deterministic base resume health audit engine in `src/lib/health/` scoring resumes across impact metrics, action verbs, ATS completeness, and content depth with localized issue detection for English and Arabic (see spec 0014).
+- Bilingual health audit surface at `/[lang]/resume` and summary card at `/[lang]/profile` displaying overall score, score band badge, category meters, and prioritized issue cards with severity levels (see spec 0014).
+- Interactive issue resolution allowing one click accept with master profile updates and 10 second undo, dismiss and restore with score recalculation, and AI bullet rewriting with grounding verification against hallucinations (see spec 0014).
+- Real time profile language switch synchronization across both `/resume` and `/profile` views via cookie persistence, URL search params, and reactive client dispatch events (see spec 0014).
+- PostgreSQL schema extension and Prisma migration adding `ProfileHealthAudit` and `ResumeHealthIssueAction` models (see spec 0014).
+- Dedicated candidate profile hub at `/[lang]/profile` allowing candidates to manage personal identity, headline, summary, and contact information decoupled from tailoring (see spec 0013).
+- Client side avatar photo crop modal with interactive HTML5 Canvas circle mask, zoom slider, and WebP compression persisted to `User.image` (see spec 0013).
+- Structured profile management cards for work experiences, education, skills, and projects with up and down drag reordering and REST endpoints under `/api/profile/` (see spec 0013).
+- Dedicated authentication pages at `/[lang]/login` and `/[lang]/signup` supporting email, password, and Google OAuth with bilingual English and Arabic layout (see spec 0011).
+- Production transactional email delivery engine via Resend supporting password reset tokens and email verification workflows (see spec 0011).
+- Workspace shell featuring `WorkspaceHeader`, `WorkspaceNav`, mobile drawer, and session aware `AccountMenu` with avatar display and sign out (see spec 0011).
+- Promoted warm paper and deep emerald green palette to root CSS design tokens, unifying workspace and landing page aesthetics (see spec 0012).
 - Core application foundation bootstrapped with Next.js App Router, React 19, TypeScript strict mode, and Tailwind CSS (see spec 0001).
 - Local containerized PostgreSQL 16 service configured via Docker Compose with persistent storage volume (see spec 0001).
 - Prisma ORM data layer configuration targeting PostgreSQL with development client singleton pattern (see spec 0001).
@@ -65,6 +77,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Follow up staleness warning badges identifying applications in `APPLIED` over seven days or `INTERVIEWING` past scheduled interview date (see spec 0009).
 - Real time filter toolbar featuring text search, minimum ATS match threshold filtering, follow up filter toggle, and automatic drag reordering pausing (see spec 0009).
 - Quick add modal on the kanban board and Add to Tracker button in Tailor Studio linking tailored resumes to tracked applications (see spec 0009).
+- Bilingual public landing page at `/[lang]` that follows one sample role from job description to tailored draft, ATS coverage review, achievement rewrite, interview preparation, and next step, with localized English and Arabic copy and sample workspace data (see spec 0010).
+- Shared light and dark appearance for the public site with a compact control in the desktop and mobile navigation that uses the same stored theme preference as the workspace (see spec 0010).
+- Scroll driven workflow story with a pinned desktop stage, a stacked reading layout for small screens and reduced motion, direct stage navigation, and a progress indicator (see spec 0010).
 
 ### Changed
 
@@ -80,6 +95,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extended `StudioContainer` sub navigation tabs with Outreach Messages and Interview Prep tabs and initial data loading status badges (see spec 0008).
 - Extended Prisma schema `Application` model with `interviewDate`, `compensation`, `location`, `contactName`, `contactEmail` fields and composite index on `[userId, interviewDate]` (see spec 0009).
 - Updated Tailor Studio header in `src/components/tailor/StudioContainer.tsx` with one click Add to Tracker action button (see spec 0009).
+- Rebuilt the public home page around one role walkthrough with hero, trust, orientation, workflow, capabilities, comparison, closing action, and footer sections in place of the previous feature grid (see spec 0010).
+- Updated public page metadata with localized titles, descriptions, structured data, and social preview fields for both languages (see spec 0010).
+- Applied a warm gallery light palette and a noir dark palette to the landing page while keeping resume paper surfaces light and readable in both themes (see spec 0010).
+- Softened landing motion with calmer easing, shorter travel, lighter parallax, and no brightness pulsing between workflow panels (see spec 0010).
 
 ### Security
 

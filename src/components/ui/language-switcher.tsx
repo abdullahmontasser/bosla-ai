@@ -14,9 +14,15 @@ import { LOCALE_COOKIE_NAME, supportedLocales, type Locale } from '@/lib/i18n/co
 
 interface LanguageSwitcherProps {
   currentLang?: string
+  className?: string
+  contentClassName?: string
 }
 
-export function LanguageSwitcher({ currentLang }: LanguageSwitcherProps) {
+export function LanguageSwitcher({
+  currentLang,
+  className,
+  contentClassName,
+}: LanguageSwitcherProps) {
   const pathname = usePathname()
   const router = useRouter()
 
@@ -62,14 +68,14 @@ export function LanguageSwitcher({ currentLang }: LanguageSwitcherProps) {
         <Button
           variant="outline"
           size="sm"
-          className="gap-2 px-3 text-xs font-medium"
+          className={className ?? 'gap-2 px-3 text-xs font-medium'}
           aria-label="Switch Language"
         >
           <Globe className="h-4 w-4" />
           <span>{activeLocale === 'ar' ? 'العربية' : 'English'}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
+      <DropdownMenuContent align="end" className={contentClassName ?? 'w-36'}>
         <DropdownMenuItem
           onClick={() => switchLanguage('en')}
           className={activeLocale === 'en' ? 'font-semibold text-primary' : ''}

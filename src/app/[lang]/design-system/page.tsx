@@ -198,9 +198,7 @@ export default async function DesignSystemPage({ params }: { params: Promise<{ l
           </div>
 
           <div className="rounded-[8px] border border-border bg-[#f6f6f7] dark:bg-[#12141c] p-4 font-mono text-xs text-[#222222] dark:text-[#f3f4f6] space-y-1.5 leading-relaxed overflow-x-auto text-start">
-            <div className="text-[#909090]">
-              &apos;// CareerCraft AI resume tailoring worker&apos;
-            </div>
+            <div className="text-[#909090]">&apos;// Bosla AI resume tailoring worker&apos;</div>
             <div>
               <span className="text-[#3e7ff0] font-semibold">import</span> &#123; tailorResume
               &#125; <span className="text-[#3e7ff0] font-semibold">from</span>{' '}
@@ -269,7 +267,7 @@ export default async function DesignSystemPage({ params }: { params: Promise<{ l
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <Badge variant="default">CareerCraft AI</Badge>
+                  <Badge variant="default">Bosla AI</Badge>
                   <span className="font-mono text-xs text-[#909090]">v1.0.0</span>
                 </div>
                 <CardTitle className="pt-2 text-base">ATS Compatibility Index</CardTitle>

@@ -1,64 +1,70 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getDictionary } from '@/lib/i18n/get-dictionary'
 import { isSupportedLocale } from '@/lib/i18n/config'
+import { requireSession } from '@/lib/auth/require-session'
 import { ResumeIngestionContainer } from '@/components/resume'
-import { LanguageSwitcher, ThemeSwitcher, Button } from '@/components/ui'
-import { ArrowLeft, FileText } from 'lucide-react'
+import { ResumeHealthPanel } from '@/components/health/ResumeHealthPanel'
+import { WorkspaceHeader } from '@/components/workspace'
 
-export default async function ResumePage({ params }: { params: Promise<{ lang: string }> }) {
+export const instant = false
+
+export default async function ResumePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ lang: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
   const { lang } = await params
   if (!isSupportedLocale(lang)) {
     notFound()
   }
 
+  const session = await requireSession(lang, `/${lang}/resume`)
+  const userId = session.user?.id
+  if (!userId) {
+    notFound()
+  }
+
+  const resolvedSearchParams = await searchParams
+  const auditLangParam = resolvedSearchParams.auditLang
+  // The audit target language is a per view override, not a page navigation.
+  const auditLang: 'en' | 'ar' =
+    typeof auditLangParam === 'string' && isSupportedLocale(auditLangParam)
+      ? (auditLangParam as 'en' | 'ar')
+      : lang
+
   const dict = await getDictionary(lang)
   const r = dict.resume || {}
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <Link href={`/${lang}`}>
-              <Button variant="ghost" size="sm" className="gap-1.5">
-                <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-                <span className="font-semibold text-foreground tracking-tight">
-                  {dict.common.brand}
-                </span>
-              </Button>
-            </Link>
-            <span className="text-muted-foreground/40 hidden sm:inline">/</span>
-            <div className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-foreground">
-              <FileText className="size-3.5 text-primary" />
-              <span>{r.title || 'Resume Ingestion'}</span>
-            </div>
-          </div>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <WorkspaceHeader lang={lang} section={r.title || 'Resume Health & Ingestion'} />
 
-          <div className="flex items-center gap-2">
-            <LanguageSwitcher currentLang={lang} />
-            <ThemeSwitcher />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Canvas */}
-      <main className="container mx-auto max-w-7xl px-4 sm:px-6 py-6 flex-1">
+      <main className="mx-auto w-full max-w-[1320px] flex-1 px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            {r.title || 'Resume Ingestion & Parsing'}
+            {r.title || 'Resume Health & Ingestion'}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {r.subtitle ||
-              'Upload your existing PDF or Word resume in English or Arabic to populate your career profile.'}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{r.subtitle || ''}</p>
         </div>
 
         <Suspense fallback={<div className="h-64 rounded-lg bg-card animate-pulse" />}>
-          <ResumeIngestionContainer lang={lang} dict={dict} />
+          <ResumeHealthPanel
+            key={auditLang}
+            userId={userId}
+            pageLang={lang}
+            auditLang={auditLang}
+            dict={dict}
+          />
         </Suspense>
+
+        <div id="resume-ingestion" className="mt-8">
+          <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-card" />}>
+            <ResumeIngestionContainer lang={lang} dict={dict} />
+          </Suspense>
+        </div>
       </main>
     </div>
   )

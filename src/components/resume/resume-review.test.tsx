@@ -11,7 +11,7 @@ import {
 } from '@/lib/validations/parsed-resume'
 
 const mockDict = {
-  common: { brand: 'CareerCraft AI' },
+  common: { brand: 'Bosla AI' },
   resume: {
     title: 'Resume Ingestion & Parsing',
     dropzoneTitle: 'Upload Your Resume',

@@ -1,176 +1,113 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Sparkles, ArrowRight, Palette, Bot, ShieldCheck, FileText } from 'lucide-react'
-import { getDictionary } from '@/lib/i18n/get-dictionary'
+import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { isSupportedLocale } from '@/lib/i18n/config'
-import {
-  Button,
-  Badge,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  LanguageSwitcher,
-  ThemeSwitcher,
-  RtlIcon,
-} from '@/components/ui'
+import { Comparison } from '@/components/landing/Comparison'
+import { Features } from '@/components/landing/Features'
+import { FinalCta } from '@/components/landing/FinalCta'
+import { Hero } from '@/components/landing/Hero'
+import { HowItWorks } from '@/components/landing/HowItWorks'
+import { LandingFooter } from '@/components/landing/LandingFooter'
+import { LandingNav } from '@/components/landing/LandingNav'
+import { LandingNavWithSession } from '@/components/landing/LandingNavWithSession'
+import { ProductStory } from '@/components/landing/ProductStory'
+import { TrustStrip } from '@/components/landing/TrustStrip'
+import { getLandingCopy } from '@/components/landing/content'
+import { getShowcaseSample } from '@/components/landing/showcase-data'
 
-export default async function HomePage({ params }: { params: Promise<{ lang: string }> }) {
+interface PageProps {
+  params: Promise<{ lang: string }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { lang } = await params
+  const isAr = lang === 'ar'
+
+  const title = isAr
+    ? 'بوصلة AI — سيرة مخصّصة لكل وظيفة، وتحضير أهدأ للمقابلة'
+    : 'Bosla AI — A sharper resume for the role you actually want'
+  const description = isAr
+    ? 'الصق وصف الوظيفة، ووائم متطلباتها مع خبرتك الحقيقية. راجع تغطية الكلمات المفتاحية، وقوِّ نقاط إنجازك، وصدّر سيرة نظيفة، واستعد للمقابلة—بمفاتيحك الخاصة.'
+    : 'Paste a job description, map it to your real experience, inspect requirement coverage, strengthen your achievements, export a clean resume, and prepare for the conversation—with your own AI provider.'
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: 'website',
+      locale: isAr ? 'ar_AR' : 'en_US',
+      url: `https://bosla.ai/${lang}`,
+      siteName: isAr ? 'بوصلة AI' : 'Bosla AI',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+  }
+}
+
+export default async function HomePage({ params }: PageProps) {
   const { lang } = await params
   if (!isSupportedLocale(lang)) {
     notFound()
   }
 
-  const dict = await getDictionary(lang)
+  const copy = getLandingCopy(lang)
+  const sample = getShowcaseSample(lang)
+  const isAr = lang === 'ar'
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: isAr ? 'بوصلة AI' : 'Bosla AI',
+    applicationCategory: 'BusinessApplication',
+    operatingSystem: 'Any (Web Application)',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    description: copy.hero.lead,
+    featureList: [
+      isAr ? 'تخصيص السيرة الذاتية حسب الوظيفة' : 'Role-specific resume tailoring',
+      isAr ? 'تحليل تغطية متطلبات ATS' : 'ATS requirement coverage analysis',
+      isAr ? 'تحضير المقابلات بصيغة STAR' : 'STAR interview preparation',
+      isAr ? 'دعم العربية والإنجليزية' : 'Arabic and English support',
+    ],
+  }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground">
-      {/* Top Navigation */}
-      <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="container mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold shadow-xs">
-              CC
-            </div>
-            <span className="font-semibold text-foreground tracking-tight">
-              {dict.common.brand}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Link href={`/${lang}/tailor`}>
-              <Button
-                variant="default"
-                size="sm"
-                className="gap-1.5 bg-primary text-primary-foreground"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>{lang === 'ar' ? 'استوديو التخصيص' : 'Tailor Studio'}</span>
-              </Button>
-            </Link>
-            <Link href={`/${lang}/resume`}>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-                <FileText className="h-4 w-4" />
-                <span>{lang === 'ar' ? 'استيراد السيرة' : 'Import Resume'}</span>
-              </Button>
-            </Link>
-            <Link href={`/${lang}/settings/providers`}>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-                <Bot className="h-4 w-4" />
-                <span>{lang === 'ar' ? 'المزودات' : 'Providers'}</span>
-              </Button>
-            </Link>
-            <Link href={`/${lang}/design-system`}>
-              <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-                <Palette className="h-4 w-4" />
-                <span>{lang === 'ar' ? 'نظام التصميم' : 'Design System'}</span>
-              </Button>
-            </Link>
-            <LanguageSwitcher currentLang={lang} />
-            <ThemeSwitcher />
-          </div>
-        </div>
-      </header>
+    <div className="landing-shell flex min-h-svh flex-col bg-background text-foreground antialiased">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
-      {/* Main Content */}
-      <main className="flex-1 container mx-auto max-w-6xl px-4 py-16 sm:px-6 flex flex-col items-center justify-center text-center">
-        <div className="max-w-3xl space-y-6">
-          <div className="flex justify-center">
-            <Badge variant="outline" className="px-3 py-1 gap-1.5 text-xs">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span>Bilingual Foundation Ready</span>
-            </Badge>
-          </div>
+      <a
+        href="#main"
+        className="sr-only z-[60] rounded-[6px] bg-primary px-4 py-2 text-sm font-bold text-primary-foreground focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-4 focus:ring-offset-background"
+      >
+        {isAr ? 'انتقل إلى المحتوى' : 'Skip to content'}
+      </a>
 
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground">
-            {dict.common.brand}
-          </h1>
+      <Suspense fallback={<LandingNav lang={lang} copy={copy} />}>
+        <LandingNavWithSession lang={lang} copy={copy} />
+      </Suspense>
 
-          <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-            {dict.common.tagline}
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-            <Link href={`/${lang}/tailor`}>
-              <Button
-                size="lg"
-                className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                <Sparkles className="h-4 w-4" />
-                <span>{lang === 'ar' ? 'افتح استوديو التخصيص' : 'Open Tailoring Studio'}</span>
-                <RtlIcon icon={ArrowRight} className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href={`/${lang}/settings/providers`}>
-              <Button size="lg" variant="outline" className="gap-2">
-                <Bot className="h-4 w-4" />
-                <span>{lang === 'ar' ? 'إعدادات المزودين' : 'Configure Providers'}</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Highlight Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full mt-16 text-start">
-          <Card>
-            <CardHeader>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary mb-2">
-                <Palette className="h-5 w-5" />
-              </div>
-              <CardTitle>Bilingual Design System</CardTitle>
-              <CardDescription>
-                Tailwind CSS v4 tokens, logical layout properties, and native RTL support.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                Fluid mirroring for Arabic and English with IBM Plex Sans Arabic and Geist Sans.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary mb-2">
-                <Bot className="h-5 w-5" />
-              </div>
-              <CardTitle>Autonomous Career Agent</CardTitle>
-              <CardDescription>
-                Resume tailoring, ATS keyword optimization, and interview preparation.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                BYOK architecture supporting OpenAI, Anthropic, Gemini, Groq, and local Ollama.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary mb-2">
-                <ShieldCheck className="h-5 w-5" />
-              </div>
-              <CardTitle>Accessible Foundation</CardTitle>
-              <CardDescription>
-                Headless Radix UI primitives with zero theme flicker and keyboard navigation.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground">
-                WCAG AAA compliant contrast, focus rings, and screen reader announcements.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+      <main id="main" className="flex-1">
+        <Hero lang={lang} copy={copy} />
+        <TrustStrip copy={copy} />
+        <HowItWorks lang={lang} copy={copy} />
+        <ProductStory lang={lang} copy={copy} sample={sample} />
+        <Features lang={lang} copy={copy} />
+        <Comparison copy={copy} />
+        <FinalCta lang={lang} copy={copy} />
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
-        <div className="container mx-auto px-4">
-          <p>© 2026 {dict.common.brand}. Open source career agent foundation.</p>
-        </div>
-      </footer>
+      <LandingFooter lang={lang} copy={copy} />
     </div>
   )
 }

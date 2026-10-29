@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { checkRateLimit, hashClientIdentifier, _resetRateLimitStore } from './rate-limiter'
+import {
+  checkRateLimit,
+  hashClientIdentifier,
+  isRateLimited,
+  recordFailedAttempt,
+  clearRateLimit,
+  _resetRateLimitStore,
+} from './rate-limiter'
 
 describe('Telemetry Rate Limiter (covers: AC-8)', () => {
   beforeEach(() => {
@@ -45,5 +52,30 @@ describe('Telemetry Rate Limiter (covers: AC-8)', () => {
 
     expect(checkRateLimit(clientA, 100, 3600000).allowed).toBe(false)
     expect(checkRateLimit(clientB, 100, 3600000).allowed).toBe(true)
+  })
+
+  describe('Auth failure tracking and lockout (covers: Hardening Item 1)', () => {
+    it('accurately locks out after 5 failed attempts and clears on success', () => {
+      const authKey = 'auth_user_test'
+      expect(isRateLimited(authKey, 5)).toBe(false)
+
+      // First 4 failed attempts allow further tries
+      for (let i = 1; i <= 4; i++) {
+        const res = recordFailedAttempt(authKey, 5, 15 * 60 * 1000)
+        expect(res.allowed).toBe(true)
+        expect(res.remaining).toBe(5 - i)
+        expect(isRateLimited(authKey, 5)).toBe(false)
+      }
+
+      // 5th failed attempt triggers lockout
+      const fifth = recordFailedAttempt(authKey, 5, 15 * 60 * 1000)
+      expect(fifth.allowed).toBe(false)
+      expect(fifth.remaining).toBe(0)
+      expect(isRateLimited(authKey, 5)).toBe(true)
+
+      // Clearing rate limit resets lockout status
+      clearRateLimit(authKey)
+      expect(isRateLimited(authKey, 5)).toBe(false)
+    })
   })
 })

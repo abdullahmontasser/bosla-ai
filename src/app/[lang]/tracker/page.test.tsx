@@ -21,6 +21,14 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/en/tracker',
 }))
 
+vi.mock('@/lib/auth/require-session', () => ({
+  requireSession: vi.fn().mockResolvedValue({ user: { id: 'usr_test' } }),
+}))
+
+vi.mock('@/components/workspace', () => ({
+  WorkspaceHeader: () => <header data-testid="workspace-header" />,
+}))
+
 describe('TrackerPage and TrackerContent (covers: AC-1)', () => {
   beforeEach(() => {
     vi.clearAllMocks()

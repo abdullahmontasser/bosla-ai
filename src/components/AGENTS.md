@@ -1,6 +1,6 @@
 # Components Context (src/components)
 
-Foundational UI components, layout primitives, and theme controls for CareerCraft AI.
+Foundational UI components, layout primitives, and theme controls for Bosla AI.
 
 ## Architecture
 
@@ -25,13 +25,19 @@ Foundational UI components, layout primitives, and theme controls for CareerCraf
 - `src/components/outreach/`: Cold outreach message cards, connection note editor with character counters, and one click copy.
 - `src/components/interview-prep/`: Interview prep workbench, STAR response cards, and interviewer questions list.
 - `src/components/tracker/`: Kanban board columns, cards with ATS badges, slide over details drawer, filter toolbar, and quick add modal.
+- `src/components/landing/`: public landing sections, GSAP motion, bilingual copy, and sample workflow data.
+- `src/components/auth/`: Sign in and sign up cards, forgot password, reset password, email verification card, and copy.
+- `src/components/workspace/`: Shared header, workspace navigation, mobile drawer, and session aware account menu.
+- `src/components/profile/`: Dedicated candidate profile hub, avatar crop modal, and identity, education, experience, skills, and projects cards.
+- `src/components/health/`: Base resume health score card, category meters, issue cards with severity badges, undo toast notification, and AI rewrite modal.
 
 ## Rules & Constraints
 
 - Always use logical CSS utilities (`ms-`, `me-`, `ps-`, `pe-`, `start-`, `end-`, `text-start`, `text-end`). Never write physical `ml-`, `mr-`, `pl-`, `pr-`, `left-`, or `right-`.
 - Preserve keyboard focus rings (`focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2`).
 - Directional icons must use `RtlIcon` or `rtl:rotate-180`. Symmetric icons (magnifying glass, checkmark) must remain unrotated.
-- Unit tests are colocated in `src/components/ui/components.test.tsx`.
+- Animated heading line reveals must use the `line-mask` utility (overflow clip with an extended clip margin), never a bare `overflow-hidden`, so Arabic hamza and tashkeel are not cut off.
+- Unit tests are colocated beside the components they cover as `*.test.tsx` files.
 
 ## Specs
 
@@ -39,5 +45,15 @@ Foundational UI components, layout primitives, and theme controls for CareerCraf
 - [0007. ATS resume engine and PDF export](../../docs/specs/0007-ats-resume-engine-pdf-export/index.md)
 - [0008. Career outreach and interview prep](../../docs/specs/0008-career-outreach-and-interview-prep/index.md)
 - [0009. Job application kanban tracker](../../docs/specs/0009-job-application-kanban-tracker/index.md)
+- [0010. Public showcase and landing page](../../docs/specs/0010-public-showcase-and-landing-page/index.md)
+- [0011. Account access and workspace shell](../../docs/specs/0011-account-access-and-workspace-shell/index.md)
+- [0012. Palette unification and landing refinement](../../docs/specs/0012-palette-unification-and-landing-refinement/index.md)
+- [0013. Candidate profile and photo management](../../docs/specs/0013-candidate-profile-and-photo-management/index.md)
+- [0014. Base resume health audit and improvement](../../docs/specs/0014-base-resume-health-audit/index.md)
+
+## Quality Assurance & Visual QA
+
+- Multi viewport screenshots (desktop, tablet, mobile) and RTL parity are captured via `scripts/visual-qa.sh` into `scratch/qa/`.
+- All landing components must avoid generic AI tropes and adhere to the award level guidelines in `design.md`.
 
 _Drafted by /sync from the introducing change, worth a quick human pass._

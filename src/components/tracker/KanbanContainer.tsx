@@ -6,6 +6,7 @@ import {
   DragOverlay,
   closestCorners,
   PointerSensor,
+  TouchSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
@@ -123,6 +124,14 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
     },
   })
 
+  // TouchSensor with delay constraint so touch scrolling works smoothly on mobile
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: {
+      delay: 250,
+      tolerance: 5,
+    },
+  })
+
   // RTL Coordinate Inversion for Arabic progression (AC-2)
   const keyboardSensor = useSensor(KeyboardSensor, {
     coordinateGetter: (event, args) => {
@@ -139,7 +148,7 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
     },
   })
 
-  const sensors = useSensors(pointerSensor, keyboardSensor)
+  const sensors = useSensors(pointerSensor, touchSensor, keyboardSensor)
 
   const columnTitles: Record<ApplicationStatus, string> = {
     SAVED: t.saved || 'Saved',

@@ -1,5 +1,7 @@
 import type { AtsBreakdown } from '@/lib/validations/tailored-resume'
 
+import { startsWithActionVerb } from '@/lib/text/action-verbs'
+
 export interface CandidateHeaderInput {
   fullName?: string | null
   email?: string | null
@@ -36,83 +38,6 @@ export interface FormattingComplianceResult {
   actionVerbScore: number
   feedback: string[]
 }
-
-const ENGLISH_ACTION_VERBS = new Set([
-  'led',
-  'developed',
-  'architected',
-  'built',
-  'engineered',
-  'designed',
-  'managed',
-  'created',
-  'implemented',
-  'optimized',
-  'scaled',
-  'spearheaded',
-  'delivered',
-  'automated',
-  'orchestrated',
-  'authored',
-  'established',
-  'revamped',
-  'boosted',
-  'accelerated',
-  'launched',
-  'mentored',
-  'reduced',
-  'increased',
-  'improved',
-  'achieved',
-  'saved',
-  'generated',
-  'transformed',
-  'formulated',
-  'streamlined',
-  'directed',
-  'executed',
-  'drove',
-  'integrated',
-  'pioneered',
-  'produced',
-  'resolved',
-])
-
-const ARABIC_ACTION_VERBS = new Set([
-  'قاد',
-  'طور',
-  'بنى',
-  'هندس',
-  'صمم',
-  'أدار',
-  'أنشأ',
-  'نفذ',
-  'حسن',
-  'أطلق',
-  'حقق',
-  'وفر',
-  'أتمت',
-  'أشرف',
-  'ابتكر',
-  'حدث',
-  'عزز',
-  'خفض',
-  'زاد',
-  'نظم',
-  'صاغ',
-  'أنجز',
-  'وسع',
-  'مكن',
-  'باشر',
-  'أسس',
-  'قامت',
-  'طورت',
-  'بنت',
-  'صممت',
-  'أدارت',
-  'نفذت',
-  'حققت',
-])
 
 const COMMON_STOP_WORDS = new Set([
   'and',
@@ -352,16 +277,10 @@ export function checkFormattingCompliance(
         : 'No experience bullets recorded. Add accomplishment bullets to demonstrate impact.',
     )
   } else {
-    const verbsSet = language === 'AR' ? ARABIC_ACTION_VERBS : ENGLISH_ACTION_VERBS
     let actionCount = 0
 
     for (const bullet of experienceBullets) {
-      const firstWord = bullet
-        .trim()
-        .split(/\s+/)[0]
-        ?.toLowerCase()
-        .replace(/[^\w\u0600-\u06FF]/g, '')
-      if (firstWord && verbsSet.has(firstWord)) {
+      if (startsWithActionVerb(bullet, language)) {
         actionCount++
       }
     }

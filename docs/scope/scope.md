@@ -9,19 +9,26 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 
 ## At a glance
 
-| #   | Feature                                 | Phase      | Status      |
-| --- | --------------------------------------- | ---------- | ----------- |
-| 1   | Stack & architecture                    | Foundation | done        |
-| 2   | Coding standards & tooling              | Foundation | done        |
-| 3   | Data model                              | Foundation | done        |
-| 4   | Design system & bilingual UI foundation | Foundation | done        |
-| 5   | AI provider configuration (BYOK)        | Foundation | done        |
-| 6   | Core resume tailoring thread            | Slice 1    | done        |
-| 7   | Resume parsing and ingestion            | Slice 2    | done        |
-| 8   | ATS resume engine and PDF export        | Slice 3    | done        |
-| 9   | Career outreach and interview prep      | Slice 4    | done        |
-| 10  | Job application kanban tracker          | Slice 5    | done        |
-| 11  | Public showcase and landing page        | Slice 6    | in-progress |
+| #   | Feature                                    | Phase      | Status  |
+| --- | ------------------------------------------ | ---------- | ------- |
+| 1   | Stack & architecture                       | Foundation | done    |
+| 2   | Coding standards & tooling                 | Foundation | done    |
+| 3   | Data model                                 | Foundation | done    |
+| 4   | Design system & bilingual UI foundation    | Foundation | done    |
+| 5   | AI provider configuration (BYOK)           | Foundation | done    |
+| 6   | Core resume tailoring thread               | Slice 1    | done    |
+| 7   | Resume parsing and ingestion               | Slice 2    | done    |
+| 8   | ATS resume engine and PDF export           | Slice 3    | done    |
+| 9   | Career outreach and interview prep         | Slice 4    | done    |
+| 10  | Job application kanban tracker             | Slice 5    | done    |
+| 11  | Public showcase and landing page           | Slice 6    | done    |
+| 12  | Account access and session controls        | Slice 7    | done    |
+| 13  | Workspace shell and navigation             | Slice 7    | done    |
+| 14  | Landing refinement and palette unification | Slice 7    | done    |
+| 15  | Candidate profile and photo management     | Slice 8    | done    |
+| 16  | Base resume health audit and improvements  | Slice 8    | done    |
+| 17  | Streamlined tailor studio and outreach     | Slice 8    | planned |
+| 18  | Dedicated career prep and STAR hub         | Slice 8    | planned |
 
 ## Foundations
 
@@ -182,21 +189,113 @@ A kanban board tracking application stages from saved to offer, connecting each 
 
 ## Slice 6: Public showcase and landing page
 
-### 11. Public showcase and landing page · in-progress
+### 11. Public showcase and landing page · done
 
-spec [0010](../specs/0010-public-showcase-and-landing-page/index.md)
+spec [0010](../specs/0010-public-showcase-and-landing-page/index.md) · code in src/components/showcase/, src/app/[lang]/page.tsx
 A public landing page showcasing the open source application, architecture highlights, GitHub repository links, SEO metadata, and product analytics.
 **Done when:** visitors and recruiters can explore product features, access the GitHub repository, and activation events are tracked.
 
 - [x] Design it (spec): `/architect public showcase and landing page`
-- [ ] Build it: `/develop public showcase and landing page`
-  - [ ] Prisma schema migration and telemetry route handler with in memory rate limiting (AC-7, AC-8, AC-9)
-  - [ ] Interactive ATS benchmark showcase component and bilingual preset dataset (AC-3)
-  - [ ] Architecture blueprint card, developer quickstart, and feature breakdown sections (AC-4, AC-5, AC-6)
-  - [ ] Public showcase page assembly and bilingual responsive layout (AC-1, AC-2)
-  - [ ] Dynamic Open Graph image generation and JSON LD software application metadata (AC-10)
-- [ ] Verify it: `/check verify public showcase and landing page`
-- [ ] Test it: `/test public showcase and landing page`
+- [x] Build it: `/develop public showcase and landing page`
+  - [x] Prisma schema migration and telemetry route handler with in memory rate limiting (AC-7, AC-8, AC-9)
+  - [x] Interactive ATS benchmark showcase component and bilingual preset dataset (AC-3)
+  - [x] Architecture blueprint card, developer quickstart, and feature breakdown sections (AC-4, AC-5, AC-6)
+  - [x] Public showcase page assembly and bilingual responsive layout (AC-1, AC-2)
+  - [x] Dynamic Open Graph image generation and JSON LD software application metadata (AC-10)
+- [x] Verify it: `/check verify public showcase and landing page`
+- [x] Test it: `/test public showcase and landing page`
+
+### 12. Account access and session controls · done
+
+spec [0011](../specs/0011-account-access-and-workspace-shell/index.md) · code in src/components/auth/, src/app/[lang]/login/, src/app/[lang]/signup/, src/auth.ts
+Dedicated sign in and signup pages with email, password, and optional OAuth, safe callback redirects, and a working sign out.
+**Done when:** a visitor can create an account, sign in, return to the page they meant to open, and sign out from anywhere.
+
+- [x] Design it (spec): `/architect account access and session controls`
+- [x] Build it: `/develop account access and session controls`
+  - [x] Callback sanitizer with tests, conditional OAuth providers, and the auth route handler (AC-3, AC-4)
+  - [x] Signup, OAuth start, and sign out server actions (AC-2, AC-7)
+  - [x] Bilingual login and signup pages with inline errors and a demo shortcut (AC-1, AC-2, AC-5)
+- [x] Verify it: `/check verify account access and session controls`
+- [x] Test it: `/test account access and session controls`
+
+### 13. Workspace shell and navigation · done
+
+spec [0011](../specs/0011-account-access-and-workspace-shell/index.md) · code in src/components/workspace/, src/lib/auth/require-session.ts
+One shared header and account menu for every signed in page, plus page level guards for the workspace routes.
+**Done when:** every workspace surface shares the same navigation, shows who is signed in, and a signed out visitor is routed to login with a return path.
+
+- [x] Design it (spec): `/architect workspace shell and navigation`
+- [x] Build it: `/develop workspace shell and navigation`
+  - [x] Page level `requireSession` guard on tailor, resumes, tracker, and providers (AC-6)
+  - [x] Shared header, workspace links, mobile menu, and account menu with sign out (AC-7, AC-9)
+  - [x] Session aware landing navigation with sign in and open workspace (AC-8)
+- [x] Verify it: `/check verify workspace shell and navigation`
+- [x] Test it: `/test workspace shell and navigation`
+
+### 14. Landing refinement and palette unification · done
+
+spec [0012](../specs/0012-palette-unification-and-landing-refinement/index.md) · code in src/app/globals.css, src/components/landing/
+Promote the landing paper and green palette to the root tokens and simplify the landing page into a calm, one idea per section read.
+**Done when:** the workspace and landing share one palette, the landing page no longer reads as text heavy, and every surface is verified in both locales and themes.
+
+- [x] Design it (spec): `/architect landing refinement and palette unification`
+- [x] Build it: `/develop landing refinement and palette unification`
+  - [x] Root palette promotion and `.landing-shell` override removal (AC-1, AC-2)
+  - [x] Compact capability grid and single line foundation links (AC-4)
+  - [x] Accordion walkthrough for reduced motion and small screens (AC-5)
+  - [x] Tighter section rhythm across orientation, comparison, closing action, and trust (AC-6)
+  - [x] `design.md` rewritten for Bosla, auth, and workspace surfaces (AC-3)
+- [x] Verify it: `/check verify landing refinement and palette unification`
+- [x] Test it: `/test landing refinement and palette unification`
+
+## Slice 8: Workspace refinement and modular career tools
+
+### 15. Candidate profile and photo management · done
+
+spec [0013](../specs/0013-candidate-profile-and-photo-management/index.md) · code in src/app/[lang]/profile/
+A dedicated profile hub at /profile for candidate identity, avatar upload with client crop and storage to User.image, contact details, headline, summary, and work experiences decoupled from the tailoring studio.
+**Done when:** you can manage your master profile and avatar in one dedicated space, and other workspace surfaces read from this profile automatically.
+
+- [x] Design it (spec): `/architect candidate profile and photo management`
+- [x] Build it: `/develop candidate profile and photo management`
+  - [x] Tracer bullet foundation and identity slice (AC-1, AC-4, AC-6)
+  - [x] Avatar crop modal and client WebP compression (AC-2, AC-3)
+  - [x] Structured experiences, education, skills, and projects (AC-5)
+  - [x] Bilingual switching and downstream sync (AC-6, AC-7)
+  - [x] Workspace integration and test suite (AC-1, AC-8)
+- [x] Verify it: `/check verify candidate profile and photo management`
+- [x] Test it: `/test candidate profile and photo management`
+
+### 16. Base resume health audit and improvements · done
+
+spec [0014](../specs/0014-base-resume-health-audit/index.md) · code in src/app/[lang]/resume/, src/app/[lang]/profile/, src/components/health/, src/lib/health/, and src/app/actions/resume-health.ts
+Audit base resume and profile hygiene in /resume and /profile across action verbs, Google XYZ metrics, and ATS completeness, with interactive preview cards where accepted suggestions morph smoothly and dismissed suggestions fall away.
+**Done when:** you see an instant CV health score out of 100 on upload or edit, can preview AI suggestions before accepting, and see score updates with animations on accept or discard.
+
+- [x] Design it (spec): `/architect base resume health audit and improvements`
+- [x] Build it: `/develop base resume health audit and improvements`
+  - [x] Schema, shared text helpers, and scoring rules with tests (AC-2, AC-10)
+  - [x] Audit read, gauge, empty state, and last known score (AC-1, AC-2, AC-12)
+  - [x] Issue cards, accept, undo, dismiss, restore, and conflicts (AC-3, AC-4, AC-5, AC-8)
+  - [x] AI rewrite, stale handling, grounding guard, rate limit, profile card, language switch, and telemetry (AC-1, AC-6, AC-7, AC-9, AC-12)
+  - [x] Bilingual, accessibility, responsive polish, full test suite, and build (AC-10, AC-11)
+- [x] Verify it: `/check verify base resume health audit and improvements`
+- [x] Test it: `/test base resume health audit and improvements`
+
+### 17. Streamlined tailor studio and outreach · planned · needs a decision
+
+Refactor /tailor to focus strictly on job input, live streaming, job specific ATS match scoring, vector PDF export, and a collapsible outreach accordion, with direct handoffs to the tracker and career prep.
+**Done when:** the tailor studio loads without inline profile editing clutter, handles missing profiles with a friendly prompt, shows job specific match scoring and PDF export cleanly, and offers one click handoff to career prep and tracker.
+
+- [ ] Design it (spec): `/architect streamlined tailor studio and outreach`
+
+### 18. Dedicated career prep and STAR hub · planned · needs a decision
+
+A standalone interview preparation page at /career-prep with a job selector dropdown, deep linking from tailored resumes, STAR question and answer breakdowns, copy actions, and printable cheat sheets.
+**Done when:** you can pick any past tailored application or follow a deep link from tailoring to practice job specific STAR interview questions in a dedicated focus view.
+
+- [ ] Design it (spec): `/architect dedicated career prep and STAR hub`
 
 ## Deferred
 
@@ -206,6 +305,7 @@ Out of scope for the current build pass, kept so the plan stays honest.
 - **Browser extension**: direct job posting capture from job boards · needs a decision
 - **Automated job application bots**: auto apply scripts for job platforms · needs a decision
 - **Team workspace sharing**: mentor and peer review sharing · needs a decision
+- **Resume health score history and trends**: past audit snapshots and a score chart · from spec 0014
 
 ## Legend
 

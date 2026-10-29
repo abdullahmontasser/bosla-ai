@@ -28,7 +28,7 @@ describe('getDictionary and deepMergeFallback', () => {
   it('loads English dictionary with complete string map', async () => {
     const dict = await getDictionary('en')
     expect(dict).toBeDefined()
-    expect(dict.common.brand).toBe('CareerCraft AI')
+    expect(dict.common.brand).toBe('Bosla AI')
     expect(dict.common.save).toBe('Save')
     expect(dict.designSystem.title).toContain('Design System')
   })
@@ -36,7 +36,7 @@ describe('getDictionary and deepMergeFallback', () => {
   it('loads Arabic dictionary with Arabic translations', async () => {
     const dict = await getDictionary('ar')
     expect(dict).toBeDefined()
-    expect(dict.common.brand).toBe('كارير كرافت AI')
+    expect(dict.common.brand).toBe('بوصلة AI')
     expect(dict.common.save).toBe('حفظ')
     expect(dict.designSystem.title).toContain('نظام التصميم')
   })
@@ -44,13 +44,13 @@ describe('getDictionary and deepMergeFallback', () => {
   it('falls back to English when an unsupported language is requested', async () => {
     const dict = await getDictionary('fr')
     expect(dict).toBeDefined()
-    expect(dict.common.brand).toBe('CareerCraft AI')
+    expect(dict.common.brand).toBe('Bosla AI')
   })
 
   it('deep merges missing keys from canonical dictionary', () => {
     const canonical = {
       common: {
-        brand: 'CareerCraft AI',
+        brand: 'Bosla AI',
         save: 'Save',
         nested: { a: 'A', b: 'B' },
       },
@@ -64,7 +64,7 @@ describe('getDictionary and deepMergeFallback', () => {
 
     const merged = deepMergeFallback(canonical, target) as typeof canonical
     expect(merged.common.save).toBe('حفظ')
-    expect(merged.common.brand).toBe('CareerCraft AI')
+    expect(merged.common.brand).toBe('Bosla AI')
     expect(merged.common.nested.a).toBe('أ')
     expect(merged.common.nested.b).toBe('B')
   })

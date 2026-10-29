@@ -120,10 +120,11 @@ export function QuickAddApplicationModal({
           <div className="space-y-3 py-1">
             {/* Job Title */}
             <div className="space-y-1">
-              <label className="text-xs font-medium text-foreground">
+              <label htmlFor="quick-add-title" className="text-xs font-medium text-foreground">
                 {t.jobTitle || 'Job Title'} <span className="text-destructive">*</span>
               </label>
               <Input
+                id="quick-add-title"
                 type="text"
                 required
                 value={title}
@@ -136,10 +137,11 @@ export function QuickAddApplicationModal({
 
             {/* Company Name */}
             <div className="space-y-1">
-              <label className="text-xs font-medium text-foreground">
+              <label htmlFor="quick-add-company" className="text-xs font-medium text-foreground">
                 {t.companyName || 'Company Name'} <span className="text-destructive">*</span>
               </label>
               <Input
+                id="quick-add-company"
                 type="text"
                 required
                 value={companyName}
@@ -152,10 +154,11 @@ export function QuickAddApplicationModal({
 
             {/* Job URL */}
             <div className="space-y-1">
-              <label className="text-xs font-medium text-foreground">
+              <label htmlFor="quick-add-url" className="text-xs font-medium text-foreground">
                 {t.jobUrl || 'Job URL (Optional)'}
               </label>
               <Input
+                id="quick-add-url"
                 type="url"
                 value={jobUrl}
                 onChange={(e) => setJobUrl(e.target.value)}
@@ -167,14 +170,20 @@ export function QuickAddApplicationModal({
 
             {/* Initial Stage */}
             <div className="space-y-1">
-              <label className="text-xs font-medium text-foreground">
+              <span className="text-xs font-medium text-foreground block">
                 {t.initialStatus || 'Initial Stage'}
-              </label>
-              <div className="grid grid-cols-3 gap-1.5 pt-1">
+              </span>
+              <div
+                className="grid grid-cols-3 gap-1.5 pt-1"
+                role="radiogroup"
+                aria-label={t.initialStatus || 'Initial Stage'}
+              >
                 {stages.map((stage) => (
                   <button
                     key={stage.key}
                     type="button"
+                    role="radio"
+                    aria-checked={status === stage.key}
                     onClick={() => setStatus(stage.key)}
                     className={`rounded-md border py-1.5 px-2 text-center text-xs font-medium transition-all ${
                       status === stage.key

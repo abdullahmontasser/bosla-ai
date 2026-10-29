@@ -75,6 +75,67 @@ export interface AtsDictionary {
   lowMatch: string
 }
 
+export interface HealthDictionary {
+  panelTitle: string
+  panelSubtitle: string
+  auditLanguageLabel: string
+  switchToEnglish: string
+  switchToArabic: string
+  scoreLabel: string
+  scoreOutOf: string
+  updating: string
+  lastKnown: string
+  needsWork: string
+  fair: string
+  strong: string
+  excellent: string
+  excludedSuffix: string
+  openIssuesSuffix: string
+  categoryImpact: string
+  categoryActionVerbs: string
+  categoryCompleteness: string
+  categoryDepth: string
+  emptyTitle: string
+  emptyBody: string
+  emptyProfile: string
+  emptyUpload: string
+  originalLabel: string
+  proposedLabel: string
+  accept: string
+  acceptedBadge: string
+  undo: string
+  dismiss: string
+  restore: string
+  askAi: string
+  rewriting: string
+  aiBadge: string
+  aiStaleBadge: string
+  staleNotice: string
+  regenerate: string
+  goProfile: string
+  conflictNotice: string
+  rateLimited: string
+  noProvider: string
+  aiFailed: string
+  ungroundedNotice: string
+  retry: string
+  profileCardTitle: string
+  profileCardSubtitle: string
+  viewAudit: string
+  fieldEmail: string
+  fieldPhone: string
+  fieldLocation: string
+  fieldLinkedin: string
+  fieldWebsite: string
+  fieldGithub: string
+  fieldSummary: string
+  fieldSkills: string
+  fieldEducation: string
+  fieldRole: string
+  fieldBullet: string
+  notSet: string
+}
+
 export interface TrackerDictionary {
   title: string
   subtitle: string
@@ -147,6 +208,7 @@ export interface TrackerDictionary {
 
 export interface Dictionary {
   ats?: AtsDictionary
+  health?: HealthDictionary
   tracker?: TrackerDictionary
   common: {
     brand: string

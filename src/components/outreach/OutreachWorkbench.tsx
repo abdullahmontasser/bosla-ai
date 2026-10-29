@@ -341,11 +341,15 @@ export function OutreachWorkbench({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg border border-border/60 bg-muted/20">
         {/* Recipient Targeting Selector */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
             <UserCheck className="size-3.5 text-primary" />
             <span>{isArabic ? 'الجهة أو الشخص المستهدف' : 'Target Recipient Type'}</span>
-          </label>
-          <div className="flex flex-wrap gap-1.5">
+          </span>
+          <div
+            className="flex flex-wrap gap-1.5"
+            role="radiogroup"
+            aria-label={isArabic ? 'الجهة أو الشخص المستهدف' : 'Target Recipient Type'}
+          >
             {recipientOptions.map((opt) => {
               const Icon = opt.icon
               const isSelected = recipientType === opt.id
@@ -353,6 +357,8 @@ export function OutreachWorkbench({
                 <button
                   key={opt.id}
                   type="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   onClick={() => setRecipientType(opt.id)}
                   className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-xs font-medium transition-all ${
                     isSelected
@@ -370,17 +376,23 @@ export function OutreachWorkbench({
 
         {/* Tone Selection */}
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+          <span className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
             <Sparkles className="size-3.5 text-primary" />
             <span>{isArabic ? 'نبرة الخطاب' : 'Outreach Tone'}</span>
-          </label>
-          <div className="flex flex-wrap gap-1.5">
+          </span>
+          <div
+            className="flex flex-wrap gap-1.5"
+            role="radiogroup"
+            aria-label={isArabic ? 'نبرة الخطاب' : 'Outreach Tone'}
+          >
             {toneOptions.map((opt) => {
               const isSelected = tone === opt.id
               return (
                 <button
                   key={opt.id}
                   type="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   onClick={() => setTone(opt.id)}
                   className={`inline-flex items-center px-2.5 py-1 rounded-[6px] text-xs font-medium transition-all ${
                     isSelected
