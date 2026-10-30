@@ -15,7 +15,7 @@ export interface JobPostingFormProps {
   onChange: (data: { jobTitle: string; companyName: string; rawJobDescription: string }) => void
 }
 
-export function JobPostingForm({
+export const JobPostingForm = React.memo(function JobPostingForm({
   jobTitle,
   companyName,
   rawJobDescription,
@@ -126,4 +126,5 @@ export function JobPostingForm({
       </CardContent>
     </Card>
   )
-}
+})
+JobPostingForm.displayName = 'JobPostingForm'

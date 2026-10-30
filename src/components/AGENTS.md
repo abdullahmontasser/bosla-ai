@@ -30,6 +30,7 @@ Foundational UI components, layout primitives, and theme controls for Bosla AI.
 - `src/components/workspace/`: Shared header, workspace navigation, mobile drawer, and session aware account menu.
 - `src/components/profile/`: Dedicated candidate profile hub, avatar crop modal, and identity, education, experience, skills, and projects cards.
 - `src/components/health/`: Base resume health score card, category meters, issue cards with severity badges, undo toast notification, and AI rewrite modal.
+- `src/components/tailor/`: Streamlined tailor studio, live AI response stream, candidate headline badge, missing profile alert banner, collapsible lazy loaded outreach accordion, and unified action bar.
 
 ## Rules & Constraints
 
@@ -50,6 +51,7 @@ Foundational UI components, layout primitives, and theme controls for Bosla AI.
 - [0012. Palette unification and landing refinement](../../docs/specs/0012-palette-unification-and-landing-refinement/index.md)
 - [0013. Candidate profile and photo management](../../docs/specs/0013-candidate-profile-and-photo-management/index.md)
 - [0014. Base resume health audit and improvement](../../docs/specs/0014-base-resume-health-audit/index.md)
+- [0015. Streamlined tailor studio and outreach](../../docs/specs/0015-streamlined-tailor-studio-and-outreach/index.md)
 
 ## Quality Assurance & Visual QA
 

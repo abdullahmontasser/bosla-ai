@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Streamlined resume tailoring studio at `/[lang]/tailor` decoupled from inline profile editing with candidate headline badge and email verification status chip (see spec 0015).
+- Friendly missing profile alert banner with direct CTA to `/profile` and disabled tailoring generation when no master candidate profile exists (see spec 0015).
+- Composite index migration on `TailoredResume` for `[userId, language, createdAt(sort: Desc)]` and query optimization eliminating unused interview prep payload from initial data (see spec 0015).
+- Collapsible lazy loaded outreach accordion beneath ATS match metrics with on demand payload fetching via `getOutreachMessageAction` (see spec 0015).
+- Unified sticky bottom action bar with optimistic one click save to application tracker and deep link handoff to interview prep practice (see spec 0015).
 - Deterministic base resume health audit engine in `src/lib/health/` scoring resumes across impact metrics, action verbs, ATS completeness, and content depth with localized issue detection for English and Arabic (see spec 0014).
 - Bilingual health audit surface at `/[lang]/resume` and summary card at `/[lang]/profile` displaying overall score, score band badge, category meters, and prioritized issue cards with severity levels (see spec 0014).
 - Interactive issue resolution allowing one click accept with master profile updates and 10 second undo, dismiss and restore with score recalculation, and AI bullet rewriting with grounding verification against hallucinations (see spec 0014).

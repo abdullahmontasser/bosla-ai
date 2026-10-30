@@ -2,26 +2,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { StudioContainer } from './StudioContainer'
-import { saveCandidateProfile } from '@/app/actions/tailor'
 import type { Dictionary } from '@/lib/i18n/types'
 
 vi.mock('@/app/actions/tailor', () => ({
   saveCandidateProfile: vi.fn(),
   loadSampleCandidateProfile: vi.fn(),
+  getOutreachMessageAction: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+}))
+
+vi.mock('@/app/actions/application-actions', () => ({
+  createApplication: vi.fn().mockResolvedValue({ success: true }),
 }))
 
 vi.mock('@/app/actions/ats-engine', () => ({
   calculateAtsScoreAction: vi.fn().mockResolvedValue({
     success: true,
-    atsScore: 85,
+    atsScore: 88,
     breakdown: {
-      overallScore: 85,
-      keywordMatchScore: 80,
+      overallScore: 88,
+      keywordMatchScore: 85,
       experienceRelevanceScore: 90,
-      formattingScore: 85,
-      matchedKeywords: ['Next.js'],
-      missingKeywords: [],
-      dismissedKeywords: [],
+      formattingScore: 88,
+      matchedSkills: ['Next.js', 'PostgreSQL'],
+      missingSkills: [],
+      dismissedSkills: [],
       feedback: [],
     },
   }),
@@ -43,7 +47,7 @@ vi.mock('@/components/provider-settings/ProviderSwitcher', () => ({
   ),
 }))
 
-describe('StudioContainer (covers: AC-2, AC-5, AC-8, AC-9, AC-10)', () => {
+describe('StudioContainer (covers: AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-9, AC-10)', () => {
   const dummyDict = {
     tailor: {
       title: 'Resume Tailoring Studio',
@@ -54,20 +58,42 @@ describe('StudioContainer (covers: AC-2, AC-5, AC-8, AC-9, AC-10)', () => {
       tailorButton: 'Generate Tailored Resume',
       stopGenerating: 'Stop Generation',
       previewPanelTitle: 'Live Tailoring Output',
-      experiencePanelTitle: 'Candidate Experience',
       jobPostingPanelTitle: 'Target Job Posting',
+      missingProfileAlertTitle: 'Master Candidate Profile Required',
+      missingProfileAlertDesc:
+        'To generate tailored resumes grounded in your real career facts, please create your master profile first.',
+      createProfileButton: 'Create Master Profile',
+      profileMissingWarning: 'Please create your master profile to enable resume tailoring.',
+      verified: 'Verified',
+      unverified: 'Unverified',
+      editProfile: 'Edit Profile',
+      readyBadge: 'Ready',
+      pendingBadge: 'Pending',
+      practiceStarQuestions: 'Practice STAR Interview Questions',
+      outreachAccordionTitle: 'Outreach Messaging & Networking',
     },
-  }
+    ats: {
+      title: 'ATS Optimization Workbench',
+      subtitle: 'Real-time keyword scoring and vector PDF export.',
+    },
+    tracker: {
+      addToTracker: 'Add to Tracker',
+      viewInTracker: 'View in Tracker',
+      saving: 'Adding...',
+    },
+  } as unknown as Partial<Dictionary>
 
-  const initialProfile = {
+  const validProfile = {
     id: 'prof_test_1',
-    headline: 'Senior Full Stack Engineer',
-    summary: 'Full stack engineer with 6+ years experience architecting cloud applications.',
+    headline: 'Senior Full Stack Engineer & Cloud Architect',
+    candidateName: 'Alex Morgan',
+    emailVerified: true,
+    summary: 'Full stack engineer with 6+ years experience.',
     workExperiences: [
       {
         companyName: 'TechVanguard Systems',
         jobTitle: 'Senior Full Stack Engineer',
-        bullets: ['Architected bilingual career agent.'],
+        bullets: ['Architected bilingual career agent handling automated resume ingestion.'],
       },
     ],
   }
@@ -76,45 +102,59 @@ describe('StudioContainer (covers: AC-2, AC-5, AC-8, AC-9, AC-10)', () => {
     vi.clearAllMocks()
   })
 
-  it('renders studio workbench with experience, job posting, and live preview panels (covers: AC-2)', () => {
+  it('renders friendly missing profile banner and disables generate button when profile is missing (covers: AC-2)', () => {
     render(
       <StudioContainer
-        initialProfile={initialProfile}
+        initialProfile={null}
         initialActiveProvider="OPENAI"
         configuredProviders={['OPENAI']}
         lang="en"
-        dict={dummyDict as unknown as Partial<Dictionary>}
+        dict={dummyDict}
       />,
     )
 
-    expect(screen.getByRole('heading', { name: /Resume Tailoring Studio/i })).toBeDefined()
-    expect(screen.getByRole('heading', { name: /Candidate Experience/i })).toBeDefined()
-    expect(screen.getByRole('heading', { name: /Target Job Posting/i })).toBeDefined()
-    expect(screen.getByRole('heading', { name: /Live Tailoring Output/i })).toBeDefined()
-    expect(screen.queryByText(/No active AI provider configured/i)).toBeNull()
-  })
+    // Verify alert banner presence
+    expect(screen.getByTestId('missing-profile-banner')).toBeDefined()
+    expect(screen.getByText('Master Candidate Profile Required')).toBeDefined()
+    expect(screen.getByTestId('create-profile-btn')).toBeDefined()
 
-  it('displays warning banner and disables generation when no active provider exists (covers: AC-9)', () => {
-    render(
-      <StudioContainer
-        initialProfile={initialProfile}
-        initialActiveProvider={null}
-        configuredProviders={[]}
-        lang="en"
-        dict={dummyDict as unknown as Partial<Dictionary>}
-      />,
-    )
-
-    expect(screen.getByText(/No active AI provider configured/)).toBeDefined()
-
+    // Verify generate button disabled
     const generateBtn = screen.getByRole('button', { name: /Generate Tailored Resume/i })
     expect(generateBtn.getAttribute('disabled')).not.toBeNull()
+
+    // Verify inline experience form is NOT rendered
+    expect(screen.queryByText('Candidate Experience')).toBeNull()
   })
 
-  it('handles full streaming lifecycle from click to completion (covers: AC-5, AC-7)', async () => {
+  it('renders compact candidate header badge with verified email status and no inline experience form when profile exists (covers: AC-3)', () => {
+    render(
+      <StudioContainer
+        initialProfile={validProfile}
+        initialActiveProvider="OPENAI"
+        configuredProviders={['OPENAI']}
+        lang="en"
+        dict={dummyDict}
+      />,
+    )
+
+    // Verify candidate badge rendered
+    expect(screen.getByTestId('candidate-badge')).toBeDefined()
+    expect(screen.getByText('Senior Full Stack Engineer & Cloud Architect')).toBeDefined()
+    expect(screen.getByText('Alex Morgan')).toBeDefined()
+    expect(screen.getByTestId('email-verified-badge')).toBeDefined()
+
+    // Verify missing profile banner is NOT rendered
+    expect(screen.queryByTestId('missing-profile-banner')).toBeNull()
+
+    // Verify inline experience form is NOT rendered
+    expect(screen.queryByText('Candidate Experience')).toBeNull()
+    expect(screen.queryByLabelText(/Achievements & Responsibilities/i)).toBeNull()
+  })
+
+  it('handles live streaming lifecycle smoothly and isolates preview island (covers: AC-4)', async () => {
     const chunks = [
       new TextEncoder().encode('### SUMMARY\nTailored summary here.\n'),
-      new TextEncoder().encode('### BULLETS\n- Tailored bullet point one.\n'),
+      new TextEncoder().encode('### BULLETS\n- Streamed bullet point one.\n'),
     ]
 
     let chunkIndex = 0
@@ -130,6 +170,9 @@ describe('StudioContainer (covers: AC-2, AC-5, AC-8, AC-9, AC-10)', () => {
 
     const mockResponse = {
       ok: true,
+      headers: {
+        get: (h: string) => (h === 'x-tailored-resume-id' ? 'res_streamed_123' : null),
+      },
       body: {
         getReader: () => mockReader,
       },
@@ -139,11 +182,11 @@ describe('StudioContainer (covers: AC-2, AC-5, AC-8, AC-9, AC-10)', () => {
 
     render(
       <StudioContainer
-        initialProfile={initialProfile}
+        initialProfile={validProfile}
         initialActiveProvider="OPENAI"
         configuredProviders={['OPENAI']}
         lang="en"
-        dict={dummyDict as unknown as Partial<Dictionary>}
+        dict={dummyDict}
       />,
     )
 
@@ -155,38 +198,32 @@ describe('StudioContainer (covers: AC-2, AC-5, AC-8, AC-9, AC-10)', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Tailored bullet point one.')).toBeDefined()
+      expect(screen.getByText('Streamed bullet point one.')).toBeDefined()
       expect(screen.getByText('Completed & Saved')).toBeDefined()
     })
 
     vi.unstubAllGlobals()
   })
 
-  it('handles user abort with Stop Generation button (covers: AC-8)', async () => {
+  it('handles user abort with Stop Generation button (covers: AC-4)', async () => {
     const mockReader = {
-      read: vi.fn().mockImplementation(() => {
-        return new Promise(() => {
-          // Never resolves to simulate ongoing stream
-        })
-      }),
+      read: vi.fn().mockImplementation(() => new Promise(() => {})),
     }
 
     const mockResponse = {
       ok: true,
-      body: {
-        getReader: () => mockReader,
-      },
+      body: { getReader: () => mockReader },
     }
 
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(mockResponse))
 
     render(
       <StudioContainer
-        initialProfile={initialProfile}
+        initialProfile={validProfile}
         initialActiveProvider="OPENAI"
         configuredProviders={['OPENAI']}
         lang="en"
-        dict={dummyDict as unknown as Partial<Dictionary>}
+        dict={dummyDict}
       />,
     )
 
@@ -204,98 +241,83 @@ describe('StudioContainer (covers: AC-2, AC-5, AC-8, AC-9, AC-10)', () => {
     vi.unstubAllGlobals()
   })
 
-  it('saves unsaved profile before initiating stream if profileId is missing (covers: AC-3)', async () => {
-    vi.mocked(saveCandidateProfile).mockResolvedValueOnce({
-      success: true,
-      profileId: 'new_persisted_profile_id',
-    })
-
-    const mockReader = {
-      read: vi.fn().mockResolvedValue({ done: true, value: undefined }),
-    }
-
-    const mockFetch = vi.fn().mockResolvedValue({
-      ok: true,
-      body: { getReader: () => mockReader },
-    })
-
-    vi.stubGlobal('fetch', mockFetch)
-
-    render(
-      <StudioContainer
-        initialProfile={null}
-        initialActiveProvider="OPENAI"
-        configuredProviders={['OPENAI']}
-        lang="en"
-        dict={dummyDict as unknown as Partial<Dictionary>}
-      />,
-    )
-
-    const generateBtn = screen.getByRole('button', { name: /Generate Tailored Resume/i })
-    fireEvent.click(generateBtn)
-
-    await waitFor(() => {
-      expect(saveCandidateProfile).toHaveBeenCalledTimes(1)
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/tailor',
-        expect.objectContaining({
-          body: expect.stringContaining('"profileId":"new_persisted_profile_id"'),
-        }),
-      )
-    })
-
-    vi.unstubAllGlobals()
-  })
-
-  it('renders sub-navigation tabs and switches between ATS, Outreach, and Interview Prep (covers: AC-3, AC-CO-3, AC-IP-3)', async () => {
+  it('renders AtsWorkbench with PdfExportButton docked at top of results upon completion (covers: AC-5, AC-6)', () => {
     const mockInitialResume = {
-      id: 'res_test_1',
-      atsScore: 85,
-      outreachMessage: {
-        version: 1,
-        generatedAt: '2026-10-26T00:00:00.000Z',
-        updatedAt: '2026-10-26T00:00:00.000Z',
-        language: 'EN',
-        tone: 'PROFESSIONAL',
-        recipientType: 'RECRUITER',
-        connectionNote: { text: 'Connection note', charCount: 15 },
-        inMail: { subject: 'InMail Subject', body: 'InMail Body' },
-        email: { subject: 'Email Subject', body: 'Email Body' },
+      id: 'res_completed_123',
+      atsScore: 91,
+      atsBreakdown: {
+        overallScore: 91,
+        keywordMatchScore: 90,
+        experienceRelevanceScore: 92,
+        formattingScore: 90,
+        matchedSkills: ['Next.js', 'PostgreSQL'],
+        missingSkills: [],
+        dismissedSkills: [],
+        feedback: [],
       },
-      interviewPrep: null,
+      hasOutreach: true,
+      hasApplication: false,
+      tailoredSummary: 'Proven full-stack engineer.',
+      jobPosting: {
+        title: 'Lead Architect',
+        companyName: 'OpenAI Partner',
+        rawDescription: 'Building high throughput AI systems with TypeScript and Next.js.',
+      },
     }
 
     render(
       <StudioContainer
-        initialProfile={initialProfile}
+        initialProfile={validProfile}
         initialActiveProvider="OPENAI"
         configuredProviders={['OPENAI']}
         initialLatestTailoredResume={mockInitialResume}
         lang="en"
-        dict={dummyDict as unknown as Partial<Dictionary>}
+        dict={dummyDict}
       />,
     )
 
-    // Verify sub navigation tabs are rendered
+    // Results container visible
     expect(screen.getByTestId('studio-workbenches')).toBeDefined()
-    expect(screen.getByRole('button', { name: /ATS Optimization/i })).toBeDefined()
-    expect(screen.getByRole('button', { name: /Outreach Messages/i })).toBeDefined()
-    expect(screen.getByRole('button', { name: /Interview Prep/i })).toBeDefined()
 
-    // Default tab is ATS
+    // ATS Workbench and PDF Export button rendered
     expect(screen.getByTestId('ats-workbench')).toBeDefined()
+    expect(screen.getByTestId('pdf-export-btn')).toBeDefined()
+  })
 
-    // Switch to Outreach Messages tab
-    const outreachTabBtn = screen.getByRole('button', { name: /Outreach Messages/i })
-    fireEvent.click(outreachTabBtn)
+  it('renders collapsible OutreachAccordion beneath ATS workbench and unified action bar (covers: AC-7, AC-8, AC-9)', () => {
+    const mockInitialResume = {
+      id: 'res_completed_123',
+      atsScore: 91,
+      atsBreakdown: null,
+      hasOutreach: true,
+      hasApplication: true,
+      tailoredSummary: 'Proven full-stack engineer.',
+      jobPosting: {
+        title: 'Lead Architect',
+        companyName: 'OpenAI Partner',
+        rawDescription: 'Building high throughput AI systems.',
+      },
+    }
 
-    expect(screen.getByTestId('outreach-workbench')).toBeDefined()
-    expect(screen.getByDisplayValue('Connection note')).toBeDefined()
+    render(
+      <StudioContainer
+        initialProfile={validProfile}
+        initialActiveProvider="OPENAI"
+        configuredProviders={['OPENAI']}
+        initialLatestTailoredResume={mockInitialResume}
+        lang="en"
+        dict={dummyDict}
+      />,
+    )
 
-    // Switch to Interview Prep tab
-    const interviewTabBtn = screen.getByRole('button', { name: /Interview Prep/i })
-    fireEvent.click(interviewTabBtn)
+    // Outreach accordion rendered and collapsed by default
+    expect(screen.getByTestId('outreach-accordion')).toBeDefined()
+    expect(screen.getByTestId('outreach-status-badge')).toBeDefined()
+    expect(screen.queryByTestId('outreach-accordion-content')).toBeNull()
 
-    expect(screen.getByTestId('interview-prep-workbench')).toBeDefined()
+    // Unified bottom action bar rendered with tracker and STAR questions handoff
+    expect(screen.getByTestId('tailor-action-bar')).toBeDefined()
+    expect(screen.getByTestId('view-in-tracker-btn')).toBeDefined()
+    expect(screen.getByTestId('practice-star-btn')).toBeDefined()
   })
 })

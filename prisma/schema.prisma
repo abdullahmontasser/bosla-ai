@@ -330,6 +330,7 @@ model TailoredResume {
   @@index([userId, jobPostingId])
   @@index([profileId])
   @@index([missingSkills], type: Gin)
+  @@index([userId, language, createdAt(sort: Desc)])
   @@map("tailored_resumes")
 }
 

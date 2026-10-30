@@ -388,3 +388,51 @@ export async function regenerateOutreachVariantAction(
     return { success: false, error: message }
   }
 }
+
+/**
+ * Lightweight action to fetch outreach message on demand for the collapsible studio accordion.
+ */
+export async function getOutreachMessageAction(tailoredResumeId: string): Promise<{
+  success: boolean
+  data?: OutreachMessagePayload
+  error?: string
+}> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false, error: 'Unauthorized' }
+  }
+
+  if (!tailoredResumeId) {
+    return { success: false, error: 'Tailored resume ID is required' }
+  }
+
+  try {
+    const resume = await prisma.tailoredResume.findFirst({
+      where: {
+        id: tailoredResumeId,
+        userId: session.user.id,
+      },
+      select: {
+        outreachMessage: true,
+      },
+    })
+
+    if (!resume) {
+      return { success: false, error: 'Tailored resume not found' }
+    }
+
+    if (!resume.outreachMessage) {
+      return { success: true, data: undefined }
+    }
+
+    const parsed = OutreachMessagePayloadSchema.safeParse(resume.outreachMessage)
+    if (!parsed.success) {
+      return { success: false, error: 'Invalid outreach data format' }
+    }
+
+    return { success: true, data: parsed.data }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Failed to retrieve outreach messages'
+    return { success: false, error: message }
+  }
+}

@@ -85,6 +85,7 @@ export function PdfExportButton({
         size="sm"
         disabled={isExporting}
         onClick={handleDownload}
+        data-testid="pdf-export-btn"
         className={`gap-2 font-medium shadow-sm transition-all ${className || ''}`}
       >
         {isExporting ? (

@@ -27,7 +27,7 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 | 14  | Landing refinement and palette unification | Slice 7    | done    |
 | 15  | Candidate profile and photo management     | Slice 8    | done    |
 | 16  | Base resume health audit and improvements  | Slice 8    | done    |
-| 17  | Streamlined tailor studio and outreach     | Slice 8    | planned |
+| 17  | Streamlined tailor studio and outreach     | Slice 8    | done    |
 | 18  | Dedicated career prep and STAR hub         | Slice 8    | planned |
 
 ## Foundations
@@ -283,12 +283,21 @@ Audit base resume and profile hygiene in /resume and /profile across action verb
 - [x] Verify it: `/check verify base resume health audit and improvements`
 - [x] Test it: `/test base resume health audit and improvements`
 
-### 17. Streamlined tailor studio and outreach · planned · needs a decision
+### 17. Streamlined tailor studio and outreach · done
 
+spec [0015](../specs/0015-streamlined-tailor-studio-and-outreach/index.md) · code in src/components/tailor/, src/app/[lang]/tailor/
 Refactor /tailor to focus strictly on job input, live streaming, job specific ATS match scoring, vector PDF export, and a collapsible outreach accordion, with direct handoffs to the tracker and career prep.
 **Done when:** the tailor studio loads without inline profile editing clutter, handles missing profiles with a friendly prompt, shows job specific match scoring and PDF export cleanly, and offers one click handoff to career prep and tracker.
 
-- [ ] Design it (spec): `/architect streamlined tailor studio and outreach`
+- [x] Design it (spec): `/architect streamlined tailor studio and outreach`
+- [x] Build it: `/develop streamlined tailor studio and outreach`
+  - [x] Database index migration, initial data optimization, and Server Component prefetching (AC-1, AC-8)
+  - [x] Decoupled candidate badge and friendly missing profile alert banner (AC-2, AC-3)
+  - [x] Isolated live AI streaming and integrated ATS results workbench with PDF export (AC-4, AC-5, AC-6)
+  - [x] Collapsible lazy loaded outreach accordion and unified action bar with tracker/STAR handoffs (AC-7, AC-8, AC-9)
+  - [x] Bilingual RTL/LTR layout, comprehensive unit and component test suites (AC-10)
+- [x] Verify it: `/check verify streamlined tailor studio and outreach`
+- [x] Test it: `/test streamlined tailor studio and outreach`
 
 ### 18. Dedicated career prep and STAR hub · planned · needs a decision
 

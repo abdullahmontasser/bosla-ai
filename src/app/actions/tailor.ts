@@ -6,7 +6,10 @@ import { getDefaultProfile, upsertTailoringCandidateProfile } from '@/lib/db/pro
 import { SaveCandidateProfileSchema } from '@/lib/validations/tailor'
 import { getSampleCandidate } from '@/lib/fixtures/sample-candidate'
 import { getProviderConfigurations } from '@/app/actions/provider-settings'
+import { getOutreachMessageAction } from '@/app/actions/outreach-actions'
 import type { Language, AiProvider } from '@prisma/client'
+
+export { getOutreachMessageAction }
 
 export async function getCandidateProfile(language: 'EN' | 'AR' = 'EN') {
   const session = await auth()
@@ -66,13 +69,17 @@ export interface TailorStudioData {
   session: {
     user: {
       id: string
+      name?: string | null
       email?: string | null
+      emailVerified?: boolean
     }
   } | null
   profile: {
     id: string
     headline?: string | null
     summary?: string | null
+    candidateName?: string | null
+    emailVerified?: boolean
     workExperiences: Array<{
       companyName: string
       jobTitle: string
@@ -86,8 +93,15 @@ export interface TailorStudioData {
     id: string
     atsScore?: number | null
     atsBreakdown?: unknown | null
+    hasOutreach: boolean
+    hasApplication: boolean
+    tailoredSummary?: string | null
+    jobPosting?: {
+      title: string
+      companyName: string
+      rawDescription: string
+    } | null
     outreachMessage?: unknown | null
-    interviewPrep?: unknown | null
   } | null
 }
 
@@ -106,8 +120,44 @@ export async function getTailorStudioInitialData(
     }
   }
 
-  const profile = await getDefaultProfile(session.user.id, language as Language)
-  const providerConfigs = await getProviderConfigurations()
+  const [user, profile, providerConfigs, latestResume] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, emailVerified: true },
+    }),
+    getDefaultProfile(session.user.id, language as Language),
+    getProviderConfigurations(),
+    prisma.tailoredResume.findFirst({
+      where: {
+        userId: session.user.id,
+        language: language as Language,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        atsScore: true,
+        atsBreakdown: true,
+        tailoredSummary: true,
+        outreachMessage: true,
+        jobPosting: {
+          select: {
+            title: true,
+            companyName: true,
+            rawDescription: true,
+          },
+        },
+        applications: {
+          select: {
+            id: true,
+          },
+          take: 1,
+        },
+      },
+    }),
+  ])
+
   const activeSetting = Array.isArray(providerConfigs)
     ? providerConfigs.find((p) => p.isActive)
     : null
@@ -115,28 +165,15 @@ export async function getTailorStudioInitialData(
     ? providerConfigs.filter((p) => p.isConfigured).map((p) => p.provider)
     : []
 
-  const latestResume = await prisma.tailoredResume.findFirst({
-    where: {
-      userId: session.user.id,
-      language: language as Language,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-    select: {
-      id: true,
-      atsScore: true,
-      atsBreakdown: true,
-      outreachMessage: true,
-      interviewPrep: true,
-    },
-  })
+  const isEmailVerified = Boolean(user?.emailVerified)
 
   return {
     session: {
       user: {
         id: session.user.id,
+        name: user?.name,
         email: session.user.email,
+        emailVerified: isEmailVerified,
       },
     },
     profile: profile
@@ -144,6 +181,8 @@ export async function getTailorStudioInitialData(
           id: profile.id,
           headline: profile.headline,
           summary: profile.summary,
+          candidateName: user?.name || null,
+          emailVerified: isEmailVerified,
           workExperiences: profile.workExperiences.map((w) => ({
             companyName: w.companyName,
             jobTitle: w.jobTitle,
@@ -159,8 +198,17 @@ export async function getTailorStudioInitialData(
           id: latestResume.id,
           atsScore: latestResume.atsScore,
           atsBreakdown: latestResume.atsBreakdown,
-          outreachMessage: latestResume.outreachMessage,
-          interviewPrep: latestResume.interviewPrep,
+          tailoredSummary: latestResume.tailoredSummary,
+          hasOutreach: latestResume.outreachMessage !== null,
+          hasApplication: (latestResume.applications?.length ?? 0) > 0,
+          jobPosting: latestResume.jobPosting
+            ? {
+                title: latestResume.jobPosting.title,
+                companyName: latestResume.jobPosting.companyName,
+                rawDescription: latestResume.jobPosting.rawDescription,
+              }
+            : null,
+          outreachMessage: null,
         }
       : null,
   }
