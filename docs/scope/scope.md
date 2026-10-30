@@ -9,26 +9,26 @@ _These are recommendations to keep your build orderly, not requirements. Skip an
 
 ## At a glance
 
-| #   | Feature                                    | Phase      | Status  |
-| --- | ------------------------------------------ | ---------- | ------- |
-| 1   | Stack & architecture                       | Foundation | done    |
-| 2   | Coding standards & tooling                 | Foundation | done    |
-| 3   | Data model                                 | Foundation | done    |
-| 4   | Design system & bilingual UI foundation    | Foundation | done    |
-| 5   | AI provider configuration (BYOK)           | Foundation | done    |
-| 6   | Core resume tailoring thread               | Slice 1    | done    |
-| 7   | Resume parsing and ingestion               | Slice 2    | done    |
-| 8   | ATS resume engine and PDF export           | Slice 3    | done    |
-| 9   | Career outreach and interview prep         | Slice 4    | done    |
-| 10  | Job application kanban tracker             | Slice 5    | done    |
-| 11  | Public showcase and landing page           | Slice 6    | done    |
-| 12  | Account access and session controls        | Slice 7    | done    |
-| 13  | Workspace shell and navigation             | Slice 7    | done    |
-| 14  | Landing refinement and palette unification | Slice 7    | done    |
-| 15  | Candidate profile and photo management     | Slice 8    | done    |
-| 16  | Base resume health audit and improvements  | Slice 8    | done    |
-| 17  | Streamlined tailor studio and outreach     | Slice 8    | done    |
-| 18  | Dedicated career prep and STAR hub         | Slice 8    | planned |
+| #   | Feature                                    | Phase      | Status      |
+| --- | ------------------------------------------ | ---------- | ----------- |
+| 1   | Stack & architecture                       | Foundation | done        |
+| 2   | Coding standards & tooling                 | Foundation | done        |
+| 3   | Data model                                 | Foundation | done        |
+| 4   | Design system & bilingual UI foundation    | Foundation | done        |
+| 5   | AI provider configuration (BYOK)           | Foundation | done        |
+| 6   | Core resume tailoring thread               | Slice 1    | done        |
+| 7   | Resume parsing and ingestion               | Slice 2    | done        |
+| 8   | ATS resume engine and PDF export           | Slice 3    | done        |
+| 9   | Career outreach and interview prep         | Slice 4    | done        |
+| 10  | Job application kanban tracker             | Slice 5    | done        |
+| 11  | Public showcase and landing page           | Slice 6    | done        |
+| 12  | Account access and session controls        | Slice 7    | done        |
+| 13  | Workspace shell and navigation             | Slice 7    | done        |
+| 14  | Landing refinement and palette unification | Slice 7    | done        |
+| 15  | Candidate profile and photo management     | Slice 8    | done        |
+| 16  | Base resume health audit and improvements  | Slice 8    | done        |
+| 17  | Streamlined tailor studio and outreach     | Slice 8    | done        |
+| 18  | Dedicated career prep and STAR hub         | Slice 8    | in-progress |
 
 ## Foundations
 
@@ -299,18 +299,28 @@ Refactor /tailor to focus strictly on job input, live streaming, job specific AT
 - [x] Verify it: `/check verify streamlined tailor studio and outreach`
 - [x] Test it: `/test streamlined tailor studio and outreach`
 
-### 18. Dedicated career prep and STAR hub · planned · needs a decision
+### 18. Dedicated career prep and STAR hub · in-progress
 
-A standalone interview preparation page at /career-prep with a job selector dropdown, deep linking from tailored resumes, STAR question and answer breakdowns, copy actions, and printable cheat sheets.
-**Done when:** you can pick any past tailored application or follow a deep link from tailoring to practice job specific STAR interview questions in a dedicated focus view.
+spec [0016](../specs/0016-career-prep-star-hub/index.md)
+A dedicated focus page at /career-prep with a job selector over every tailored job (newest first, capped at 50 with load more), URL driven deep links, STAR question and answer breakdowns with editing parity, user authored custom questions inside a version 2 prep payload, copy actions, and a dedicated printable sheet route; the tailor studio Interview Prep tab becomes a single handoff button to the hub.
+**Done when:** you can pick any past tailored application or follow a deep link from tailoring to practice job specific STAR interview questions in a dedicated focus view, with custom questions, a full sheet copy, and a clean printable sheet.
 
-- [ ] Design it (spec): `/architect dedicated career prep and STAR hub`
+- [x] Design it (spec): `/architect dedicated career prep and STAR hub`
+- [ ] Build it: `/develop dedicated career prep and STAR hub`
+  - [ ] Schema v2 with tolerant read, career prep read helpers with grounded banner flag, and load more read action (AC-1, AC-4, AC-5, AC-10)
+  - [ ] Hub page, URL driven selection with fallback notice, generate CTA, and engine merge with stale save 409 guard (AC-2, AC-8, AC-4, AC-5)
+  - [ ] Focus view editing, copy full sheet, and the print route with redirect safety (AC-3, AC-6, AC-7)
+  - [ ] Workspace nav link, bilingual dictionaries, and the studio tab handoff conversion (AC-8, AC-11, AC-12)
+  - [ ] Vitest suites for normalizer, selector, generation merge, stale save, copy, and print, with build clean (all ACs)
+- [ ] Verify it: `/check verify dedicated career prep and STAR hub`
+- [ ] Test it: `/test dedicated career prep and STAR hub`
 
 ## Deferred
 
 Out of scope for the current build pass, kept so the plan stays honest.
 
 - **Interactive AI voice mock interviews**: real time voice practice sessions · needs a decision
+- **Tracker prep deep links**: surface the career prep deep link on application cards missing prep · from spec 0016
 - **Browser extension**: direct job posting capture from job boards · needs a decision
 - **Automated job application bots**: auto apply scripts for job platforms · needs a decision
 - **Team workspace sharing**: mentor and peer review sharing · needs a decision
