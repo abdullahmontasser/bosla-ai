@@ -195,6 +195,93 @@ describe('Interview Prep Server Actions (covers: AC-2, AC-4, AC-5, AC-IP-1, AC-I
         }),
       )
     })
+
+    it('merges existing custom questions and preserves them during generation (AC-5, Task 4)', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ user: mockUser } as unknown as never)
+      const existingCustomQuestion = {
+        id: 'preserved-custom-q',
+        category: 'CUSTOM' as const,
+        customOrigin: true,
+        question: 'What is your architectural philosophy?',
+        whyAsked: 'Evaluate design maturity',
+        starResponse: {
+          situation: 'Designed distributed system',
+          task: 'Ensure high throughput',
+          action: 'Implemented event sourcing',
+          result: 'Zero message loss',
+        },
+        referencedSources: [],
+        missingMetricFlags: [],
+      }
+
+      const resumeWithCustom = {
+        ...mockResume,
+        interviewPrep: {
+          ...mockInterviewPrepPayloadEn,
+          questions: [...mockInterviewPrepPayloadEn.questions, existingCustomQuestion],
+        },
+      }
+
+      vi.mocked(prisma.tailoredResume.findFirst).mockResolvedValueOnce(
+        resumeWithCustom as unknown as never,
+      )
+      vi.mocked(getActiveProviderSettings).mockResolvedValueOnce([
+        {
+          provider: 'ANTHROPIC',
+          apiKey: 'sk-ant-test',
+          defaultModel: 'claude-3-5-sonnet',
+        } as unknown as never,
+      ])
+
+      vi.mocked(generateObject).mockResolvedValueOnce({
+        object: {
+          questions: [
+            {
+              category: 'BEHAVIORAL',
+              question: 'New AI Q1',
+              whyAsked: 'Intent',
+              starResponse: { situation: 'S', task: 'T', action: 'A', result: 'R' },
+              referencedSources: [],
+              missingMetricFlags: [],
+            },
+            {
+              category: 'TECHNICAL',
+              question: 'New AI Q2',
+              whyAsked: 'Intent',
+              starResponse: { situation: 'S', task: 'T', action: 'A', result: 'R' },
+              referencedSources: [],
+              missingMetricFlags: [],
+            },
+            {
+              category: 'SITUATIONAL',
+              question: 'New AI Q3',
+              whyAsked: 'Intent',
+              starResponse: { situation: 'S', task: 'T', action: 'A', result: 'R' },
+              referencedSources: [],
+              missingMetricFlags: [],
+            },
+          ],
+          questionsToAskInterviewer: [
+            { question: 'QI 1', strategicGoal: 'Goal' },
+            { question: 'QI 2', strategicGoal: 'Goal' },
+            { question: 'QI 3', strategicGoal: 'Goal' },
+          ],
+        },
+      } as unknown as never)
+
+      vi.mocked(prisma.tailoredResume.update).mockResolvedValueOnce({} as unknown as never)
+
+      const result = await generateInterviewPrepAction('res_1')
+      expect(result.success).toBe(true)
+      if (result.success && result.data) {
+        // 3 AI questions + 1 preserved custom question = 4 questions!
+        expect(result.data.questions).toHaveLength(4)
+        const customQ = result.data.questions.find((q) => q.id === 'preserved-custom-q')
+        expect(customQ).toBeDefined()
+        expect(customQ?.customOrigin).toBe(true)
+        expect(customQ?.question).toBe('What is your architectural philosophy?')
+      }
+    })
   })
 
   describe('saveInterviewPrepAction', () => {
@@ -221,9 +308,61 @@ describe('Interview Prep Server Actions (covers: AC-2, AC-4, AC-5, AC-IP-1, AC-I
       expect(result.success).toBe(true)
       expect(prisma.tailoredResume.update).toHaveBeenCalled()
     })
+
+    it('rejects stale save carrying older updatedAt with status 409 (AC-3, Task 4)', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ user: mockUser } as unknown as never)
+      vi.mocked(prisma.tailoredResume.findFirst).mockResolvedValueOnce({
+        ...mockResume,
+        interviewPrep: {
+          ...mockInterviewPrepPayloadEn,
+          updatedAt: '2026-10-30T15:00:00.000Z',
+        },
+      } as unknown as never)
+
+      const stalePayload = {
+        ...mockInterviewPrepPayloadEn,
+        updatedAt: '2026-10-30T12:00:00.000Z', // older than stored 15:00:00
+      }
+
+      const result = await saveInterviewPrepAction('res_1', stalePayload)
+      expect(result.success).toBe(false)
+      expect(result.status).toBe(409)
+      expect(result.error).toContain('Conflict')
+    })
   })
 
   describe('regenerateInterviewQuestionAction', () => {
+    it('rejects regenerating custom questions with status 422 (AC-4, Task 4)', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({ user: mockUser } as unknown as never)
+      const resumeWithCustom = {
+        ...mockResume,
+        interviewPrep: {
+          ...mockInterviewPrepPayloadEn,
+          questions: [
+            ...mockInterviewPrepPayloadEn.questions,
+            {
+              id: 'custom-q-1',
+              category: 'CUSTOM' as const,
+              customOrigin: true,
+              question: 'My custom question',
+              whyAsked: '',
+              starResponse: { situation: '', task: '', action: '', result: '' },
+              referencedSources: [],
+              missingMetricFlags: [],
+            },
+          ],
+        },
+      }
+      vi.mocked(prisma.tailoredResume.findFirst).mockResolvedValueOnce(
+        resumeWithCustom as unknown as never,
+      )
+
+      const result = await regenerateInterviewQuestionAction('res_1', 'custom-q-1')
+      expect(result.success).toBe(false)
+      expect(result.status).toBe(422)
+      expect(result.error).toContain('Custom questions cannot be regenerated')
+    })
+
     it('regenerates single question and merges it into questions array preserving the other 2', async () => {
       vi.mocked(auth).mockResolvedValueOnce({ user: mockUser } as unknown as never)
       vi.mocked(prisma.tailoredResume.findFirst).mockResolvedValueOnce(

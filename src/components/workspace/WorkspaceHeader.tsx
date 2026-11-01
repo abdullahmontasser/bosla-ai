@@ -18,6 +18,7 @@ export function getWorkspaceLabels(lang: string) {
     tailor: isAr ? 'التخصيص' : 'Tailor',
     resumes: isAr ? 'السير' : 'Resumes',
     tracker: isAr ? 'المتابعة' : 'Tracker',
+    careerPrep: isAr ? 'التحضير للمقابلات' : 'Career Prep',
     providers: isAr ? 'المزوّدون' : 'Providers',
     menu: isAr ? 'قائمة مساحة العمل' : 'Workspace menu',
     signOut: isAr ? 'تسجيل الخروج' : 'Sign out',

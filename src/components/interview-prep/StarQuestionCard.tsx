@@ -2,17 +2,18 @@
 
 import * as React from 'react'
 import type { InterviewQuestion } from '@/lib/validations/career-prep'
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Copy, Check, RotateCw, HelpCircle, Layers, AlertCircle } from 'lucide-react'
+import { Copy, Check, RotateCw, HelpCircle, Layers, AlertCircle, Trash2 } from 'lucide-react'
 
 export interface StarQuestionCardProps {
   question: InterviewQuestion
   index: number
   onChange: (updatedQuestion: InterviewQuestion) => void
   onRegenerate: () => Promise<void>
+  onDelete?: () => void
   isRegenerating?: boolean
   lang: 'en' | 'ar'
 }
@@ -22,6 +23,7 @@ export function StarQuestionCard({
   index,
   onChange,
   onRegenerate,
+  onDelete,
   isRegenerating = false,
   lang,
 }: StarQuestionCardProps) {
@@ -67,9 +69,14 @@ export function StarQuestionCard({
       ar: 'سؤال موقفي',
       color: 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20',
     },
+    CUSTOM: {
+      en: 'Custom Question',
+      ar: 'سؤال مخصص',
+      color: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20',
+    },
   }
 
-  const activeCategory = categoryLabels[question.category]
+  const activeCategory = categoryLabels[question.category] || categoryLabels.CUSTOM
 
   return (
     <Card className="border border-border/80 bg-card shadow-xs transition-colors print:border print:shadow-none break-inside-avoid">
@@ -108,35 +115,71 @@ export function StarQuestionCard({
               )}
             </Button>
 
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onRegenerate}
-              disabled={isRegenerating}
-              className="h-7 text-xs gap-1 px-2 text-muted-foreground hover:text-foreground"
-            >
-              <RotateCw className={`size-3 ${isRegenerating ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">{isArabic ? 'إعادة التوليد' : 'Regenerate'}</span>
-            </Button>
+            {question.customOrigin ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onDelete}
+                className="h-7 text-xs gap-1 px-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                title={isArabic ? 'حذف السؤال المخصص' : 'Delete custom question'}
+                data-testid={`delete-custom-question-${question.id}`}
+              >
+                <Trash2 className="size-3" />
+                <span className="hidden sm:inline">{isArabic ? 'حذف' : 'Delete'}</span>
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onRegenerate}
+                disabled={isRegenerating}
+                className="h-7 text-xs gap-1 px-2 text-muted-foreground hover:text-foreground"
+                data-testid={`regenerate-question-${question.id}`}
+              >
+                <RotateCw className={`size-3 ${isRegenerating ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">
+                  {isArabic ? 'إعادة التوليد' : 'Regenerate'}
+                </span>
+              </Button>
+            )}
           </div>
         </div>
 
         {/* Question Title / Input */}
         <div className="space-y-1">
-          <CardTitle className="text-sm font-semibold tracking-tight text-foreground leading-snug">
-            {question.question}
-          </CardTitle>
+          <Textarea
+            value={question.question}
+            onChange={(e) => onChange({ ...question, question: e.target.value })}
+            placeholder={isArabic ? 'اكتب نص السؤال هنا...' : 'Type question text here...'}
+            dir={isArabic ? 'rtl' : 'ltr'}
+            rows={2}
+            className="text-sm font-semibold tracking-tight resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-snug text-foreground placeholder:text-muted-foreground/60"
+            data-testid={`question-input-${question.id}`}
+          />
         </div>
 
         {/* Why Asked Intent Box */}
         <div className="flex items-start gap-2 p-2.5 rounded-md bg-muted/40 border border-border/40 text-xs text-muted-foreground">
           <HelpCircle className="size-3.5 shrink-0 text-primary mt-0.5" />
-          <div>
-            <span className="font-semibold text-foreground/90 me-1">
+          <div className="flex-1 space-y-1">
+            <span className="font-semibold text-foreground/90 block">
               {isArabic ? 'هدف المقابِل (Why Asked):' : 'Interviewer Intent:'}
             </span>
-            <span>{question.whyAsked}</span>
+            <Textarea
+              value={question.whyAsked}
+              onChange={(e) => onChange({ ...question, whyAsked: e.target.value })}
+              placeholder={
+                isArabic
+                  ? 'ما الغرض من طرح هذا السؤال؟ (اختياري للأسئلة المخصصة)'
+                  : 'Why is this asked? (optional intent note for custom questions)'
+              }
+              dir={isArabic ? 'rtl' : 'ltr'}
+              rows={2}
+              className="text-xs resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+              data-testid={`why-asked-input-${question.id}`}
+            />
           </div>
         </div>
       </CardHeader>
@@ -165,7 +208,7 @@ export function StarQuestionCard({
                 }
                 dir={isArabic ? 'rtl' : 'ltr'}
                 rows={3}
-                className="text-xs resize-none bg-transparent border-0 p-0 focus-visible:ring-0 leading-relaxed text-foreground"
+                className="text-xs resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed text-foreground"
               />
             </div>
 
@@ -184,7 +227,7 @@ export function StarQuestionCard({
                 }
                 dir={isArabic ? 'rtl' : 'ltr'}
                 rows={3}
-                className="text-xs resize-none bg-transparent border-0 p-0 focus-visible:ring-0 leading-relaxed text-foreground"
+                className="text-xs resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed text-foreground"
               />
             </div>
 
@@ -203,7 +246,7 @@ export function StarQuestionCard({
                 }
                 dir={isArabic ? 'rtl' : 'ltr'}
                 rows={3}
-                className="text-xs resize-none bg-transparent border-0 p-0 focus-visible:ring-0 leading-relaxed text-foreground"
+                className="text-xs resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed text-foreground"
               />
             </div>
 
@@ -222,7 +265,7 @@ export function StarQuestionCard({
                 }
                 dir={isArabic ? 'rtl' : 'ltr'}
                 rows={3}
-                className="text-xs resize-none bg-transparent border-0 p-0 focus-visible:ring-0 leading-relaxed text-foreground"
+                className="text-xs resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed text-foreground"
               />
             </div>
           </div>

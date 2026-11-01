@@ -48,6 +48,26 @@ describe('Workspace Shell Components (covers: AC-7, AC-9)', () => {
     expect(resumeLink.getAttribute('aria-current')).toBeNull()
   })
 
+  it('renders career prep navigation link and sets active state (AC-11)', () => {
+    mockPathname = '/en/career-prep'
+    render(
+      <WorkspaceNav
+        lang="en"
+        labels={{
+          profile: 'Profile',
+          tailor: 'Tailor',
+          resumes: 'Resumes',
+          tracker: 'Tracker',
+          careerPrep: 'Career Prep',
+          providers: 'Providers',
+        }}
+      />,
+    )
+
+    const careerPrepLink = screen.getByRole('link', { name: /Career Prep/i })
+    expect(careerPrepLink.getAttribute('aria-current')).toBe('page')
+  })
+
   it('renders account menu with initials fallback when image is missing (AC-7)', () => {
     render(<AccountMenu lang="en" name="Abdullah Montasser" email="3bdullah.montasser@gmail.com" />)
 

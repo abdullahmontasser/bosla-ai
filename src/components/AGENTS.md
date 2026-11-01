@@ -23,7 +23,7 @@ Foundational UI components, layout primitives, and theme controls for Bosla AI.
 - `src/components/ui/rtl-icon.tsx`: SVG wrapper applying `rtl:rotate-180` to directional icons.
 - `src/components/ats/`: ATS match score card, category subscores, skills gap badges, Google XYZ bullet list, and PDF export button.
 - `src/components/outreach/`: Cold outreach message cards, connection note editor with character counters, and one click copy.
-- `src/components/interview-prep/`: Interview prep workbench, STAR response cards, and interviewer questions list.
+- `src/components/interview-prep/`: STAR response cards and interviewer questions list, the editing surfaces of the dedicated career prep hub.
 - `src/components/tracker/`: Kanban board columns, cards with ATS badges, slide over details drawer, filter toolbar, and quick add modal.
 - `src/components/landing/`: public landing sections, GSAP motion, bilingual copy, and sample workflow data.
 - `src/components/auth/`: Sign in and sign up cards, forgot password, reset password, email verification card, and copy.

@@ -12,6 +12,7 @@ interface WorkspaceMobileMenuProps {
     tailor: string
     resumes: string
     tracker: string
+    careerPrep?: string
     providers: string
     menu: string
     signOut: string

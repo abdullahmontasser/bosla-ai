@@ -88,17 +88,33 @@ export function InterviewerQuestionsList({
                   onChange={(e) => handleQuestionTextChange(idx, e.target.value)}
                   dir={isArabic ? 'rtl' : 'ltr'}
                   rows={3}
-                  className="text-xs resize-none bg-transparent border-0 p-0 focus-visible:ring-0 leading-relaxed font-medium text-foreground"
+                  className="text-xs resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed font-medium text-foreground"
                 />
               </div>
 
               <div className="flex items-start gap-1.5 p-2 rounded bg-muted/40 text-[11px] text-muted-foreground">
                 <HelpCircle className="size-3 shrink-0 text-primary mt-0.5" />
-                <div>
-                  <span className="font-semibold text-foreground/80 me-1">
+                <div className="flex-1 space-y-1">
+                  <span className="font-semibold text-foreground/80 block">
                     {isArabic ? 'الهدف الاستراتيجي:' : 'Strategic Goal:'}
                   </span>
-                  <span>{q.strategicGoal}</span>
+                  <Textarea
+                    value={q.strategicGoal}
+                    onChange={(e) => {
+                      const updated = [...questions]
+                      updated[idx] = { ...updated[idx], strategicGoal: e.target.value }
+                      onChange(updated)
+                    }}
+                    placeholder={
+                      isArabic
+                        ? 'ما هو الهدف الاستراتيجي من طرح هذا السؤال؟'
+                        : 'What is the strategic goal of asking this question?'
+                    }
+                    dir={isArabic ? 'rtl' : 'ltr'}
+                    rows={2}
+                    className="text-[11px] resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+                    data-testid={`strategic-goal-input-${idx}`}
+                  />
                 </div>
               </div>
             </div>

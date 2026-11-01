@@ -49,7 +49,7 @@ export const RegenerateOutreachVariantInputSchema = z.object({
 export type RegenerateOutreachVariantInput = z.infer<typeof RegenerateOutreachVariantInputSchema>
 
 // Interview Prep Schemas
-export const QuestionCategorySchema = z.enum(['BEHAVIORAL', 'TECHNICAL', 'SITUATIONAL'])
+export const QuestionCategorySchema = z.enum(['BEHAVIORAL', 'TECHNICAL', 'SITUATIONAL', 'CUSTOM'])
 export type QuestionCategory = z.infer<typeof QuestionCategorySchema>
 
 export const StarResponseSchema = z.object({
@@ -60,15 +60,63 @@ export const StarResponseSchema = z.object({
 })
 export type StarResponse = z.infer<typeof StarResponseSchema>
 
-export const InterviewQuestionSchema = z.object({
-  id: z.string().min(1),
-  category: QuestionCategorySchema,
-  question: z.string().min(1),
-  whyAsked: z.string().min(1),
-  starResponse: StarResponseSchema,
-  referencedSources: z.array(z.string()),
-  missingMetricFlags: z.array(z.string()),
-})
+export const InterviewQuestionSchema = z
+  .object({
+    id: z.string().min(1),
+    category: QuestionCategorySchema,
+    customOrigin: z.boolean().default(false),
+    question: z.string(),
+    whyAsked: z.string().default(''),
+    starResponse: StarResponseSchema,
+    referencedSources: z.array(z.string()).default([]),
+    missingMetricFlags: z.array(z.string()).default([]),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.customOrigin && data.category !== 'CUSTOM') {
+      if (!data.question || data.question.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Question cannot be empty for AI generated questions',
+          path: ['question'],
+        })
+      }
+      if (!data.whyAsked || data.whyAsked.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'whyAsked cannot be empty for AI generated questions',
+          path: ['whyAsked'],
+        })
+      }
+      if (!data.starResponse.situation || data.starResponse.situation.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Situation cannot be empty for AI generated questions',
+          path: ['starResponse', 'situation'],
+        })
+      }
+      if (!data.starResponse.task || data.starResponse.task.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Task cannot be empty for AI generated questions',
+          path: ['starResponse', 'task'],
+        })
+      }
+      if (!data.starResponse.action || data.starResponse.action.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Action cannot be empty for AI generated questions',
+          path: ['starResponse', 'action'],
+        })
+      }
+      if (!data.starResponse.result || data.starResponse.result.trim().length === 0) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Result cannot be empty for AI generated questions',
+          path: ['starResponse', 'result'],
+        })
+      }
+    }
+  })
 export type InterviewQuestion = z.infer<typeof InterviewQuestionSchema>
 
 export const QuestionsToAskInterviewerSchema = z.object({
@@ -78,17 +126,231 @@ export const QuestionsToAskInterviewerSchema = z.object({
 })
 export type QuestionsToAskInterviewer = z.infer<typeof QuestionsToAskInterviewerSchema>
 
-export const InterviewPrepPayloadSchema = z.object({
-  version: z.literal(1),
-  generatedAt: z.string().datetime({ offset: true }).or(z.string()),
-  updatedAt: z.string().datetime({ offset: true }).or(z.string()),
-  language: z.enum(['EN', 'AR']),
-  roleTitle: z.string(),
-  companyName: z.string(),
-  questions: z.array(InterviewQuestionSchema),
-  questionsToAskInterviewer: z.array(QuestionsToAskInterviewerSchema),
-})
+/**
+ * Single source of truth for bilingual category labels, shared by the copy full sheet
+ * assembly and the print route. StarQuestionCard keeps its own map because it adds
+ * per-category UI colors.
+ */
+export const INTERVIEW_CATEGORY_LABELS: Record<QuestionCategory, { en: string; ar: string }> = {
+  BEHAVIORAL: { en: 'Behavioral Question', ar: 'سؤال سلوكي' },
+  TECHNICAL: { en: 'Technical Question', ar: 'سؤال تقني' },
+  SITUATIONAL: { en: 'Situational Question', ar: 'سؤال موقفي' },
+  CUSTOM: { en: 'Custom Question', ar: 'سؤال مخصص' },
+}
+
+export const InterviewPrepPayloadSchema = z
+  .object({
+    version: z.literal(2),
+    generatedAt: z.string().datetime({ offset: true }).or(z.string()).nullable(),
+    updatedAt: z.string().datetime({ offset: true }).or(z.string()),
+    language: z.enum(['EN', 'AR']),
+    roleTitle: z.string(),
+    companyName: z.string(),
+    questions: z.array(InterviewQuestionSchema),
+    questionsToAskInterviewer: z.array(QuestionsToAskInterviewerSchema),
+  })
+  .refine((data) => data.questions.filter((q) => q.customOrigin).length <= 10, {
+    message: 'At most 10 custom questions allowed per payload',
+    path: ['questions'],
+  })
 export type InterviewPrepPayload = z.infer<typeof InterviewPrepPayloadSchema>
+
+/**
+ * Normalizes any interview prep payload (v1 or partial v2) to valid InterviewPrepPayload v2.
+ * Backfills missing fields: customOrigin false, version 2, generatedAt nullable.
+ */
+export function normalizeInterviewPrepPayload(raw: unknown): InterviewPrepPayload | null {
+  if (!raw || typeof raw !== 'object') {
+    return null
+  }
+
+  const obj = raw as Record<string, unknown>
+  const language = obj.language === 'AR' ? 'AR' : 'EN'
+  const roleTitle = typeof obj.roleTitle === 'string' ? obj.roleTitle : ''
+  const companyName = typeof obj.companyName === 'string' ? obj.companyName : ''
+  const generatedAt = typeof obj.generatedAt === 'string' ? obj.generatedAt : null
+  const updatedAt = typeof obj.updatedAt === 'string' ? obj.updatedAt : new Date().toISOString()
+
+  const rawQuestions = Array.isArray(obj.questions) ? obj.questions : []
+  const questions = rawQuestions.map((q: unknown) => {
+    if (!q || typeof q !== 'object') {
+      return {
+        id: crypto.randomUUID(),
+        category: 'CUSTOM' as const,
+        customOrigin: true,
+        question: '',
+        whyAsked: '',
+        starResponse: { situation: '', task: '', action: '', result: '' },
+        referencedSources: [],
+        missingMetricFlags: [],
+      }
+    }
+    const qObj = q as Record<string, unknown>
+    const id = typeof qObj.id === 'string' && qObj.id.length > 0 ? qObj.id : crypto.randomUUID()
+
+    let category: QuestionCategory = 'CUSTOM'
+    if (
+      qObj.category === 'BEHAVIORAL' ||
+      qObj.category === 'TECHNICAL' ||
+      qObj.category === 'SITUATIONAL' ||
+      qObj.category === 'CUSTOM'
+    ) {
+      category = qObj.category
+    }
+
+    const customOrigin =
+      typeof qObj.customOrigin === 'boolean'
+        ? qObj.customOrigin
+        : qObj.category === 'CUSTOM'
+          ? true
+          : false
+
+    const question = typeof qObj.question === 'string' ? qObj.question : ''
+    const whyAsked = typeof qObj.whyAsked === 'string' ? qObj.whyAsked : ''
+
+    const starObj =
+      qObj.starResponse && typeof qObj.starResponse === 'object'
+        ? (qObj.starResponse as Record<string, unknown>)
+        : {}
+
+    const starResponse = {
+      situation: typeof starObj.situation === 'string' ? starObj.situation : '',
+      task: typeof starObj.task === 'string' ? starObj.task : '',
+      action: typeof starObj.action === 'string' ? starObj.action : '',
+      result: typeof starObj.result === 'string' ? starObj.result : '',
+    }
+
+    const referencedSources = Array.isArray(qObj.referencedSources)
+      ? qObj.referencedSources.filter((s): s is string => typeof s === 'string')
+      : []
+
+    const missingMetricFlags = Array.isArray(qObj.missingMetricFlags)
+      ? qObj.missingMetricFlags.filter((f): f is string => typeof f === 'string')
+      : []
+
+    return {
+      id,
+      category,
+      customOrigin,
+      question,
+      whyAsked,
+      starResponse,
+      referencedSources,
+      missingMetricFlags,
+    }
+  })
+
+  const rawInterviewerQuestions = Array.isArray(obj.questionsToAskInterviewer)
+    ? obj.questionsToAskInterviewer
+    : []
+  const questionsToAskInterviewer = rawInterviewerQuestions.map((qi: unknown) => {
+    if (!qi || typeof qi !== 'object') {
+      return {
+        id: crypto.randomUUID(),
+        question: '',
+        strategicGoal: '',
+      }
+    }
+    const qiObj = qi as Record<string, unknown>
+    return {
+      id: typeof qiObj.id === 'string' && qiObj.id.length > 0 ? qiObj.id : crypto.randomUUID(),
+      question: typeof qiObj.question === 'string' ? qiObj.question : '',
+      strategicGoal: typeof qiObj.strategicGoal === 'string' ? qiObj.strategicGoal : '',
+    }
+  })
+
+  const candidate = {
+    version: 2 as const,
+    generatedAt,
+    updatedAt,
+    language,
+    roleTitle,
+    companyName,
+    questions,
+    questionsToAskInterviewer,
+  }
+
+  const parsed = InterviewPrepPayloadSchema.safeParse(candidate)
+  if (parsed.success) {
+    return parsed.data
+  }
+  return null
+}
+
+/**
+ * Assembles a localized plain text cheat sheet for copying full sheet content.
+ * Labels follow payload.language to prevent mixing RTL and LTR scripts.
+ */
+export function assembleFullSheetText(payload: InterviewPrepPayload): string {
+  const isAr = payload.language === 'AR'
+  const lines: string[] = []
+
+  if (isAr) {
+    lines.push(`ورقة التحضير للمقابلة: ${payload.roleTitle} - ${payload.companyName}`)
+    lines.push('')
+    lines.push('--- أسئلة المقابلة ونموذج STAR ---')
+    lines.push('')
+
+    payload.questions.forEach((q, idx) => {
+      const categoryLabel = INTERVIEW_CATEGORY_LABELS[q.category][isAr ? 'ar' : 'en']
+
+      lines.push(`${idx + 1}. ${q.question} [${categoryLabel}]`)
+      if (q.whyAsked) {
+        lines.push(`هدف المقابِل: ${q.whyAsked}`)
+      }
+      lines.push(`الموقف: ${q.starResponse.situation}`)
+      lines.push(`المهمة: ${q.starResponse.task}`)
+      lines.push(`الإجراء: ${q.starResponse.action}`)
+      lines.push(`النتيجة: ${q.starResponse.result}`)
+      lines.push('')
+    })
+
+    if (payload.questionsToAskInterviewer.length > 0) {
+      lines.push('--- أسئلة تطرحها على المقابِل ---')
+      lines.push('')
+      payload.questionsToAskInterviewer.forEach((qi, idx) => {
+        lines.push(`${idx + 1}. ${qi.question}`)
+        if (qi.strategicGoal) {
+          lines.push(`الهدف الاستراتيجي: ${qi.strategicGoal}`)
+        }
+        lines.push('')
+      })
+    }
+  } else {
+    lines.push(`Interview Prep Cheat Sheet: ${payload.roleTitle} - ${payload.companyName}`)
+    lines.push('')
+    lines.push('--- Interview Questions & STAR Responses ---')
+    lines.push('')
+
+    payload.questions.forEach((q, idx) => {
+      const categoryLabel = INTERVIEW_CATEGORY_LABELS[q.category][isAr ? 'ar' : 'en']
+
+      lines.push(`${idx + 1}. ${q.question} [${categoryLabel}]`)
+      if (q.whyAsked) {
+        lines.push(`Interviewer Intent: ${q.whyAsked}`)
+      }
+      lines.push(`Situation: ${q.starResponse.situation}`)
+      lines.push(`Task: ${q.starResponse.task}`)
+      lines.push(`Action: ${q.starResponse.action}`)
+      lines.push(`Result: ${q.starResponse.result}`)
+      lines.push('')
+    })
+
+    if (payload.questionsToAskInterviewer.length > 0) {
+      lines.push('--- Questions to Ask the Interviewer ---')
+      lines.push('')
+      payload.questionsToAskInterviewer.forEach((qi, idx) => {
+        lines.push(`${idx + 1}. ${qi.question}`)
+        if (qi.strategicGoal) {
+          lines.push(`Strategic Goal: ${qi.strategicGoal}`)
+        }
+        lines.push('')
+      })
+    }
+  }
+
+  return lines.join('\n').trim()
+}
 
 export const GenerateInterviewPrepInputSchema = z.object({
   tailoredResumeId: z.string().min(1, 'Tailored resume ID is required'),
@@ -149,7 +411,7 @@ export const mockOutreachPayloadAr: OutreachMessagePayload = {
 }
 
 export const mockInterviewPrepPayloadEn: InterviewPrepPayload = {
-  version: 1,
+  version: 2,
   generatedAt: '2026-10-26T00:00:00.000Z',
   updatedAt: '2026-10-26T00:00:00.000Z',
   language: 'EN',
@@ -159,6 +421,7 @@ export const mockInterviewPrepPayloadEn: InterviewPrepPayload = {
     {
       id: 'q-1',
       category: 'BEHAVIORAL',
+      customOrigin: false,
       question:
         'Tell me about a time you handled competing priorities when shipping a critical product feature under tight deadlines.',
       whyAsked:
@@ -178,6 +441,7 @@ export const mockInterviewPrepPayloadEn: InterviewPrepPayload = {
     {
       id: 'q-2',
       category: 'TECHNICAL',
+      customOrigin: false,
       question:
         'How do you design and optimize AI streaming pipelines in Next.js App Router to avoid server action timeouts and memory leaks?',
       whyAsked:
@@ -197,6 +461,7 @@ export const mockInterviewPrepPayloadEn: InterviewPrepPayload = {
     {
       id: 'q-3',
       category: 'SITUATIONAL',
+      customOrigin: false,
       question:
         'If an AI provider experiences sudden rate limiting or an outage in production, how would you ensure user continuity?',
       whyAsked:
@@ -240,7 +505,7 @@ export const mockInterviewPrepPayloadEn: InterviewPrepPayload = {
 }
 
 export const mockInterviewPrepPayloadAr: InterviewPrepPayload = {
-  version: 1,
+  version: 2,
   generatedAt: '2026-10-26T00:00:00.000Z',
   updatedAt: '2026-10-26T00:00:00.000Z',
   language: 'AR',
@@ -250,6 +515,7 @@ export const mockInterviewPrepPayloadAr: InterviewPrepPayload = {
     {
       id: 'q-ar-1',
       category: 'BEHAVIORAL',
+      customOrigin: false,
       question:
         'حدثني عن موقف واجهت فيه أولويات متضاربة أثناء تسليم ميزة حاسمة تحت ضغط زمني مرتفع.',
       whyAsked:
@@ -269,6 +535,7 @@ export const mockInterviewPrepPayloadAr: InterviewPrepPayload = {
     {
       id: 'q-ar-2',
       category: 'TECHNICAL',
+      customOrigin: false,
       question:
         'كيف تصمم وتحسّن خطوط التدفق في Next.js App Router لتجنب انتهاء مهلة إجراءات الخادم وتسرب الذاكرة؟',
       whyAsked:
@@ -288,6 +555,7 @@ export const mockInterviewPrepPayloadAr: InterviewPrepPayload = {
     {
       id: 'q-ar-3',
       category: 'SITUATIONAL',
+      customOrigin: false,
       question:
         'في حال حدوث حظر غير متوقع أو انقطاع لمزود الذكاء الاصطناعي في بيئة الإنتاج، كيف تضمن استمرارية الخدمة؟',
       whyAsked:

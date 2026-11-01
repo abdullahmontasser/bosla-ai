@@ -287,5 +287,6 @@ export interface Dictionary {
   resume?: Record<string, string>
   outreach?: Record<string, string>
   interviewPrep?: Record<string, string>
+  careerPrep?: Record<string, string>
   [key: string]: unknown
 }

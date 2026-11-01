@@ -2,16 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Cpu, FileText, Kanban, Sparkles, UserRound } from 'lucide-react'
+import { BookOpenCheck, Cpu, FileText, Kanban, Sparkles, UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-interface WorkspaceNavProps {
+export interface WorkspaceNavProps {
   lang: string
   labels: {
     profile?: string
     tailor: string
     resumes: string
     tracker: string
+    careerPrep?: string
     providers: string
   }
   variant?: 'bar' | 'stack'
@@ -30,6 +31,11 @@ export function WorkspaceNav({ lang, labels, variant = 'bar', onNavigate }: Work
     { href: `/${lang}/tailor`, label: labels.tailor, icon: Sparkles },
     { href: `/${lang}/resume`, label: labels.resumes, icon: FileText },
     { href: `/${lang}/tracker`, label: labels.tracker, icon: Kanban },
+    {
+      href: `/${lang}/career-prep`,
+      label: labels.careerPrep || (lang === 'ar' ? 'التحضير للمقابلات' : 'Career Prep'),
+      icon: BookOpenCheck,
+    },
     { href: `/${lang}/settings/providers`, label: labels.providers, icon: Cpu },
   ]
 

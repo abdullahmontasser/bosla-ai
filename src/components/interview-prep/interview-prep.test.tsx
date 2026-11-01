@@ -1,20 +1,12 @@
 // @vitest-environment jsdom
 import * as React from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { StarQuestionCard } from './StarQuestionCard'
 import { InterviewerQuestionsList } from './InterviewerQuestionsList'
-import { InterviewPrepWorkbench } from './InterviewPrepWorkbench'
 import { mockInterviewPrepPayloadEn } from '@/lib/validations/career-prep'
-import * as interviewActions from '@/app/actions/interview-prep-actions'
 
-vi.mock('@/app/actions/interview-prep-actions', () => ({
-  generateInterviewPrepAction: vi.fn(),
-  saveInterviewPrepAction: vi.fn(),
-  regenerateInterviewQuestionAction: vi.fn(),
-}))
-
-describe('Interview Prep Studio Components (covers: AC-2, AC-4, AC-IP-3, AC-IP-5)', () => {
+describe('Interview Prep Components (covers: AC-2, AC-4, AC-IP-3, AC-IP-5)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     Object.assign(navigator, {
@@ -69,6 +61,60 @@ describe('Interview Prep Studio Components (covers: AC-2, AC-4, AC-IP-3, AC-IP-5
         expect.stringContaining(q.starResponse.situation),
       )
     })
+
+    it('renders delete button for custom questions and hides regenerate (AC-4)', () => {
+      const customQ = {
+        id: 'cust-1',
+        category: 'CUSTOM' as const,
+        customOrigin: true,
+        question: 'Custom Question Text',
+        whyAsked: 'Custom Intent',
+        starResponse: { situation: '', task: '', action: '', result: '' },
+        referencedSources: [],
+        missingMetricFlags: [],
+      }
+      const handleDelete = vi.fn()
+      const handleRegenerate = vi.fn()
+
+      render(
+        <StarQuestionCard
+          question={customQ}
+          index={0}
+          onChange={vi.fn()}
+          onRegenerate={handleRegenerate}
+          onDelete={handleDelete}
+          lang="en"
+        />,
+      )
+
+      expect(screen.getByText('Custom Question')).toBeDefined()
+      const deleteBtn = screen.getByTestId('delete-custom-question-cust-1')
+      expect(deleteBtn).toBeDefined()
+      fireEvent.click(deleteBtn)
+      expect(handleDelete).toHaveBeenCalled()
+
+      // Regenerate button must NOT be present
+      expect(screen.queryByTestId('regenerate-question-cust-1')).toBeNull()
+    })
+
+    it('renders regenerate button for AI questions and hides delete (AC-4)', () => {
+      const aiQ = mockInterviewPrepPayloadEn.questions[0]
+      const handleRegenerate = vi.fn().mockResolvedValue(undefined)
+
+      render(
+        <StarQuestionCard
+          question={aiQ}
+          index={0}
+          onChange={vi.fn()}
+          onRegenerate={handleRegenerate}
+          lang="en"
+        />,
+      )
+
+      const regenBtn = screen.getByTestId(`regenerate-question-${aiQ.id}`)
+      expect(regenBtn).toBeDefined()
+      expect(screen.queryByTestId(`delete-custom-question-${aiQ.id}`)).toBeNull()
+    })
   })
 
   describe('InterviewerQuestionsList', () => {
@@ -86,61 +132,6 @@ describe('Interview Prep Studio Components (covers: AC-2, AC-4, AC-IP-3, AC-IP-5
 
       expect(handleChange).toHaveBeenCalledWith(
         expect.arrayContaining([expect.objectContaining({ question: 'Edited question prompt' })]),
-      )
-    })
-  })
-
-  describe('InterviewPrepWorkbench', () => {
-    it('renders zero-experience guidance banner when hasRecordedExperiences is false', () => {
-      render(
-        <InterviewPrepWorkbench
-          tailoredResumeId="res_1"
-          initialInterviewPrep={null}
-          hasRecordedExperiences={false}
-          lang="en"
-        />,
-      )
-
-      expect(screen.getByText(/Guidance for Candidates with No Recorded Projects/i)).toBeDefined()
-    })
-
-    it('renders questions and performs debounced autosave on edits', async () => {
-      vi.mocked(interviewActions.saveInterviewPrepAction).mockResolvedValue({
-        success: true,
-        data: mockInterviewPrepPayloadEn,
-      })
-
-      render(
-        <InterviewPrepWorkbench
-          tailoredResumeId="res_1"
-          initialInterviewPrep={mockInterviewPrepPayloadEn}
-          lang="en"
-        />,
-      )
-
-      expect(screen.getByText(mockInterviewPrepPayloadEn.questions[0].question)).toBeDefined()
-
-      const situationArea = screen.getByDisplayValue(
-        mockInterviewPrepPayloadEn.questions[0].starResponse.situation,
-      )
-      fireEvent.change(situationArea, { target: { value: 'Updated situation narrative.' } })
-
-      await waitFor(
-        () => {
-          expect(interviewActions.saveInterviewPrepAction).toHaveBeenCalledWith(
-            'res_1',
-            expect.objectContaining({
-              questions: expect.arrayContaining([
-                expect.objectContaining({
-                  starResponse: expect.objectContaining({
-                    situation: 'Updated situation narrative.',
-                  }),
-                }),
-              ]),
-            }),
-          )
-        },
-        { timeout: 2000 },
       )
     })
   })

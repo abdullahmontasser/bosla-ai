@@ -4,7 +4,7 @@ set -euo pipefail
 # Visual QA Runner for CareerCraft AI
 # Captures responsive screenshots in LTR (en) and RTL (ar) viewports using headless Google Chrome.
 
-BASE_URL="${1:-http://localhost:3000}"
+BASE_URL="${1:-http://localhost:3001}"
 OUTPUT_DIR="scratch/qa"
 CHROME_BIN="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 

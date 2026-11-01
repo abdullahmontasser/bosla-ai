@@ -81,7 +81,7 @@ interface InterviewPrepPayloadV2 {
 }
 ```
 
-Version 2 with tolerant read (a normalizer called on every read path): a version 1 payload becomes a version 2 shape in memory with `customOrigin: false` on every question and `category` unchanged. New writes are always version 2. Two schema notes: the Zod schema relaxes its `min(1)` STAR and why asked rules conditionally, only when `customOrigin: true` (fresh custom questions legitimately start empty); and a draft payload created before the first generation sources `roleTitle`, `companyName`, and `language` from the tailored resume's `JobPosting` and `TailoredResume.language`. This is a data contract change only, so there is no database migration.
+Version 2 with tolerant read (a normalizer called on every read path): a version 1 payload becomes a version 2 shape in memory with `category` unchanged and `customOrigin` taken from the question's own flag, meaning a v1 question already carrying `category: CUSTOM` reads back as `customOrigin: true` so it stays deletable in the hub, and every other question reads back `customOrigin: false`. New writes are always version 2. Two schema notes: the Zod schema relaxes its `min(1)` STAR and why asked rules conditionally, only when `customOrigin: true` (fresh custom questions legitimately start empty); and a draft payload created before the first generation sources `roleTitle`, `companyName`, and `language` from the tailored resume's `JobPosting` and `TailoredResume.language`. This is a data contract change only, so there is no database migration.
 
 **State transitions** (payload lifecycle):
 
@@ -197,5 +197,7 @@ Build approach: Tracer Bullet (the project default from the scope header, no row
 
 ## Follow-up
 
+- [ ] Selector paging currently dedupes and slices in memory; move the newest-version-per-posting query into SQL (`groupBy` with `take: 50`) when accounts get heavy
+- [ ] The guidance banner shows whenever grounding is empty, including already generated payloads (slightly broader than the "beside the CTA" wording; harmless, keep or tighten)
 - [ ] Consider surfacing the hub deep link from `ApplicationCards` in the tracker when a linked application lacks prep (cheap win, mirror of the tailor handoff)
 - [ ] `tailwind-4-docs` conventions live in root `AGENTS.md`; verify a phone sized print sanity pass during `/check verify` (paper and print emulation)

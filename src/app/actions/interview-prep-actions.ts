@@ -9,6 +9,7 @@ import {
   InterviewPrepPayloadSchema,
   GenerateInterviewPrepInputSchema,
   RegenerateInterviewQuestionInputSchema,
+  normalizeInterviewPrepPayload,
   type InterviewPrepPayload,
 } from '@/lib/validations/career-prep'
 import {
@@ -129,9 +130,10 @@ export async function generateInterviewPrepAction(
     })
 
     const now = new Date().toISOString()
-    const questions = object.questions.map((q) => ({
+    const generatedAiQuestions = object.questions.map((q) => ({
       id: crypto.randomUUID(),
       category: q.category,
+      customOrigin: false,
       question: q.question,
       whyAsked: q.whyAsked,
       starResponse: q.starResponse,
@@ -145,14 +147,18 @@ export async function generateInterviewPrepAction(
       strategicGoal: qi.strategicGoal,
     }))
 
+    // Invariant: generation merges instead of overwriting, preserving custom questions (AC-5)
+    const existingPrep = normalizeInterviewPrepPayload(resume.interviewPrep)
+    const existingCustomQuestions = existingPrep?.questions.filter((q) => q.customOrigin) ?? []
+
     const payload: InterviewPrepPayload = {
-      version: 1,
+      version: 2,
       generatedAt: now,
       updatedAt: now,
       language,
       roleTitle,
       companyName,
-      questions,
+      questions: [...generatedAiQuestions, ...existingCustomQuestions],
       questionsToAskInterviewer,
     }
 
@@ -175,7 +181,7 @@ export async function generateInterviewPrepAction(
 export async function saveInterviewPrepAction(tailoredResumeId: string, payload: unknown) {
   const session = await auth()
   if (!session?.user?.id) {
-    return { success: false, error: 'Unauthorized' }
+    return { success: false, error: 'Unauthorized', status: 401 }
   }
 
   const validated = InterviewPrepPayloadSchema.safeParse(payload)
@@ -183,6 +189,7 @@ export async function saveInterviewPrepAction(tailoredResumeId: string, payload:
     return {
       success: false,
       error: validated.error.issues.map((i) => i.message).join(', '),
+      status: 422,
     }
   }
 
@@ -195,11 +202,26 @@ export async function saveInterviewPrepAction(tailoredResumeId: string, payload:
     })
 
     if (!resume) {
-      return { success: false, error: 'Tailored resume not found or access denied.' }
+      return { success: false, error: 'Tailored resume not found or access denied.', status: 404 }
+    }
+
+    // Invariant: rejects a save whose submitted updatedAt is older than stored value with 409
+    const existingPrep = normalizeInterviewPrepPayload(resume.interviewPrep)
+    if (existingPrep?.updatedAt && validated.data.updatedAt) {
+      const storedTime = new Date(existingPrep.updatedAt).getTime()
+      const submittedTime = new Date(validated.data.updatedAt).getTime()
+      if (submittedTime < storedTime) {
+        return {
+          success: false,
+          error: 'Conflict: Stale save rejected because a newer version exists.',
+          status: 409,
+        }
+      }
     }
 
     const updatedPayload: InterviewPrepPayload = {
       ...validated.data,
+      version: 2,
       updatedAt: new Date().toISOString(),
     }
 
@@ -213,7 +235,7 @@ export async function saveInterviewPrepAction(tailoredResumeId: string, payload:
     return { success: true, data: updatedPayload }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to save interview prep'
-    return { success: false, error: message }
+    return { success: false, error: message, status: 500 }
   }
 }
 
@@ -224,7 +246,7 @@ export async function regenerateInterviewQuestionAction(
 ) {
   const session = await auth()
   if (!session?.user?.id) {
-    return { success: false, error: 'Unauthorized' }
+    return { success: false, error: 'Unauthorized', status: 401 }
   }
 
   const inputParsed = RegenerateInterviewQuestionInputSchema.safeParse({
@@ -237,6 +259,7 @@ export async function regenerateInterviewQuestionAction(
     return {
       success: false,
       error: inputParsed.error.issues.map((i) => i.message).join(', '),
+      status: 422,
     }
   }
 
@@ -258,29 +281,38 @@ export async function regenerateInterviewQuestionAction(
     })
 
     if (!resume) {
-      return { success: false, error: 'Tailored resume not found or access denied.' }
+      return { success: false, error: 'Tailored resume not found or access denied.', status: 404 }
     }
 
-    const existingPrep = resume.interviewPrep as unknown as InterviewPrepPayload | null
+    const existingPrep = normalizeInterviewPrepPayload(resume.interviewPrep)
     if (!existingPrep || !existingPrep.questions?.length) {
       return {
         success: false,
         error: 'No existing interview prep found. Please generate interview prep first.',
+        status: 404,
       }
     }
 
     const targetIndex = existingPrep.questions.findIndex((q) => q.id === questionId)
     if (targetIndex === -1) {
-      return { success: false, error: 'Question not found in interview prep.' }
+      return { success: false, error: 'Question not found in interview prep.', status: 404 }
     }
 
     const targetQuestion = existingPrep.questions[targetIndex]
+    if (targetQuestion.customOrigin) {
+      return {
+        success: false,
+        error: 'Custom questions cannot be regenerated.',
+        status: 422,
+      }
+    }
 
     const activeSettings = await getActiveProviderSettings(session.user.id)
     if (!activeSettings.length || !activeSettings[0].apiKey) {
       return {
         success: false,
         error: 'No active AI provider configured. Please configure an API key in Settings.',
+        status: 503,
       }
     }
 
@@ -323,6 +355,7 @@ export async function regenerateInterviewQuestionAction(
     updatedQuestions[targetIndex] = {
       id: crypto.randomUUID(),
       category: targetQuestion.category,
+      customOrigin: false,
       question: object.question,
       whyAsked: object.whyAsked,
       starResponse: object.starResponse,
@@ -332,6 +365,7 @@ export async function regenerateInterviewQuestionAction(
 
     const updatedPayload: InterviewPrepPayload = {
       ...existingPrep,
+      version: 2,
       updatedAt: new Date().toISOString(),
       questions: updatedQuestions,
     }
@@ -346,6 +380,6 @@ export async function regenerateInterviewQuestionAction(
     return { success: true, data: updatedPayload }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Failed to regenerate interview question'
-    return { success: false, error: message }
+    return { success: false, error: message, status: 500 }
   }
 }
