@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { healthBand, type HealthScoreBand } from '@/lib/health/constants'
 import type { HealthAuditView } from '@/lib/health/queries'
 import type { Dictionary, HealthDictionary } from '@/lib/i18n/types'
@@ -105,33 +105,25 @@ export function HealthProfileCardClient({
   const openCount = view.openCount
 
   return (
-    <Card className="border-border bg-card" data-testid="health-profile-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold text-foreground">
-          {t.profileCardTitle || 'Base resume health'}
-        </CardTitle>
-        <CardDescription className="mt-0.5 text-xs text-muted-foreground">
-          {t.profileCardSubtitle || ''}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="border-border/70 bg-card/70" data-testid="health-profile-card">
+      <CardContent className="p-3.5 sm:px-5 sm:py-3.5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div
-            className="flex min-w-0 flex-1 items-center gap-4"
+            className="flex min-w-0 flex-1 items-center gap-3.5"
             dir={cardLang === 'ar' ? 'rtl' : 'ltr'}
           >
             <div
-              className="relative h-20 w-20 shrink-0"
+              className="relative h-12 w-12 shrink-0"
               role="img"
               aria-label={`${formatNumber(clamped, cardLang)} ${t.scoreOutOf || 'out of 100'}`}
             >
-              <svg viewBox="0 0 96 96" className="h-20 w-20 -rotate-90" aria-hidden="true">
+              <svg viewBox="0 0 96 96" className="h-12 w-12 -rotate-90" aria-hidden="true">
                 <circle
                   cx="48"
                   cy="48"
                   r="40"
                   fill="none"
-                  strokeWidth="8"
+                  strokeWidth="9"
                   className="stroke-muted"
                 />
                 <circle
@@ -139,7 +131,7 @@ export function HealthProfileCardClient({
                   cy="48"
                   r="40"
                   fill="none"
-                  strokeWidth="8"
+                  strokeWidth="9"
                   strokeLinecap="round"
                   className={bandStyles.ring}
                   strokeDasharray={CIRCUMFERENCE}
@@ -148,7 +140,7 @@ export function HealthProfileCardClient({
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
                 <span
-                  className={cn('text-xl font-bold leading-none tabular-nums', bandStyles.text)}
+                  className={cn('text-sm font-bold leading-none tabular-nums', bandStyles.text)}
                 >
                   {formatNumber(clamped, cardLang)}
                 </span>
@@ -156,14 +148,25 @@ export function HealthProfileCardClient({
             </div>
 
             <div className="min-w-0 space-y-0.5">
-              <p className={cn('text-sm font-semibold', bandStyles.text)}>{bandText}</p>
-              <p className="text-xs text-muted-foreground">
-                {formatNumber(openCount, cardLang)} {t.openIssuesSuffix || 'open issues'}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-foreground">
+                  {t.profileCardTitle || 'Base resume health'}
+                </span>
+                <span className="text-muted-foreground/50" aria-hidden>
+                  ·
+                </span>
+                <span className={cn('text-xs font-semibold', bandStyles.text)}>{bandText}</span>
+                <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                  {formatNumber(openCount, cardLang)} {t.openIssuesSuffix || 'open issues'}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {t.profileCardSubtitle || 'Recalculated from your master profile on every visit.'}
               </p>
             </div>
           </div>
 
-          <Button asChild variant="outline" size="sm" className="w-full shrink-0 sm:w-auto">
+          <Button asChild variant="outline" size="sm" className="h-8 w-full shrink-0 text-xs sm:w-auto">
             <Link href={`/${lang}/resume?auditLang=${cardLang}`}>
               {t.viewAudit || 'Open the full audit'}
             </Link>

@@ -91,69 +91,73 @@ export function ProfileOverviewCard({
 
   return (
     <>
-      <Card className="relative overflow-hidden border-border bg-card">
-        {/* Subtle decorative background gradient */}
-        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
+      <Card className="relative overflow-hidden border-border/70 bg-card">
+        <CardContent className="p-4 sm:p-5">
+          <div className="flex items-center gap-4">
+            {/* Compact Avatar with hover trigger */}
+            <div className="relative group shrink-0">
+              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-border/80 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-lg font-bold text-primary shadow-2xs transition-transform duration-300 group-hover:scale-102">
+                {user.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.image} alt={activeName} className="h-full w-full object-cover" />
+                ) : (
+                  <span aria-hidden>{initials}</span>
+                )}
+              </div>
 
-        <CardContent className="relative flex flex-col items-center pt-8 pb-6 text-center">
-          {/* Avatar with hover trigger */}
-          <div className="relative group mb-4">
-            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-border/80 bg-gradient-to-br from-primary/20 via-primary/10 to-transparent text-[24px] font-bold text-primary shadow-sm transition-transform duration-300 group-hover:scale-102">
-              {user.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={user.image} alt={activeName} className="h-full w-full object-cover" />
-              ) : (
-                <span aria-hidden>{initials}</span>
-              )}
+              <button
+                type="button"
+                onClick={() => setCropModalOpen(true)}
+                aria-label={isAr ? 'تعديل الصورة الشخصية' : 'Edit profile photo'}
+                className="absolute -bottom-0.5 -end-0.5 flex h-7 w-7 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-xs transition-colors hover:border-primary/50 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Camera className="h-3.5 w-3.5 text-primary" />
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setCropModalOpen(true)}
-              aria-label={isAr ? 'تعديل الصورة الشخصية' : 'Edit profile photo'}
-              className="absolute bottom-0 end-0 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-sm transition-colors hover:border-primary/50 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Camera className="h-4 w-4 text-primary" />
-            </button>
+            {/* Name, Headline & Badges */}
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-bold tracking-tight text-foreground truncate">
+                {activeName}
+              </h2>
+
+              {profile.headline ? (
+                <p className="mt-0.5 text-xs font-medium text-muted-foreground truncate">
+                  {profile.headline}
+                </p>
+              ) : (
+                <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground/75">
+                  <Sparkles className="h-3 w-3 text-primary/70" />
+                  {isAr ? 'أضف مسمى مهني' : 'Add a headline to stand out'}
+                </span>
+              )}
+
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <Badge variant="outline" className="text-[10px] py-0 px-1.5">
+                  {profile.language === 'AR' ? 'العربية (AR)' : 'English (EN)'}
+                </Badge>
+                {profile.location && (
+                  <Badge variant="secondary" className="gap-1 text-[10px] py-0 px-1.5">
+                    <MapPin className="h-2.5 w-2.5 text-muted-foreground" />
+                    {profile.location}
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
 
-          {/* Name & Headline */}
-          <h2 className="text-[19px] font-bold tracking-tight text-foreground">{activeName}</h2>
-
-          {profile.headline ? (
-            <p className="mt-1 text-[13px] font-medium text-muted-foreground">{profile.headline}</p>
-          ) : (
-            <span className="mt-1 inline-flex items-center gap-1 text-[11px] text-muted-foreground/75">
-              <Sparkles className="h-3 w-3 text-primary/70" />
-              {isAr ? 'أضف مسمى مهني لجذب مسؤولي التوظيف' : 'Add a headline to stand out'}
-            </span>
-          )}
-
-          {/* Badges / Chips */}
-          <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-            <Badge variant="outline" className="text-[11px]">
-              {profile.language === 'AR' ? 'العربية (AR)' : 'English (EN)'}
-            </Badge>
-            {profile.location && (
-              <Badge variant="secondary" className="gap-1 text-[11px]">
-                <MapPin className="h-3 w-3 text-muted-foreground" />
-                {profile.location}
-              </Badge>
-            )}
-          </div>
-
-          {/* Contact and Links List */}
-          <div className="mt-6 flex w-full flex-col gap-2 border-t border-border/60 pt-4 text-[12px] text-start">
+          {/* Compact Contact Summary Footer */}
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border/50 pt-3 text-[11px] text-muted-foreground">
             {activeEmail && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mail className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Mail className="h-3 w-3 shrink-0 text-muted-foreground" />
                 <span className="truncate">{activeEmail}</span>
               </div>
             )}
 
             {profile.phone && (
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Phone className="h-3.5 w-3.5 shrink-0 text-primary" />
+              <div className="flex items-center gap-1.5">
+                <Phone className="h-3 w-3 shrink-0 text-muted-foreground" />
                 <span dir="ltr" className="truncate">
                   {profile.phone}
                 </span>
@@ -165,11 +169,11 @@ export function ProfileOverviewCard({
                 href={profile.websiteUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+                className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary"
               >
-                <Globe className="h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="truncate">{profile.websiteUrl}</span>
-                <ExternalLink className="h-3 w-3 ms-auto opacity-70" />
+                <Globe className="h-3 w-3 shrink-0" />
+                <span className="truncate max-w-[140px]">{profile.websiteUrl}</span>
+                <ExternalLink className="h-2.5 w-2.5 opacity-70" />
               </a>
             )}
 
@@ -178,11 +182,11 @@ export function ProfileOverviewCard({
                 href={profile.linkedinUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+                className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary"
               >
-                <LinkedInIcon className="h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="truncate">LinkedIn</span>
-                <ExternalLink className="h-3 w-3 ms-auto opacity-70" />
+                <LinkedInIcon className="h-3 w-3 shrink-0" />
+                <span>LinkedIn</span>
+                <ExternalLink className="h-2.5 w-2.5 opacity-70" />
               </a>
             )}
 
@@ -191,11 +195,11 @@ export function ProfileOverviewCard({
                 href={profile.githubUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-primary"
+                className="inline-flex items-center gap-1 text-muted-foreground transition-colors hover:text-primary"
               >
-                <GitHubIcon className="h-3.5 w-3.5 shrink-0 text-primary" />
-                <span className="truncate">GitHub</span>
-                <ExternalLink className="h-3 w-3 ms-auto opacity-70" />
+                <GitHubIcon className="h-3 w-3 shrink-0" />
+                <span>GitHub</span>
+                <ExternalLink className="h-2.5 w-2.5 opacity-70" />
               </a>
             )}
           </div>

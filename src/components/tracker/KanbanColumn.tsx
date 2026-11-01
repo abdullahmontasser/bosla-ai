@@ -71,20 +71,20 @@ export function KanbanColumn({
     <div
       ref={setNodeRef}
       data-testid={`kanban-column-${id}`}
-      className={`flex flex-col rounded-xl border bg-muted/30 p-3 transition-colors min-w-[280px] w-full max-w-[320px] flex-1 ${
+      className={`flex flex-col rounded-xl border bg-muted/25 p-3 transition-colors min-w-0 w-full ${
         isOver ? 'border-primary/60 bg-primary/5 ring-1 ring-primary/20' : 'border-border/60'
       }`}
     >
       {/* Column Header */}
-      <div className="flex items-center justify-between pb-3 px-1 border-b border-border/40">
-        <div className="flex items-center gap-2">
-          <span className={`size-2.5 rounded-full ${colors.dot}`} />
-          <h3 className="font-semibold text-xs text-foreground uppercase tracking-wider">
+      <div className="flex items-center justify-between pb-2.5 px-1 border-b border-border/40">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className={`size-2 rounded-full shrink-0 ${colors.dot}`} />
+          <h3 className="font-semibold text-[11px] text-foreground uppercase tracking-wider truncate">
             {title}
           </h3>
         </div>
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${colors.count}`}
+          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold shrink-0 tabular-nums ${colors.count}`}
           data-testid={`column-count-${id}`}
         >
           {cards.length}
@@ -92,7 +92,7 @@ export function KanbanColumn({
       </div>
 
       {/* Cards List / Droppable Area */}
-      <div className="mt-3 flex-1 space-y-2.5 min-h-[350px]">
+      <div className="mt-3 flex-1 space-y-2.5 min-h-[220px]">
         <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
           {cards.map((card) => (
             <KanbanCard
@@ -110,13 +110,13 @@ export function KanbanColumn({
         {/* Empty Drop Zone Placeholder */}
         {cards.length === 0 && (
           <div
-            className={`flex h-44 flex-col items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs transition-colors ${
+            className={`flex h-36 flex-col items-center justify-center rounded-lg border border-dashed p-3 text-center text-[11px] transition-colors ${
               isOver
                 ? 'border-primary bg-primary/10 text-primary'
-                : 'border-border/60 bg-card/40 text-muted-foreground'
+                : 'border-border/40 bg-background/20 text-muted-foreground/80'
             }`}
           >
-            <p className="max-w-[200px] leading-relaxed">
+            <p className="max-w-[180px] leading-relaxed">
               {emptyMessage || 'Drop applications here'}
             </p>
           </div>

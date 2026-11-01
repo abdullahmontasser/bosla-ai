@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import type { AiProvider } from '@prisma/client'
+import type { AiProvider, ResumeGenerationStatus } from '@prisma/client'
 import { JobPostingForm } from './JobPostingForm'
 import { LiveTailorStream } from './LiveTailorStream'
 import { CandidateBadge } from './CandidateBadge'
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Sparkles, Square, AlertCircle, ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 import type { Dictionary, TailorDictionary } from '@/lib/i18n/types'
+import type { TailoredResumeContentSnapshot } from '@/lib/ai/tailor-prompt'
 
 export interface StudioContainerProps {
   initialProfile?: {
@@ -33,11 +34,13 @@ export interface StudioContainerProps {
   configuredProviders?: AiProvider[]
   initialLatestTailoredResume?: {
     id: string
+    status?: ResumeGenerationStatus
     atsScore?: number | null
     atsBreakdown?: unknown | null
     hasOutreach?: boolean
     hasApplication?: boolean
     tailoredSummary?: string | null
+    tailoredContent?: TailoredResumeContentSnapshot | null
     jobPosting?: {
       title: string
       companyName: string
@@ -92,15 +95,21 @@ Requirements:
 - Strong proficiency in TypeScript, React, and PostgreSQL.`,
   )
 
+  const initialStream = (initialLatestTailoredResume?.tailoredSummary || '').trim()
+  const hasValidInitialCompletion = Boolean(
+    initialLatestTailoredResume?.id &&
+      initialLatestTailoredResume?.status !== 'GENERATING' &&
+      initialLatestTailoredResume?.status !== 'FAILED' &&
+      (initialStream.length > 0 || initialLatestTailoredResume?.atsScore != null),
+  )
+
   // Streaming & Workbench State (AC-4, AC-5)
   const [status, setStatus] = React.useState<'IDLE' | 'GENERATING' | 'COMPLETED' | 'FAILED'>(
-    initialLatestTailoredResume?.id ? 'COMPLETED' : 'IDLE',
+    hasValidInitialCompletion ? 'COMPLETED' : 'IDLE',
   )
-  const [streamText, setStreamText] = React.useState(
-    initialLatestTailoredResume?.tailoredSummary || '',
-  )
+  const [streamText, setStreamText] = React.useState(initialStream)
   const [tailoredResumeId, setTailoredResumeId] = React.useState<string | null>(
-    initialLatestTailoredResume?.id || null,
+    hasValidInitialCompletion ? initialLatestTailoredResume?.id || null : null,
   )
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const abortControllerRef = React.useRef<AbortController | null>(null)
@@ -236,6 +245,22 @@ Requirements:
 
   // Form experiences formatted for AtsWorkbench
   const initialExperiences = React.useMemo(() => {
+    const snapshotExps = initialLatestTailoredResume?.tailoredContent?.tailoredExperiences
+    if (Array.isArray(snapshotExps) && snapshotExps.length > 0) {
+      return snapshotExps.map((exp, idx) => {
+        const origExp = initialProfile?.workExperiences?.[idx]
+        return {
+          companyName: exp.companyName,
+          jobTitle: exp.jobTitle,
+          bullets: (exp.bullets || []).map((b, bIdx) => ({
+            original: origExp?.bullets?.[bIdx] || b.tailored,
+            rewritten: b.tailored,
+            tailored: b.tailored,
+          })),
+        }
+      })
+    }
+
     return (
       initialProfile?.workExperiences?.map((exp) => ({
         companyName: exp.companyName,
@@ -246,17 +271,17 @@ Requirements:
         })),
       })) || []
     )
-  }, [initialProfile])
+  }, [initialProfile, initialLatestTailoredResume])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 pb-8">
       {/* Top Banner, Candidate Badge, and Provider Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-4">
-        <div className="space-y-2">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border/70 pb-5">
+        <div className="space-y-1.5">
           <div className="flex items-center gap-3 flex-wrap">
-            <h2 className="text-xl font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
               {t.title || 'Resume Tailoring Studio'}
-            </h2>
+            </h1>
             {/* Decoupled candidate header badge (AC-3) */}
             {hasProfile && (
               <CandidateBadge
@@ -268,13 +293,13 @@ Requirements:
               />
             )}
           </div>
-          <p className="text-xs text-muted-foreground max-w-xl">
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
             {t.subtitle ||
               'Align your experience with target job descriptions in real-time using your active AI provider.'}
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <ProviderSwitcher
             initialActiveProvider={activeProvider}
             initialDefaultModel={initialDefaultModel}
@@ -313,9 +338,9 @@ Requirements:
       )}
 
       {/* Studio Workbench Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* Left Column: Job Posting Input & Generate Trigger */}
-        <div className="lg:col-span-6 space-y-6">
+        <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
           <JobPostingForm
             jobTitle={jobTitle}
             companyName={companyName}
@@ -325,13 +350,13 @@ Requirements:
           />
 
           {/* Action Trigger */}
-          <div className="pt-2">
+          <div>
             {isGenerating ? (
               <Button
                 type="button"
                 variant="destructive"
                 onClick={handleStopGeneration}
-                className="w-full h-10 gap-2 text-xs font-semibold shadow-sm"
+                className="w-full h-11 gap-2 text-xs font-semibold shadow-sm"
               >
                 <Square className="size-3.5 fill-current" />
                 {t.stopGenerating || 'Stop Generation'}
@@ -342,7 +367,7 @@ Requirements:
                 variant="default"
                 onClick={handleStartTailoring}
                 disabled={!hasProfile || !hasActiveProvider || rawJobDescription.trim().length < 50}
-                className="w-full h-10 gap-2 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm disabled:opacity-50"
+                className="w-full h-11 gap-2 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm disabled:opacity-50"
               >
                 <Sparkles className="size-4" />
                 {t.tailorButton || 'Generate Tailored Resume'}
@@ -361,7 +386,7 @@ Requirements:
         </div>
 
         {/* Right Column: Live Streaming Preview Island (AC-4) */}
-        <div className="lg:col-span-6 lg:sticky lg:top-6">
+        <div className="lg:col-span-6 flex flex-col">
           <LiveTailorStream
             status={status}
             streamText={streamText}
@@ -374,7 +399,17 @@ Requirements:
 
       {/* Studio Post-Tailoring Results Workbenches (AC-5, AC-6, AC-7, AC-8, AC-9) */}
       {tailoredResumeId && status === 'COMPLETED' && (
-        <div className="pt-6 border-t border-border/80 space-y-6" data-testid="studio-workbenches">
+        <div className="pt-8 border-t border-border/70 space-y-6" data-testid="studio-workbenches">
+          {/* Unified Workflow Handoff Bar placed cleanly without overlapping content (AC-8, AC-9) */}
+          <TailorActionBar
+            tailoredResumeId={tailoredResumeId}
+            jobTitle={jobTitle}
+            companyName={companyName}
+            initialHasApplication={Boolean(initialLatestTailoredResume?.hasApplication)}
+            lang={lang}
+            dict={dict}
+          />
+
           {/* Integrated ATS Match Scoring & Vector PDF Export (AC-5, AC-6) */}
           <AtsWorkbench
             tailoredResumeId={tailoredResumeId}
@@ -393,16 +428,6 @@ Requirements:
               initialLatestTailoredResume?.outreachMessage,
             )}
             initialOutreach={null}
-            lang={lang}
-            dict={dict}
-          />
-
-          {/* Unified Bottom Action Bar with Tracker and STAR Interview Prep Handoffs (AC-8, AC-9) */}
-          <TailorActionBar
-            tailoredResumeId={tailoredResumeId}
-            jobTitle={jobTitle}
-            companyName={companyName}
-            initialHasApplication={Boolean(initialLatestTailoredResume?.hasApplication)}
             lang={lang}
             dict={dict}
           />

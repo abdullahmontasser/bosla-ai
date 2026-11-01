@@ -61,7 +61,9 @@ export function KanbanCard({
 
   // Extract connection note if available
   const outreachPayload = card.tailoredResume?.outreachMessage as
-    { connectionNoteText?: string; inMail?: { body?: string } } | null | undefined
+    | { connectionNoteText?: string; inMail?: { body?: string } }
+    | null
+    | undefined
 
   const outreachNote = outreachPayload?.connectionNoteText || outreachPayload?.inMail?.body || null
 
@@ -98,7 +100,7 @@ export function KanbanCard({
       {...listeners}
       onClick={() => onSelect(card)}
       data-testid={`kanban-card-${card.id}`}
-      className={`group relative rounded-lg border bg-card p-3.5 shadow-xs transition-all cursor-pointer select-none ${
+      className={`group relative rounded-lg border bg-card p-3 shadow-xs transition-all cursor-pointer select-none ${
         isDragging
           ? 'opacity-40 border-dashed border-primary shadow-lg ring-2 ring-primary/20'
           : 'border-border/80 hover:border-primary/50 hover:shadow-sm'
@@ -120,12 +122,15 @@ export function KanbanCard({
       )}
 
       {/* Card Header: Job Title & Quick Menu */}
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-1.5">
         <div className="min-w-0 flex-1">
-          <h4 className="font-semibold text-sm text-foreground line-clamp-1 leading-snug tracking-tight">
+          <h4
+            className="font-semibold text-xs sm:text-[13px] text-foreground line-clamp-2 leading-snug tracking-tight"
+            title={card.jobPosting.title}
+          >
             {card.jobPosting.title}
           </h4>
-          <p className="text-xs text-muted-foreground line-clamp-1 mt-0.5 font-medium">
+          <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 font-medium">
             {card.jobPosting.companyName}
           </p>
         </div>
@@ -137,7 +142,7 @@ export function KanbanCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-7 rounded-md text-muted-foreground hover:text-foreground"
+                className="size-6 rounded-md text-muted-foreground hover:text-foreground"
                 aria-label={t.changeStatus || 'Change status'}
                 data-testid={`card-menu-trigger-${card.id}`}
               >
@@ -166,40 +171,45 @@ export function KanbanCard({
       </div>
 
       {/* Optional Metadata: Location, Salary, Interview Date */}
-      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-        {card.location && (
-          <span className="flex items-center gap-1">
-            <MapPin className="size-3 shrink-0" />
-            <span className="truncate max-w-[120px]">{card.location}</span>
-          </span>
-        )}
-        {card.compensation && (
-          <span className="flex items-center gap-1">
-            <DollarSign className="size-3 shrink-0" />
-            <span className="truncate max-w-[100px]">{card.compensation}</span>
-          </span>
-        )}
-        {card.interviewDate && (
-          <span className="flex items-center gap-1 font-medium text-primary">
-            <Calendar className="size-3 shrink-0" />
-            <span>
-              {new Date(card.interviewDate).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
-                month: 'short',
-                day: 'numeric',
-              })}
+      {(card.location || card.compensation || card.interviewDate) && (
+        <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-muted-foreground">
+          {card.location && (
+            <span className="flex items-center gap-1">
+              <MapPin className="size-3 shrink-0" />
+              <span className="truncate max-w-[110px]">{card.location}</span>
             </span>
-          </span>
-        )}
-      </div>
+          )}
+          {card.compensation && (
+            <span className="flex items-center gap-1">
+              <DollarSign className="size-3 shrink-0" />
+              <span className="truncate max-w-[90px]">{card.compensation}</span>
+            </span>
+          )}
+          {card.interviewDate && (
+            <span className="flex items-center gap-1 font-medium text-primary">
+              <Calendar className="size-3 shrink-0" />
+              <span>
+                {new Date(card.interviewDate).toLocaleDateString(
+                  lang === 'ar' ? 'ar-EG' : 'en-US',
+                  {
+                    month: 'short',
+                    day: 'numeric',
+                  },
+                )}
+              </span>
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Card Footer: ATS Match Badge + Quick Outreach Copy */}
-      <div className="mt-3.5 pt-2.5 border-t border-border/50 flex items-center justify-between gap-2">
+      <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between gap-1.5">
         {/* ATS Score Badge */}
         {atsScore != null ? (
           <Link
             href={`/${lang}/tailor?resumeId=${card.tailoredResumeId}`}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1.5 rounded-xs px-2 py-0.5 text-[11px] font-medium tracking-tight bg-secondary hover:bg-secondary/80 text-foreground transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium tracking-tight bg-secondary hover:bg-secondary/80 text-foreground transition-colors"
             title="ATS Match Score"
             data-testid={`ats-score-badge-${card.id}`}
           >
@@ -230,7 +240,7 @@ export function KanbanCard({
               size="sm"
               onClick={handleCopyOutreach}
               data-testid={`copy-outreach-${card.id}`}
-              className="h-6 px-2 text-[10px] gap-1 rounded-sm border-border/80 text-foreground hover:bg-accent"
+              className="h-6 px-2 text-[10px] gap-1 rounded-md border-border/80 text-foreground hover:bg-accent"
               title={outreachNote}
             >
               {copied ? (

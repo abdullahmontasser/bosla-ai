@@ -7,7 +7,8 @@ import { SaveCandidateProfileSchema } from '@/lib/validations/tailor'
 import { getSampleCandidate } from '@/lib/fixtures/sample-candidate'
 import { getProviderConfigurations } from '@/app/actions/provider-settings'
 import { getOutreachMessageAction } from '@/app/actions/outreach-actions'
-import type { Language, AiProvider } from '@prisma/client'
+import type { Language, AiProvider, ResumeGenerationStatus } from '@prisma/client'
+import type { TailoredResumeContentSnapshot } from '@/lib/ai/tailor-prompt'
 
 export { getOutreachMessageAction }
 
@@ -91,11 +92,13 @@ export interface TailorStudioData {
   configuredProviders: AiProvider[]
   latestTailoredResume?: {
     id: string
+    status?: ResumeGenerationStatus
     atsScore?: number | null
     atsBreakdown?: unknown | null
     hasOutreach: boolean
     hasApplication: boolean
     tailoredSummary?: string | null
+    tailoredContent?: TailoredResumeContentSnapshot | null
     jobPosting?: {
       title: string
       companyName: string
@@ -103,6 +106,36 @@ export interface TailorStudioData {
     } | null
     outreachMessage?: unknown | null
   } | null
+}
+
+function reconstructFormattedStream(
+  tailoredSummary?: string | null,
+  tailoredContent?: unknown,
+): string {
+  const snapshot = tailoredContent as TailoredResumeContentSnapshot | null | undefined
+  const summary = (tailoredSummary || snapshot?.tailoredSummary || '').trim()
+  const bullets: string[] = []
+
+  if (snapshot && Array.isArray(snapshot.tailoredExperiences)) {
+    for (const exp of snapshot.tailoredExperiences) {
+      if (Array.isArray(exp.bullets)) {
+        for (const b of exp.bullets) {
+          const text = typeof b?.tailored === 'string' ? b.tailored.trim() : ''
+          if (text) bullets.push(`- ${text}`)
+        }
+      }
+    }
+  }
+
+  if (!summary && bullets.length === 0) {
+    return ''
+  }
+
+  if (bullets.length === 0) {
+    return summary
+  }
+
+  return `### SUMMARY\n${summary}\n\n### BULLETS\n${bullets.join('\n')}`
 }
 
 export async function getTailorStudioInitialData(
@@ -131,15 +164,18 @@ export async function getTailorStudioInitialData(
       where: {
         userId: session.user.id,
         language: language as Language,
+        status: 'COMPLETED',
       },
       orderBy: {
         createdAt: 'desc',
       },
       select: {
         id: true,
+        status: true,
         atsScore: true,
         atsBreakdown: true,
         tailoredSummary: true,
+        tailoredContent: true,
         outreachMessage: true,
         jobPosting: {
           select: {
@@ -196,9 +232,15 @@ export async function getTailorStudioInitialData(
     latestTailoredResume: latestResume
       ? {
           id: latestResume.id,
+          status: latestResume.status,
           atsScore: latestResume.atsScore,
           atsBreakdown: latestResume.atsBreakdown,
-          tailoredSummary: latestResume.tailoredSummary,
+          tailoredSummary: reconstructFormattedStream(
+            latestResume.tailoredSummary,
+            latestResume.tailoredContent,
+          ),
+          tailoredContent:
+            (latestResume.tailoredContent as unknown as TailoredResumeContentSnapshot) ?? null,
           hasOutreach: latestResume.outreachMessage !== null,
           hasApplication: (latestResume.applications?.length ?? 0) > 0,
           jobPosting: latestResume.jobPosting

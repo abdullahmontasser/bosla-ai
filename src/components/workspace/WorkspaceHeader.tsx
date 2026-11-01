@@ -30,8 +30,8 @@ export async function WorkspaceHeader({ lang, section }: WorkspaceHeaderProps) {
   const labels = getWorkspaceLabels(lang)
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 w-full max-w-[1320px] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 w-full border-b border-border/70 bg-background/90 backdrop-blur-xl">
+      <div className="mx-auto flex h-15 w-full max-w-[1320px] items-center gap-2 px-4 sm:gap-3 sm:px-6 lg:px-8">
         <Link
           href={`/${lang}`}
           className="group flex shrink-0 items-center gap-2 rounded-[6px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
@@ -51,15 +51,13 @@ export async function WorkspaceHeader({ lang, section }: WorkspaceHeaderProps) {
           </span>
         </Link>
 
-        <span className="mx-1 hidden h-4 w-px bg-border md:block" aria-hidden />
+        <span className="mx-1.5 hidden h-4 w-px bg-border/80 md:block" aria-hidden />
 
         <WorkspaceNav lang={lang} labels={labels} />
 
         <div className="ms-auto flex items-center gap-1.5 sm:gap-2">
-          <span className="me-1 hidden max-w-[14rem] truncate text-[12px] font-medium text-muted-foreground lg:block">
-            {section}
-          </span>
-          <LanguageSwitcher currentLang={lang} className="h-9 gap-1.5 px-2.5 text-[12px]" />
+          <span className="sr-only">{section}</span>
+          <LanguageSwitcher currentLang={lang} className="h-8 gap-1.5 px-2.5 text-[12px]" />
           <ThemeSwitcher />
           <AccountMenu
             lang={lang}

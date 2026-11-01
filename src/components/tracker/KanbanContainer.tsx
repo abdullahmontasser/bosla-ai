@@ -500,7 +500,7 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
         }}
       >
         <div
-          className="flex items-start gap-4 overflow-x-auto pb-6 pt-2 scrollbar-thin"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-start pb-6 pt-2"
           data-testid="kanban-columns-wrapper"
         >
           {COLUMN_ORDER.map((columnId) => (
@@ -525,7 +525,7 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
         {/* DragOverlay for Smooth Drag Preview Without DOM Reorder (AC-2) */}
         <DragOverlay>
           {activeCard ? (
-            <div className="w-[300px] rotate-2 scale-105 shadow-2xl ring-2 ring-primary">
+            <div className="w-[260px] rotate-2 scale-105 shadow-2xl ring-2 ring-primary">
               <KanbanCard
                 card={activeCard}
                 lang={lang}

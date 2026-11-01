@@ -28,6 +28,7 @@ import {
   ArrowRight,
   BookOpenCheck,
   Briefcase,
+  Calendar,
   Check,
   CheckCircle2,
   Copy,
@@ -47,6 +48,19 @@ export interface CareerPrepClientProps {
   fallbackNotice: boolean
 }
 
+function formatShortDate(isoDate: string, lang: 'en' | 'ar'): string {
+  try {
+    const d = new Date(isoDate)
+    if (Number.isNaN(d.getTime())) return ''
+    return d.toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+    })
+  } catch {
+    return ''
+  }
+}
+
 export function CareerPrepClient({
   lang,
   dict,
@@ -63,6 +77,7 @@ export function CareerPrepClient({
     React.useState<CareerPrepSelectorRow[]>(initialSelectorRows)
   const [hasMore, setHasMore] = React.useState(initialHasMore)
   const [isLoadingMore, setIsLoadingMore] = React.useState(false)
+  const [statusFilter, setStatusFilter] = React.useState<'all' | 'ready' | 'needs_prep'>('all')
   const selectedResume = initialSelectedResume
   const [payload, setPayload] = React.useState<InterviewPrepPayload | null>(
     initialSelectedResume?.payload ?? null,
@@ -382,6 +397,14 @@ export function CareerPrepClient({
   const customQuestionsCount = payload?.questions.filter((q) => q.customOrigin).length ?? 0
   const isCustomAtCap = customQuestionsCount >= 10
   const contentDir = selectedResume?.language === 'AR' ? 'rtl' : 'ltr'
+  const hasAnyQuestions = Boolean(payload && payload.questions.length > 0)
+  const showGenerateCta = !payload || payload.questions.every((q) => q.customOrigin)
+
+  const filteredSelectorRows = selectorRows.filter((row) => {
+    if (statusFilter === 'ready') return row.hasInterviewPrep
+    if (statusFilter === 'needs_prep') return !row.hasInterviewPrep
+    return true
+  })
 
   return (
     <div className="space-y-6" data-testid="career-prep-hub">
@@ -407,13 +430,16 @@ export function CareerPrepClient({
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Job Selector Sidebar */}
-        <aside className="lg:col-span-4 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-border/80">
+        <aside className="lg:col-span-4 space-y-3">
+          <div className="flex items-center justify-between pb-2.5 border-b border-border/70">
             <div className="flex items-center gap-2">
               <Briefcase className="size-4 text-primary" />
               <h2 className="text-sm font-semibold tracking-tight text-foreground">
                 {t.jobSelector || 'Tailored Jobs'}
               </h2>
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums">
+                {selectorRows.length}
+              </span>
             </div>
             <Button
               asChild
@@ -422,39 +448,84 @@ export function CareerPrepClient({
               className="h-7 text-[11px] gap-1 px-2 text-muted-foreground hover:text-foreground"
             >
               <Link href={`/${lang}/tailor`}>
-                <span>{t.openInStudio || 'Studio'}</span>
+                <span>{t.openInStudio || 'Open in Tailor Studio'}</span>
                 <ExternalLink className="size-3" />
               </Link>
             </Button>
           </div>
 
-          <div className="space-y-2" data-testid="career-prep-selector-list">
-            {selectorRows.map((row) => {
+          {selectorRows.length > 3 && (
+            <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-card/60 p-1">
+              {(
+                [
+                  { key: 'all', label: isArabic ? 'الكل' : 'All' },
+                  { key: 'ready', label: t.statusGenerated || (isArabic ? 'جاهز' : 'Ready') },
+                  {
+                    key: 'needs_prep',
+                    label: t.statusNotGenerated || (isArabic ? 'يحتاج تحضير' : 'Needs prep'),
+                  },
+                ] as const
+              ).map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setStatusFilter(tab.key)}
+                  className={`flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                    statusFilter === tab.key
+                      ? 'bg-secondary text-foreground font-semibold shadow-2xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div
+            className="space-y-2 max-h-[600px] overflow-y-auto pe-1"
+            data-testid="career-prep-selector-list"
+          >
+            {filteredSelectorRows.map((row) => {
               const isSelected = row.tailoredResumeId === selectedResume?.id
+              const dateStr = formatShortDate(row.createdAt, lang)
               return (
                 <button
                   key={row.tailoredResumeId}
                   type="button"
                   onClick={() => handleSelectJob(row.tailoredResumeId)}
-                  className={`w-full text-start p-3 rounded-lg border transition-all ${
+                  className={`w-full text-start p-3 rounded-xl border transition-all ${
                     isSelected
-                      ? 'border-primary bg-primary/5 shadow-xs'
-                      : 'border-border/60 bg-card hover:bg-accent/50'
+                      ? 'border-primary/70 bg-primary/8 shadow-xs ring-1 ring-primary/20'
+                      : 'border-border/60 bg-card/80 hover:bg-accent/40 hover:border-border'
                   }`}
                   data-testid={`selector-row-${row.tailoredResumeId}`}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 space-y-0.5">
                       <p className="text-xs font-semibold text-foreground truncate">
                         {row.roleTitle}
                       </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {row.companyName}
-                      </p>
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <span className="truncate">{row.companyName}</span>
+                        {dateStr && (
+                          <>
+                            <span aria-hidden>·</span>
+                            <span className="inline-flex items-center gap-1 shrink-0 text-[10px] text-muted-foreground/80">
+                              <Calendar className="size-2.5" />
+                              {dateStr}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
                     <Badge
-                      variant={row.hasInterviewPrep ? 'default' : 'secondary'}
-                      className="text-[10px] px-1.5 py-0 shrink-0 font-normal"
+                      variant="outline"
+                      className={`text-[10px] px-2 py-0.5 shrink-0 font-medium rounded-md ${
+                        row.hasInterviewPrep
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                      }`}
                     >
                       {row.hasInterviewPrep
                         ? t.statusGenerated || 'Ready'
@@ -482,27 +553,27 @@ export function CareerPrepClient({
         </aside>
 
         {/* Main Focus Practice View */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-8 space-y-5">
           {selectedResume && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Header and Action Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/80 bg-card shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/70 bg-card shadow-2xs">
                 <div className="min-w-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-base font-bold tracking-tight text-foreground truncate">
                       {selectedResume.roleTitle}
                     </h2>
-                    <Badge variant="outline" className="text-[10px] font-mono py-0">
+                    <Badge variant="secondary" className="text-[11px] font-medium py-0">
                       {selectedResume.companyName}
                     </Badge>
-                    <Badge variant="secondary" className="text-[10px] uppercase font-mono py-0">
+                    <Badge variant="outline" className="text-[10px] uppercase font-mono py-0">
                       {selectedResume.language}
                     </Badge>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {saveStatus === 'saving' && (
                       <span className="animate-pulse text-muted-foreground flex items-center gap-1">
-                        <span className="size-1.5 rounded-full bg-primary animate-ping" />
+                        <span className="size-1.5 rounded-full bg-amber-500 animate-ping" />
                         {t.autosaving || 'Autosaving...'}
                       </span>
                     )}
@@ -520,62 +591,61 @@ export function CareerPrepClient({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                  {payload && (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCopyFullSheet}
-                        className="h-8 gap-1.5 text-xs text-foreground"
-                        data-testid="copy-full-sheet-btn"
-                      >
-                        {copiedFull ? (
-                          <>
-                            <Check className="size-3 text-emerald-600" />
-                            <span>{t.copiedFullSheet || 'Copied'}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="size-3" />
-                            <span>{t.copyFullSheet || 'Copy Full Sheet'}</span>
-                          </>
-                        )}
-                      </Button>
+                {/* Only render header action toolbar when questions exist so we never duplicate the empty state buttons */}
+                {hasAnyQuestions && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyFullSheet}
+                      className="h-8 gap-1.5 text-xs text-foreground"
+                      data-testid="copy-full-sheet-btn"
+                    >
+                      {copiedFull ? (
+                        <>
+                          <Check className="size-3 text-emerald-600" />
+                          <span>{t.copiedFullSheet || 'Copied'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="size-3" />
+                          <span>{t.copyFullSheet || 'Copy Full Sheet'}</span>
+                        </>
+                      )}
+                    </Button>
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handlePrint}
-                        className="h-8 gap-1.5 text-xs text-foreground"
-                        data-testid="print-sheet-btn"
-                      >
-                        <Printer className="size-3.5" />
-                        <span>{t.printCheatSheet || 'Print'}</span>
-                      </Button>
-                    </>
-                  )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrint}
+                      className="h-8 gap-1.5 text-xs text-foreground"
+                      data-testid="print-sheet-btn"
+                    >
+                      <Printer className="size-3.5" />
+                      <span>{t.printCheatSheet || 'Print'}</span>
+                    </Button>
 
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    onClick={handleAddCustomQuestion}
-                    disabled={isCustomAtCap}
-                    className="h-8 gap-1.5 text-xs font-semibold"
-                    title={
-                      isCustomAtCap
-                        ? t.customQuestionLimit || 'Maximum 10 custom questions reached'
-                        : undefined
-                    }
-                    data-testid="add-custom-question-btn"
-                  >
-                    <Plus className="size-3.5" />
-                    <span>{t.addCustomQuestion || 'Add Question'}</span>
-                  </Button>
-                </div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={handleAddCustomQuestion}
+                      disabled={isCustomAtCap}
+                      className="h-8 gap-1.5 text-xs font-semibold"
+                      title={
+                        isCustomAtCap
+                          ? t.customQuestionLimit || 'Maximum 10 custom questions reached'
+                          : undefined
+                      }
+                      data-testid="add-custom-question-btn"
+                    >
+                      <Plus className="size-3.5" />
+                      <span>{t.addCustomQuestion || 'Add Question'}</span>
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Instructional Guidance Banner when profile has zero experiences/projects */}
@@ -597,16 +667,15 @@ export function CareerPrepClient({
                 </div>
               )}
 
-              {/* Generate Inline CTA: no payload yet, or the AI question set is absent
-                  (the empty AI set is a legal state when custom questions led the draft, AC-5) */}
-              {(!payload || payload.questions.every((q) => q.customOrigin)) && (
-                <Card className="border border-dashed border-border/80 bg-card/40">
-                  <CardContent className="flex flex-col items-center justify-center p-8 text-center space-y-4">
-                    <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              {/* Generate Inline CTA: no payload yet, or the AI question set is absent */}
+              {showGenerateCta && (
+                <Card className="border border-dashed border-border/80 bg-card/50">
+                  <CardContent className="flex flex-col items-center justify-center p-8 sm:p-10 text-center space-y-4">
+                    <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       <BookOpenCheck className="size-6" />
                     </div>
-                    <div className="space-y-1 max-w-md">
-                      <h3 className="text-sm font-bold text-foreground">
+                    <div className="space-y-1.5 max-w-md">
+                      <h3 className="text-sm sm:text-base font-bold text-foreground">
                         {t.generateCtaTitle || 'No interview cheat sheet generated yet'}
                       </h3>
                       <p className="text-xs text-muted-foreground leading-relaxed">
@@ -615,7 +684,7 @@ export function CareerPrepClient({
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-wrap justify-center pt-1">
                       <Button
                         type="button"
                         variant="default"
@@ -633,16 +702,20 @@ export function CareerPrepClient({
                         </span>
                       </Button>
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleAddCustomQuestion}
-                        className="h-9 gap-1.5 text-xs text-foreground"
-                      >
-                        <Plus className="size-3.5" />
-                        <span>{t.addCustomQuestion || 'Add Question First'}</span>
-                      </Button>
+                      {!hasAnyQuestions && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddCustomQuestion}
+                          disabled={isCustomAtCap}
+                          className="h-9 gap-1.5 text-xs text-foreground"
+                          data-testid="add-custom-question-btn"
+                        >
+                          <Plus className="size-3.5" />
+                          <span>{t.addCustomQuestion || 'Add Custom Question'}</span>
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

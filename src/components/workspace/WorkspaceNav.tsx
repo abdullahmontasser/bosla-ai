@@ -56,15 +56,18 @@ export function WorkspaceNav({ lang, labels, variant = 'bar', onNavigate }: Work
             onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'inline-flex items-center gap-2 rounded-[7px] px-3 text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-              variant === 'bar' ? 'h-9' : 'min-h-11',
+              'inline-flex items-center gap-2 rounded-lg px-3 text-[13px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              variant === 'bar' ? 'h-8.5' : 'min-h-11',
               active
-                ? 'bg-accent text-foreground'
-                : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground',
+                ? 'bg-secondary font-semibold text-foreground ring-1 ring-border/80 shadow-2xs'
+                : 'font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground',
             )}
           >
             <Icon
-              className={cn('h-3.5 w-3.5', active ? 'text-primary' : 'text-muted-foreground')}
+              className={cn(
+                'h-3.5 w-3.5 transition-colors',
+                active ? 'text-primary' : 'text-muted-foreground/80',
+              )}
               aria-hidden
             />
             {link.label}

@@ -54,17 +54,17 @@ export function TailorActionBar({
 
   return (
     <div
-      className="sticky bottom-4 z-20 w-full rounded-xl border border-border/80 bg-card/95 p-4 shadow-lg backdrop-blur-md transition-all"
+      className="relative w-full rounded-xl border border-primary/25 bg-gradient-to-r from-primary/8 via-card to-card p-4 shadow-xs transition-all"
       data-testid="tailor-action-bar"
     >
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         {/* Left / Start Info */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
             <Briefcase className="size-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground truncate">
+            <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
               {jobTitle} · {companyName}
             </p>
             <p className="text-[11px] text-muted-foreground truncate">
@@ -105,7 +105,7 @@ export function TailorActionBar({
               className="h-9 gap-1.5 text-xs font-semibold border-border hover:bg-accent text-foreground"
               data-testid="add-to-tracker-btn"
             >
-              <Kanban className="size-3.5 text-primary" />
+              <Kanban className="size-3.5 text-muted-foreground" />
               <span>
                 {isSaving
                   ? dict.tracker?.saving || (isArabic ? 'جارٍ الإضافة...' : 'Adding...')

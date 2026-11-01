@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { User, Briefcase, GraduationCap, Wrench, FolderGit2 } from 'lucide-react'
 import { ProfileOverviewCard } from './ProfileOverviewCard'
 import { LanguageProfileSwitch } from './LanguageProfileSwitch'
 import { IdentityCard } from './IdentityCard'
@@ -52,6 +53,7 @@ function useSafeRouter() {
 
 export function ProfileHub({ initialData, lang }: ProfileHubProps) {
   const router = useSafeRouter()
+  const isAr = lang === 'ar'
   const [user, setUser] = useState(initialData.user)
   const [profile, setProfile] = useState(initialData.profile)
   const [experiences, setExperiences] = useState<WorkExperienceItem[]>(initialData.experiences)
@@ -137,6 +139,44 @@ export function ProfileHub({ initialData, lang }: ProfileHubProps) {
     }
   }
 
+  const sectionNavItems = [
+    {
+      href: '#section-identity',
+      label: isAr ? 'الهوية المهنية' : 'Personal Identity',
+      count: profile.summary ? (isAr ? 'مكتمل' : 'Ready') : (isAr ? 'أساسي' : 'Basic'),
+      icon: User,
+      isComplete: Boolean(profile.fullName && profile.summary),
+    },
+    {
+      href: '#section-experience',
+      label: isAr ? 'الخبرات المهنية' : 'Work Experience',
+      count: String(experiences.length),
+      icon: Briefcase,
+      isComplete: experiences.length > 0,
+    },
+    {
+      href: '#section-education',
+      label: isAr ? 'التعليم والمؤهلات' : 'Education',
+      count: String(educations.length),
+      icon: GraduationCap,
+      isComplete: educations.length > 0,
+    },
+    {
+      href: '#section-skills',
+      label: isAr ? 'المهارات والكفاءات' : 'Skills',
+      count: String(skills.length),
+      icon: Wrench,
+      isComplete: skills.length >= 5,
+    },
+    {
+      href: '#section-projects',
+      label: isAr ? 'المشاريع البارزة' : 'Projects',
+      count: String(projects.length),
+      icon: FolderGit2,
+      isComplete: projects.length > 0,
+    },
+  ]
+
   return (
     <div className="relative w-full">
       {loadingLanguage && (
@@ -144,85 +184,130 @@ export function ProfileHub({ initialData, lang }: ProfileHubProps) {
           <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 shadow-lg">
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             <span className="text-[13px] font-medium text-foreground">
-              {lang === 'ar' ? 'جارٍ تحميل الملف...' : 'Loading profile...'}
+              {isAr ? 'جارٍ تحميل الملف...' : 'Loading profile...'}
             </span>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8 items-start">
-        {/* Left Column / Sidebar */}
-        <aside className="lg:col-span-4 xl:col-span-4 space-y-6">
+        {/* Left Column / Sticky Sidebar */}
+        <aside className="lg:col-span-4 xl:col-span-4 lg:sticky lg:top-20 space-y-4">
           <ProfileOverviewCard
             user={user}
             profile={profile}
             lang={lang}
             onAvatarUpdate={handleAvatarUpdate}
           />
+
           <LanguageProfileSwitch
             currentProfileLang={profile.language}
             onSelectLanguage={handleSelectLanguage}
             lang={lang}
           />
+
+          {/* Quick Section Jump Navigation & Completion Summary */}
+          <nav
+            aria-label={isAr ? 'أقسام الملف المهني' : 'Profile sections'}
+            className="rounded-xl border border-border/70 bg-card p-3 space-y-1"
+          >
+            <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {isAr ? 'أقسام السيرة الذاتية' : 'Resume Sections'}
+            </p>
+            {sectionNavItems.map((item) => {
+              const Icon = item.icon
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center justify-between rounded-lg px-2.5 py-2 text-xs font-medium text-muted-foreground hover:bg-accent/60 hover:text-foreground transition-colors"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <Icon className="size-3.5 text-primary/80" />
+                    <span>{item.label}</span>
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums ${
+                      item.isComplete
+                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    }`}
+                  >
+                    {item.count}
+                  </span>
+                </a>
+              )
+            })}
+          </nav>
         </aside>
 
         {/* Right Column / Master Sections */}
         <main className="lg:col-span-8 xl:col-span-8 space-y-6">
-          <IdentityCard
-            key={profile.id}
-            profileId={profile.id}
-            fullName={profile.fullName}
-            headline={profile.headline}
-            summary={profile.summary}
-            email={profile.email}
-            phone={profile.phone}
-            location={profile.location}
-            websiteUrl={profile.websiteUrl}
-            linkedinUrl={profile.linkedinUrl}
-            githubUrl={profile.githubUrl}
-            lang={lang}
-            onSaveSuccess={handleIdentitySave}
-          />
+          <div id="section-identity" className="scroll-mt-20">
+            <IdentityCard
+              key={profile.id}
+              profileId={profile.id}
+              fullName={profile.fullName}
+              headline={profile.headline}
+              summary={profile.summary}
+              email={profile.email}
+              phone={profile.phone}
+              location={profile.location}
+              websiteUrl={profile.websiteUrl}
+              linkedinUrl={profile.linkedinUrl}
+              githubUrl={profile.githubUrl}
+              lang={lang}
+              onSaveSuccess={handleIdentitySave}
+            />
+          </div>
 
-          <ExperienceCard
-            profileId={profile.id}
-            experiences={experiences}
-            lang={lang}
-            onExperiencesChange={(newExps) => {
-              setExperiences(newExps)
-              notifyProfileDataUpdated(profile.id)
-            }}
-          />
+          <div id="section-experience" className="scroll-mt-20">
+            <ExperienceCard
+              profileId={profile.id}
+              experiences={experiences}
+              lang={lang}
+              onExperiencesChange={(newExps) => {
+                setExperiences(newExps)
+                notifyProfileDataUpdated(profile.id)
+              }}
+            />
+          </div>
 
-          <EducationCard
-            profileId={profile.id}
-            educations={educations}
-            lang={lang}
-            onEducationsChange={(newEdus) => {
-              setEducations(newEdus)
-              notifyProfileDataUpdated(profile.id)
-            }}
-          />
+          <div id="section-education" className="scroll-mt-20">
+            <EducationCard
+              profileId={profile.id}
+              educations={educations}
+              lang={lang}
+              onEducationsChange={(newEdus) => {
+                setEducations(newEdus)
+                notifyProfileDataUpdated(profile.id)
+              }}
+            />
+          </div>
 
-          <SkillsCard
-            profileId={profile.id}
-            skills={skills}
-            lang={lang}
-            onSkillsChange={(newSkills) => {
-              setSkills(newSkills)
-              notifyProfileDataUpdated(profile.id)
-            }}
-          />
+          <div id="section-skills" className="scroll-mt-20">
+            <SkillsCard
+              profileId={profile.id}
+              skills={skills}
+              lang={lang}
+              onSkillsChange={(newSkills) => {
+                setSkills(newSkills)
+                notifyProfileDataUpdated(profile.id)
+              }}
+            />
+          </div>
 
-          <ProjectsCard
-            profileId={profile.id}
-            projects={projects}
-            lang={lang}
-            onProjectsChange={(newProjects) => {
-              setProjects(newProjects)
-              notifyProfileDataUpdated(profile.id)
-            }}
-          />
+          <div id="section-projects" className="scroll-mt-20">
+            <ProjectsCard
+              profileId={profile.id}
+              projects={projects}
+              lang={lang}
+              onProjectsChange={(newProjects) => {
+                setProjects(newProjects)
+                notifyProfileDataUpdated(profile.id)
+              }}
+            />
+          </div>
         </main>
       </div>
     </div>

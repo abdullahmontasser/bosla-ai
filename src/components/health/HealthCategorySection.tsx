@@ -31,15 +31,18 @@ export function HealthCategorySection({
   if (cards.length === 0) return null
 
   return (
-    <details className="group rounded-lg border border-border/60 bg-muted/20" open={openDefault}>
+    <details
+      className="group rounded-xl border border-border/60 bg-muted/15 overflow-hidden"
+      open={openDefault}
+    >
       <summary
         className={cn(
-          'flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 select-none',
-          'rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+          'flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3.5 select-none hover:bg-muted/30 transition-colors',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         )}
       >
-        <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <span className="rounded-[2px] bg-primary/10 px-2 py-0.5 text-xs font-semibold tabular-nums text-primary">
+        <span className="flex items-center gap-2.5 text-sm font-semibold text-foreground">
+          <span className="rounded-md bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 text-xs font-semibold tabular-nums text-amber-600 dark:text-amber-400">
             {cards.length}
           </span>
           {label}
@@ -49,14 +52,14 @@ export function HealthCategorySection({
           aria-hidden="true"
         />
       </summary>
-      <div className="space-y-3 px-4 pb-4">
+      <div className="divide-y divide-border/40 border-t border-border/40 px-4 pb-4">
         {cards.map((card) => (
-          <div key={card.id}>
+          <div key={card.id} className="pt-3.5 first:pt-3.5">
             {renderCard ? renderCard(card) : <HealthSuggestionCard card={card} dict={dict} />}
           </div>
         ))}
         {restorable && onRestore && (
-          <div className="flex justify-start border-t border-border/40 pt-3">
+          <div className="flex justify-start pt-3">
             <button
               type="button"
               onClick={onRestore}

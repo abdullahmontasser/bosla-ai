@@ -42,20 +42,48 @@ function resolveTargetLabel(
   }
 }
 
+/**
+ * Strips the redundant leading `"${originalText}" ` quote from rationale when
+ * originalText is already rendered in the quote block right above it.
+ */
+function formatConciseRationale(rationale: string, rawOriginal: string): string {
+  const trimmedOrig = rawOriginal.trim()
+  if (!trimmedOrig) return rationale
+
+  const quotedPrefix = `"${trimmedOrig}"`
+  if (rationale.startsWith(quotedPrefix)) {
+    const remainder = rationale.slice(quotedPrefix.length).trim()
+    if (remainder.length > 0) {
+      return remainder.charAt(0).toUpperCase() + remainder.slice(1)
+    }
+  }
+  return rationale
+}
+
 export function HealthSuggestionCard({ card, dict }: HealthSuggestionCardProps) {
   const t = (dict.health || {}) as Partial<HealthDictionary>
   const targetLabel = resolveTargetLabel(card, t, (value) => String(value))
-  const originalText = card.originalText.trim().length > 0 ? card.originalText : t.notSet || ''
+  const hasOriginal = card.originalText.trim().length > 0
+  const originalText = hasOriginal ? card.originalText : t.notSet || ''
+  const conciseRationale = formatConciseRationale(card.rationale, card.originalText)
+  const showProposed = Boolean(card.proposedText && card.proposedText.trim().length > 0 && !card.isAiStale)
 
   return (
     <div
-      className="rounded-lg border border-border/60 bg-muted/20 p-3"
+      className="rounded-lg bg-background/60 p-3.5 space-y-2.5"
       data-target-kind={card.targetKind}
       data-target-id={card.targetId ?? undefined}
       data-fingerprint={card.fingerprint}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-foreground">{card.title}</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-sm font-semibold text-foreground">{card.title}</p>
+          {targetLabel && (
+            <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+              {targetLabel}
+            </span>
+          )}
+        </div>
         <div className="flex shrink-0 items-center gap-1.5">
           {card.isAiStale && (
             <Badge
@@ -73,16 +101,24 @@ export function HealthSuggestionCard({ card, dict }: HealthSuggestionCardProps) 
         </div>
       </div>
 
-      <div className="mt-2 space-y-1">
-        {targetLabel && (
-          <span className="block text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            {targetLabel}
-          </span>
-        )}
-        <p className="text-xs whitespace-pre-wrap text-muted-foreground">{originalText}</p>
-      </div>
+      {originalText && (
+        <blockquote className="border-s-2 border-border ps-3 py-1 text-xs whitespace-pre-wrap text-muted-foreground">
+          {originalText}
+        </blockquote>
+      )}
 
-      <p className="mt-2 text-xs leading-relaxed text-foreground/90">{card.rationale}</p>
+      {showProposed && (
+        <div className="border-s-2 border-emerald-500 bg-emerald-500/8 ps-3 py-2 rounded-e-md space-y-0.5">
+          <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            {t.aiBadge || 'Suggested Rewrite'}
+          </span>
+          <p className="text-xs whitespace-pre-wrap text-foreground font-medium">
+            {card.proposedText}
+          </p>
+        </div>
+      )}
+
+      <p className="text-xs leading-relaxed text-foreground/90">{conciseRationale}</p>
     </div>
   )
 }

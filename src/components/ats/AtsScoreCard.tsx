@@ -35,6 +35,12 @@ export function AtsScoreCard({
     return 'text-rose-500 bg-rose-500/10 border-rose-500/30'
   }
 
+  const getBarColor = (val: number) => {
+    if (val >= 80) return 'bg-emerald-500'
+    if (val >= 60) return 'bg-amber-500'
+    return 'bg-rose-500'
+  }
+
   const getScoreLabel = (val: number) => {
     if (val >= 80) return t.highMatch || 'Strong Match'
     if (val >= 60) return t.mediumMatch || 'Moderate Match'
@@ -84,13 +90,13 @@ export function AtsScoreCard({
 
             {onDeepScan && (
               <Button
-                variant="default"
+                variant="secondary"
                 size="sm"
                 onClick={onDeepScan}
                 disabled={isScanning}
-                className="h-8 gap-1.5 text-xs font-medium"
+                className="h-8 gap-1.5 text-xs font-semibold border border-border/80"
               >
-                <Sparkles className={`h-3.5 w-3.5 ${isScanning ? 'animate-spin' : ''}`} />
+                <Sparkles className={`h-3.5 w-3.5 text-primary ${isScanning ? 'animate-spin' : ''}`} />
                 <span>
                   {isScanning
                     ? t.deepScanning || 'Scanning...'
@@ -104,9 +110,9 @@ export function AtsScoreCard({
 
       <CardContent className="space-y-4">
         {/* Main Score Display */}
-        <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/40 border border-border/60">
+        <div className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
           <div
-            className={`w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0 font-bold ${getScoreColor(
+            className={`w-16 h-16 rounded-full border-2 flex flex-col items-center justify-center shrink-0 font-bold tabular-nums ${getScoreColor(
               score,
             )}`}
           >
@@ -118,7 +124,7 @@ export function AtsScoreCard({
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm text-foreground">{getScoreLabel(score)}</span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground leading-relaxed">
               {lang === 'ar'
                 ? `تم التقييم بنجاح: ${breakdown.matchedSkills.length} مهارات متطابقة و ${breakdown.missingSkills.length} مهارات ناقصة.`
                 : `Evaluation complete: ${breakdown.matchedSkills.length} matched keywords and ${breakdown.missingSkills.length} skills to optimize.`}
@@ -134,11 +140,13 @@ export function AtsScoreCard({
               <span className="font-medium text-foreground">
                 {t.keywordMatch || 'Keyword Match (50%)'}
               </span>
-              <span className="font-semibold text-muted-foreground">{subscores.keywordMatch}%</span>
+              <span className="font-semibold tabular-nums text-muted-foreground">
+                {subscores.keywordMatch}%
+              </span>
             </div>
             <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-primary transition-all duration-500 rounded-full"
+                className={`h-full transition-all duration-500 rounded-full ${getBarColor(subscores.keywordMatch)}`}
                 style={{ width: `${subscores.keywordMatch}%` }}
               />
             </div>
@@ -150,13 +158,13 @@ export function AtsScoreCard({
               <span className="font-medium text-foreground">
                 {t.experienceRelevance || 'Experience Relevance (30%)'}
               </span>
-              <span className="font-semibold text-muted-foreground">
+              <span className="font-semibold tabular-nums text-muted-foreground">
                 {subscores.experienceRelevance}%
               </span>
             </div>
             <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-primary/80 transition-all duration-500 rounded-full"
+                className={`h-full transition-all duration-500 rounded-full ${getBarColor(subscores.experienceRelevance)}`}
                 style={{ width: `${subscores.experienceRelevance}%` }}
               />
             </div>
@@ -168,13 +176,13 @@ export function AtsScoreCard({
               <span className="font-medium text-foreground">
                 {t.formattingCompliance || 'Formatting Compliance (20%)'}
               </span>
-              <span className="font-semibold text-muted-foreground">
+              <span className="font-semibold tabular-nums text-muted-foreground">
                 {subscores.formattingCompliance}%
               </span>
             </div>
             <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-primary/60 transition-all duration-500 rounded-full"
+                className={`h-full transition-all duration-500 rounded-full ${getBarColor(subscores.formattingCompliance)}`}
                 style={{ width: `${subscores.formattingCompliance}%` }}
               />
             </div>
