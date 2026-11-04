@@ -124,7 +124,7 @@ describe('landing sections', () => {
     render(<HowItWorks lang="ar" copy={getLandingCopy('ar')} />)
 
     expect(screen.getByText('ابدأ بخبرتك.')).toBeDefined()
-    expect(screen.getByRole('link', { name: /أضف خبرتك/ }).getAttribute('href')).toBe('/ar/resume')
+    expect(screen.getByRole('link', { name: /أضف خبرتك/ }).getAttribute('href')).toBe('/ar/profile')
   })
 
   it('renders the workflow rail and the stacked fallback', () => {

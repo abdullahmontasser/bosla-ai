@@ -217,7 +217,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           title: 'Start with your experience.',
           body: 'Upload an existing resume or write your background once. This becomes the source of truth for every draft.',
           link: 'Add your experience',
-          href: '/resume',
+          href: '/profile',
         },
         {
           title: 'Aim it at the role.',
@@ -287,7 +287,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
         body: 'Inspect keyword coverage, evidence gaps, and formatting. The score is a drafting signal, not a prediction of hiring outcomes.',
         bullets: ['Requirement coverage', 'Missing-evidence flags', 'Parser-safe formatting'],
         link: 'Run an ATS scan',
-        href: '/resume',
+        href: '/profile',
       },
       evidence: {
         kicker: 'Evidence',
@@ -319,7 +319,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           title: 'Clean PDF export',
           body: 'Single-column, searchable, and shaped for Arabic and English.',
           link: 'Export from the ATS engine',
-          href: '/resume',
+          href: '/tailor',
         },
         {
           title: 'Application tracker',
@@ -390,7 +390,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           title: 'Product',
           links: [
             { href: '/tailor', label: 'Tailor studio' },
-            { href: '/resume', label: 'ATS engine' },
+            { href: '/profile', label: 'ATS engine' },
             { href: '/tracker', label: 'Tracker' },
             { href: '/settings/providers', label: 'Providers' },
           ],
@@ -508,7 +508,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           title: 'ابدأ بخبرتك.',
           body: 'ارفع سيرتك الحالية أو اكتب خلفيتك مرة واحدة. تصبح هذه هي المرجع لكل مسودة.',
           link: 'أضف خبرتك',
-          href: '/resume',
+          href: '/profile',
         },
         {
           title: 'وجّهها نحو الوظيفة.',
@@ -578,7 +578,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
         body: 'راجع تغطية الكلمات المفتاحية، وفجوات الأدلة، والتنسيق. الدرجة مؤشر للمسودة، وليست تنبؤاً بنتيجة التوظيف.',
         bullets: ['تغطية المتطلبات', 'تنبيهات الأدلة الناقصة', 'تنسيق آمن للقراءة الآلية'],
         link: 'شغّل فحص ATS',
-        href: '/resume',
+        href: '/profile',
       },
       evidence: {
         kicker: 'الأدلة',
@@ -610,7 +610,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           title: 'تصدير PDF نظيف',
           body: 'عمود واحد، قابل للبحث، ومصمّم للعربية والإنجليزية.',
           link: 'صدّر من محرك ATS',
-          href: '/resume',
+          href: '/tailor',
         },
         {
           title: 'لوحة متابعة الطلبات',
@@ -681,7 +681,7 @@ export const landingCopy: Record<Locale, LandingCopy> = {
           title: 'المنتج',
           links: [
             { href: '/tailor', label: 'استوديو التخصيص' },
-            { href: '/resume', label: 'محرك ATS' },
+            { href: '/profile', label: 'محرك ATS' },
             { href: '/tracker', label: 'لوحة التتبع' },
             { href: '/settings/providers', label: 'المزوّدات' },
           ],

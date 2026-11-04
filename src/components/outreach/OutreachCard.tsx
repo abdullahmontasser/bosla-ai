@@ -139,7 +139,7 @@ export function OutreachCard({
             onChange={(e) => onBodyChange(e.target.value)}
             dir={isArabic ? 'rtl' : 'ltr'}
             rows={7}
-            className="text-xs leading-relaxed text-foreground bg-background resize-y"
+            className="text-xs leading-relaxed text-foreground bg-background resize-y max-h-72 overflow-y-auto scrollbar-thin"
             placeholder={isArabic ? 'نص الرسالة...' : 'Message body content...'}
           />
         </div>

@@ -100,7 +100,7 @@ export function ConnectionNoteEditor({
             onChange={(e) => onChange(e.target.value)}
             dir={isArabic ? 'rtl' : 'ltr'}
             rows={4}
-            className={`resize-none text-xs leading-relaxed text-foreground ${
+            className={`resize-none text-xs leading-relaxed text-foreground max-h-40 overflow-y-auto scrollbar-thin ${
               isOverLimit ? 'border-destructive focus-visible:ring-destructive' : ''
             }`}
             placeholder={

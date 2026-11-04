@@ -112,7 +112,7 @@ export function FinalCta({ lang, copy }: FinalCtaProps) {
             </Link>
 
             <Link
-              href={`/${lang}/resume`}
+              href={`/${lang}/profile`}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[7px] border border-border bg-card/50 px-5 text-sm font-medium text-foreground transition-colors hover:border-primary/35 hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4 focus-visible:ring-offset-background"
             >
               {isAr ? 'افتح محرك ATS' : 'Explore the ATS engine'}
