@@ -129,4 +129,18 @@ describe('AtsScoreCard Component (covers: AC-1, AC-3, AC-4)', () => {
       screen.getByText(/Incorporate quantified cloud scaling metrics into your latest role./i),
     ).toBeDefined()
   })
+
+  it('safely handles missing or undefined matchedSkills and missingSkills without crashing', () => {
+    const incompleteBreakdown = {
+      overallScore: 70,
+    } as unknown as AtsBreakdown
+
+    expect(() => {
+      render(
+        <AtsScoreCard score={70} breakdown={incompleteBreakdown} dict={sampleDict} lang="en" />,
+      )
+    }).not.toThrow()
+
+    expect(screen.getByText(/0 matched keywords and 0 skills to optimize/i)).toBeDefined()
+  })
 })

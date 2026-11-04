@@ -126,4 +126,36 @@ describe('LiveTailorStream (covers: AC-2, AC-5, AC-6, AC-7, AC-8)', () => {
       expect(screen.getByText('Copied')).toBeDefined()
     })
   })
+
+  it('toggles in-place edit mode and allows updating summary and bullets', () => {
+    const onStreamTextChange = vi.fn()
+    const initialStream = [
+      '### SUMMARY',
+      'Initial summary.',
+      '### BULLETS',
+      '- Initial bullet.',
+    ].join('\n')
+
+    render(
+      <LiveTailorStream
+        status="COMPLETED"
+        streamText={initialStream}
+        dict={dummyDict as unknown as Partial<Dictionary>}
+        onStreamTextChange={onStreamTextChange}
+      />,
+    )
+
+    const editBtn = screen.getByRole('button', { name: /Edit Draft/i })
+    fireEvent.click(editBtn)
+
+    // Verify textarea is now rendered with initial summary
+    const summaryInput = screen.getByDisplayValue('Initial summary.')
+    fireEvent.change(summaryInput, { target: { value: 'Updated summary.' } })
+
+    // Click Done to save
+    const doneBtn = screen.getByRole('button', { name: /Done/i })
+    fireEvent.click(doneBtn)
+
+    expect(onStreamTextChange).toHaveBeenCalledWith(expect.stringContaining('Updated summary.'))
+  })
 })

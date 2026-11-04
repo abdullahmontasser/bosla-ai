@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
 import { getActiveProviderSettings } from '@/lib/db/provider-settings'
 import { getProfileById } from '@/lib/db/profiles'
+import { upsertJobPosting } from '@/lib/db/job-postings'
 import { TailorPayloadSchema } from '@/lib/validations/tailor'
 import {
   buildTailoringSystemPrompt,
@@ -12,6 +13,17 @@ import {
 } from '@/lib/ai/tailor-prompt'
 import { getProviderModel } from '@/lib/ai/provider-client'
 import { streamText } from 'ai'
+
+async function markResumeFailed(id: string) {
+  try {
+    await prisma.tailoredResume.update({
+      where: { id },
+      data: { status: 'FAILED' },
+    })
+  } catch {
+    // Ignore cleanup failure
+  }
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -64,14 +76,14 @@ export async function POST(req: NextRequest) {
   let jobPosting
   let tailoredResume
   try {
-    jobPosting = await prisma.jobPosting.create({
-      data: {
-        userId: session.user.id,
-        title: payload.jobTitle,
-        companyName: payload.companyName,
-        rawDescription: payload.rawJobDescription,
-        parsedSkills: [],
-      },
+    const normalizedTitle = payload.jobTitle.trim()
+    const normalizedCompany = payload.companyName.trim()
+
+    // Deduplicate job posting by userId, title, and companyName
+    jobPosting = await upsertJobPosting(session.user.id, {
+      title: normalizedTitle,
+      companyName: normalizedCompany,
+      rawDescription: payload.rawJobDescription,
     })
 
     tailoredResume = await prisma.tailoredResume.create({
@@ -80,7 +92,7 @@ export async function POST(req: NextRequest) {
         profileId: profile.id,
         jobPostingId: jobPosting.id,
         language: payload.language,
-        title: `${payload.companyName} - ${payload.jobTitle}`,
+        title: `${normalizedCompany} - ${normalizedTitle}`,
         status: 'GENERATING',
         tailoredContent: {},
       },
@@ -102,7 +114,20 @@ export async function POST(req: NextRequest) {
       jobTitle: w.jobTitle,
       bullets: w.bullets,
     })),
+    candidateProjects: (profile.projects || []).map((p) => ({
+      title: p.name,
+      role: p.role,
+      description: p.description,
+      bullets: p.technologies,
+    })),
+    candidateEducation: (profile.educations || []).map((e) => ({
+      schoolName: e.institution,
+      degree: e.degree,
+      fieldOfStudy: e.fieldOfStudy,
+    })),
     language: payload.language,
+    customInstructions: payload.customInstructions,
+    excludedSkills: payload.excludedSkills,
   })
 
   // Handle client abort
@@ -112,10 +137,7 @@ export async function POST(req: NextRequest) {
         where: { id: tailoredResume.id },
       })
       if (current && current.status === 'GENERATING') {
-        await prisma.tailoredResume.update({
-          where: { id: tailoredResume.id },
-          data: { status: 'FAILED' },
-        })
+        await markResumeFailed(tailoredResume.id)
       }
     } catch {
       // ignore cleanup error
@@ -150,26 +172,12 @@ export async function POST(req: NextRequest) {
           })
         } catch (finishErr) {
           console.error('Failed to finalize tailored resume record:', finishErr)
-          try {
-            await prisma.tailoredResume.update({
-              where: { id: tailoredResume.id },
-              data: { status: 'FAILED' },
-            })
-          } catch {
-            // Ignore failure
-          }
+          await markResumeFailed(tailoredResume.id)
         }
       },
       onError: async (error) => {
         console.error('AI streaming error:', error)
-        try {
-          await prisma.tailoredResume.update({
-            where: { id: tailoredResume.id },
-            data: { status: 'FAILED' },
-          })
-        } catch {
-          // Ignore failure
-        }
+        await markResumeFailed(tailoredResume.id)
       },
     })
 
@@ -181,14 +189,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     console.error('Failed to initiate AI stream:', err)
-    try {
-      await prisma.tailoredResume.update({
-        where: { id: tailoredResume.id },
-        data: { status: 'FAILED' },
-      })
-    } catch {
-      // Ignore failure
-    }
+    await markResumeFailed(tailoredResume.id)
 
     return NextResponse.json({ error: 'Failed to start AI generation stream' }, { status: 502 })
   }

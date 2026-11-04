@@ -1,14 +1,13 @@
 'use client'
 
 import * as React from 'react'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { OutreachWorkbench } from '@/components/outreach'
 import { getOutreachMessageAction } from '@/app/actions/outreach-actions'
 import type { OutreachMessagePayload } from '@/lib/validations/career-prep'
 import type { Dictionary, TailorDictionary } from '@/lib/i18n/types'
-import { Send, ChevronDown, Check, Clock, AlertCircle, Loader2 } from 'lucide-react'
+import { ChevronDown, Check, Clock, AlertCircle, Loader2 } from 'lucide-react'
 
 export interface OutreachAccordionProps {
   tailoredResumeId: string
@@ -79,61 +78,56 @@ export function OutreachAccordion({
   }
 
   return (
-    <Card
-      className="border border-border/80 bg-card overflow-hidden transition-all shadow-xs"
+    <div
+      className="rounded-[8px] border border-border bg-card overflow-hidden transition-all"
       data-testid="outreach-accordion"
     >
       <button
         type="button"
         onClick={handleToggle}
         aria-expanded={isOpen}
-        className="w-full text-start p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-accent/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="w-full text-start p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
         data-testid="outreach-accordion-toggle"
       >
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-            <Send className="size-4" />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm sm:text-base font-semibold tracking-tight text-foreground">
+              {t.outreachAccordionTitle ||
+                (isArabic ? 'رسائل التواصل المهني' : 'Outreach Messaging & Networking')}
+            </span>
+            <Badge
+              variant={hasOutreach ? 'secondary' : 'outline'}
+              className={`text-xs px-2 py-0.5 font-medium gap-1 rounded-[4px] ${
+                hasOutreach
+                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : 'text-muted-foreground'
+              }`}
+              data-testid="outreach-status-badge"
+            >
+              {hasOutreach ? (
+                <>
+                  <Check className="size-3 text-emerald-500" />
+                  <span>{t.readyBadge || (isArabic ? 'جاهز' : 'Ready')}</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="size-3" />
+                  <span>{t.pendingBadge || (isArabic ? 'معلّق' : 'Pending')}</span>
+                </>
+              )}
+            </Badge>
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm sm:text-base font-bold tracking-tight text-foreground">
-                {t.outreachAccordionTitle ||
-                  (isArabic ? 'رسائل التواصل المهني' : 'Outreach Messaging & Networking')}
-              </span>
-              <Badge
-                variant={hasOutreach ? 'secondary' : 'outline'}
-                className={`text-[11px] px-2 py-0.5 font-medium gap-1 ${
-                  hasOutreach
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                    : 'text-muted-foreground'
-                }`}
-                data-testid="outreach-status-badge"
-              >
-                {hasOutreach ? (
-                  <>
-                    <Check className="size-3 text-emerald-500" />
-                    <span>{t.readyBadge || (isArabic ? 'جاهز' : 'Ready')}</span>
-                  </>
-                ) : (
-                  <>
-                    <Clock className="size-3" />
-                    <span>{t.pendingBadge || (isArabic ? 'معلّق' : 'Pending')}</span>
-                  </>
-                )}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">
-              {t.outreachAccordionDesc ||
-                (isArabic
-                  ? 'صياغة مخصصة لملاحظات لينكد إن ورسائل البريد المتوافقة مع متطلبات الوظيفة.'
-                  : 'Personalized LinkedIn notes, InMail pitches, and emails matched to this job.')}
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">
+            {t.outreachAccordionDesc ||
+              (isArabic
+                ? 'صياغة مخصصة لملاحظات لينكد إن ورسائل البريد المتوافقة مع متطلبات الوظيفة.'
+                : 'Personalized LinkedIn notes, InMail pitches, and emails matched to this job.')}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <div
-            className={`flex size-7 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition-transform duration-200 ${
+            className={`flex size-7 items-center justify-center rounded-full text-muted-foreground transition-transform duration-200 ${
               isOpen ? 'rotate-180' : ''
             }`}
           >
@@ -143,8 +137,8 @@ export function OutreachAccordion({
       </button>
 
       {isOpen && (
-        <CardContent
-          className="border-t border-border/60 p-4 sm:p-6 space-y-4 pt-5"
+        <div
+          className="border-t border-border/70 p-4 sm:p-6 space-y-4"
           data-testid="outreach-accordion-content"
         >
           {isLoading && (
@@ -189,8 +183,8 @@ export function OutreachAccordion({
               }}
             />
           )}
-        </CardContent>
+        </div>
       )}
-    </Card>
+    </div>
   )
 }

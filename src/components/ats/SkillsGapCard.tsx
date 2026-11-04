@@ -1,7 +1,6 @@
 'use client'
 
 import * as React from 'react'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Check, Plus, X, Award, AlertCircle } from 'lucide-react'
 import type { Dictionary, AtsDictionary } from '@/lib/i18n/types'
@@ -18,8 +17,8 @@ export interface SkillsGapCardProps {
 }
 
 export function SkillsGapCard({
-  matchedSkills,
-  missingSkills,
+  matchedSkills = [],
+  missingSkills = [],
   dismissedSkills = [],
   dict,
   lang,
@@ -28,22 +27,27 @@ export function SkillsGapCard({
   isUpdating = false,
 }: SkillsGapCardProps) {
   const t = (dict?.ats || {}) as Partial<AtsDictionary>
+  const safeMatched = Array.isArray(matchedSkills) ? matchedSkills : []
+  const safeMissing = Array.isArray(missingSkills) ? missingSkills : []
+  const safeDismissed = Array.isArray(dismissedSkills) ? dismissedSkills : []
 
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
+    <div className="rounded-[10px] border border-border bg-card p-5 space-y-4">
+      <div className="border-b border-border/70 pb-3">
+        <div className="flex items-center gap-2">
           <Award className="h-4 w-4 text-primary" />
-          <span>{t.matchedSkills ? `${t.matchedSkills} & Gap Analysis` : 'Skills Analysis'}</span>
-        </CardTitle>
-        <CardDescription className="text-xs text-muted-foreground">
+          <h3 className="text-sm sm:text-base font-bold tracking-tight text-foreground">
+            {t.matchedSkills ? `${t.matchedSkills} & Gap Analysis` : 'Skills Analysis'}
+          </h3>
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-0.5">
           {lang === 'ar'
             ? 'قارن مهاراتك بمتطلبات الوظيفة وأضف المهارات المفقودة أو استبعدها.'
             : 'Review matched competencies and click to add missing skills to your profile or dismiss them.'}
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
 
-      <CardContent className="space-y-4">
+      <div className="space-y-4">
         {/* Matched Skills */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -51,20 +55,21 @@ export function SkillsGapCard({
               <Check className="h-3.5 w-3.5 text-emerald-500" />
               <span>{t.matchedSkills || 'Matched Skills'}</span>
             </span>
-            <span className="text-[11px] text-muted-foreground">{matchedSkills.length}</span>
+            <span className="text-[11px] font-mono text-muted-foreground">
+              {safeMatched.length}
+            </span>
           </div>
 
           <div className="flex flex-wrap gap-1.5">
-            {matchedSkills.length > 0 ? (
-              matchedSkills.map((skill, index) => (
-                <Badge
+            {safeMatched.length > 0 ? (
+              safeMatched.map((skill, index) => (
+                <span
                   key={index}
-                  variant="outline"
-                  className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-xs py-0.5 px-2 gap-1"
+                  className="inline-flex items-center gap-1 rounded-[3px] border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-600 dark:text-emerald-400"
                 >
-                  <Check className="h-3 w-3" />
+                  <Check className="h-2.5 w-2.5" strokeWidth={2.5} />
                   <span>{skill}</span>
-                </Badge>
+                </span>
               ))
             ) : (
               <p className="text-xs text-muted-foreground italic">
@@ -77,21 +82,23 @@ export function SkillsGapCard({
         </div>
 
         {/* Missing Skills (Interactive) */}
-        <div className="space-y-2 pt-2 border-t border-border/50">
+        <div className="space-y-2 pt-3 border-t border-border/60">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
               <span>{t.missingSkills || 'Missing Skills'}</span>
             </span>
-            <span className="text-[11px] text-muted-foreground">{missingSkills.length}</span>
+            <span className="text-[11px] font-mono text-muted-foreground">
+              {safeMissing.length}
+            </span>
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {missingSkills.length > 0 ? (
-              missingSkills.map((skill, index) => (
+            {safeMissing.length > 0 ? (
+              safeMissing.map((skill, index) => (
                 <div
                   key={index}
-                  className="group flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 pl-2.5 pr-1 py-0.5 text-xs text-amber-700 dark:text-amber-300 transition-all hover:bg-amber-500/20"
+                  className="group inline-flex items-center gap-1.5 rounded-[3px] border border-amber-500/30 bg-amber-500/10 ps-2 pe-1 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-700 dark:text-amber-300 transition-all hover:bg-amber-500/20"
                 >
                   <span className="font-medium">{skill}</span>
                   <div className="flex items-center gap-0.5">
@@ -100,7 +107,7 @@ export function SkillsGapCard({
                       disabled={isUpdating}
                       onClick={() => onAddSkill(skill)}
                       title={t.addToProfile || 'Add to profile'}
-                      className="rounded-full p-1.5 text-emerald-600 hover:bg-emerald-500/20 transition-colors relative min-w-[32px] min-h-[32px] flex items-center justify-center after:absolute after:-inset-1.5 cursor-pointer"
+                      className="rounded-[2px] p-1 text-emerald-600 hover:bg-emerald-500/20 transition-colors relative min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                       aria-label={`${t.addToProfile || 'Add'} ${skill}`}
                     >
                       <Plus className="h-3.5 w-3.5" />
@@ -110,7 +117,7 @@ export function SkillsGapCard({
                       disabled={isUpdating}
                       onClick={() => onDismissSkill(skill)}
                       title={t.dismiss || 'Dismiss'}
-                      className="rounded-full p-1.5 text-muted-foreground hover:bg-muted transition-colors relative min-w-[32px] min-h-[32px] flex items-center justify-center after:absolute after:-inset-1.5 cursor-pointer"
+                      className="rounded-[2px] p-1 text-muted-foreground hover:bg-muted transition-colors relative min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                       aria-label={`${t.dismiss || 'Dismiss'} ${skill}`}
                     >
                       <X className="h-3.5 w-3.5" />
@@ -137,7 +144,7 @@ export function SkillsGapCard({
                 <Badge
                   key={index}
                   variant="outline"
-                  className="text-[11px] py-0 px-2 line-through text-muted-foreground"
+                  className="rounded-[3px] text-[10px] py-0 px-1.5 line-through text-muted-foreground"
                 >
                   {skill}
                 </Badge>
@@ -145,7 +152,7 @@ export function SkillsGapCard({
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

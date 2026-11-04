@@ -91,3 +91,49 @@ export async function deleteJobPosting(userId: string, jobPostingId: string) {
 
   return result.count > 0
 }
+
+/**
+ * Upserts a job posting by userId, title, and companyName (case-insensitive deduplication).
+ * If a posting exists for this user and company/role, updates its description.
+ * Otherwise creates a new job posting.
+ */
+export async function upsertJobPosting(
+  userId: string,
+  data: {
+    title: string
+    companyName: string
+    rawDescription: string
+    parsedSkills?: string[]
+  },
+) {
+  const normalizedTitle = data.title.trim()
+  const normalizedCompany = data.companyName.trim()
+
+  const existing = await prisma.jobPosting.findFirst({
+    where: {
+      userId,
+      title: { equals: normalizedTitle, mode: 'insensitive' },
+      companyName: { equals: normalizedCompany, mode: 'insensitive' },
+    },
+  })
+
+  if (existing) {
+    return prisma.jobPosting.update({
+      where: { id: existing.id },
+      data: {
+        rawDescription: data.rawDescription,
+        updatedAt: new Date(),
+      },
+    })
+  }
+
+  return prisma.jobPosting.create({
+    data: {
+      userId,
+      title: normalizedTitle,
+      companyName: normalizedCompany,
+      rawDescription: data.rawDescription,
+      parsedSkills: data.parsedSkills || [],
+    },
+  })
+}

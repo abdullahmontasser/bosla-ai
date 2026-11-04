@@ -5,6 +5,7 @@ import {
   loadSampleCandidateProfile,
   getTailorStudioInitialData,
   getOutreachMessageAction,
+  getTailoredResumeHistoryAction,
 } from './tailor'
 import { auth } from '@/auth'
 import { getDefaultProfile, upsertTailoringCandidateProfile } from '@/lib/db/profiles'
@@ -22,6 +23,7 @@ vi.mock('@/lib/prisma', () => ({
     },
     tailoredResume: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
   },
 }))
@@ -285,6 +287,109 @@ describe('Tailor Server Actions (covers: AC-1, AC-3, AC-7, AC-10)', () => {
       const res = await getOutreachMessageAction('res_valid')
       expect(res.success).toBe(true)
       expect(res.data?.connectionNote.text).toBe('Hi recruiter')
+    })
+  })
+
+  describe('getTailoredResumeHistoryAction (covers: DB Deduplication & Distinct)', () => {
+    it('returns error when unauthenticated', async () => {
+      mockAuth.mockResolvedValueOnce(null)
+      const res = await getTailoredResumeHistoryAction('EN')
+      expect(res).toEqual({ success: false, error: 'Unauthorized', data: [] })
+    })
+
+    it('queries distinct job postings with limit of 15', async () => {
+      mockAuth.mockResolvedValueOnce({ user: { id: 'user_1' } })
+      const mockDate = new Date('2026-11-01T12:00:00Z')
+      vi.mocked(prisma.tailoredResume.findMany).mockResolvedValueOnce([
+        {
+          id: 'tailored_1',
+          atsScore: 94,
+          tailoredSummary: 'Summary text',
+          createdAt: mockDate,
+          language: 'EN',
+          jobPosting: {
+            title: 'Staff AI Engineer',
+            companyName: 'DeepMind',
+            rawDescription: 'Building models',
+          },
+        },
+      ] as never)
+
+      const res = await getTailoredResumeHistoryAction('EN')
+      expect(res.success).toBe(true)
+      expect(res.data).toHaveLength(1)
+      expect(res.data[0]).toEqual({
+        id: 'tailored_1',
+        atsScore: 94,
+        tailoredSummary: 'Summary text',
+        createdAt: mockDate.toISOString(),
+        language: 'EN',
+        jobTitle: 'Staff AI Engineer',
+        companyName: 'DeepMind',
+        rawJobDescription: 'Building models',
+      })
+
+      expect(prisma.tailoredResume.findMany).toHaveBeenCalledWith({
+        where: {
+          userId: 'user_1',
+          language: 'EN',
+          status: 'COMPLETED',
+        },
+        orderBy: { createdAt: 'desc' },
+        distinct: ['jobPostingId'],
+        take: 15,
+        select: expect.any(Object),
+      })
+    })
+
+    it('strictly deduplicates roles with identical title and company name', async () => {
+      mockAuth.mockResolvedValueOnce({ user: { id: 'user_1' } })
+      const mockDate = new Date('2026-11-01T12:00:00Z')
+      vi.mocked(prisma.tailoredResume.findMany).mockResolvedValueOnce([
+        {
+          id: 'tailored_1',
+          atsScore: 94,
+          tailoredSummary: 'Summary text 1',
+          createdAt: mockDate,
+          language: 'EN',
+          jobPosting: {
+            title: 'Staff AI Engineer',
+            companyName: 'DeepMind',
+            rawDescription: 'Building models 1',
+          },
+        },
+        // Duplicate title & company from different jobPostingId
+        {
+          id: 'tailored_2',
+          atsScore: 90,
+          tailoredSummary: 'Summary text 2',
+          createdAt: new Date('2026-10-30T12:00:00Z'),
+          language: 'EN',
+          jobPosting: {
+            title: '  Staff AI Engineer  ',
+            companyName: 'deepmind',
+            rawDescription: 'Building models 2',
+          },
+        },
+        // Distinct role
+        {
+          id: 'tailored_3',
+          atsScore: 88,
+          tailoredSummary: 'Summary text 3',
+          createdAt: new Date('2026-10-25T12:00:00Z'),
+          language: 'EN',
+          jobPosting: {
+            title: 'Product Engineer',
+            companyName: 'Anthropic',
+            rawDescription: 'Building UI',
+          },
+        },
+      ] as never)
+
+      const res = await getTailoredResumeHistoryAction('EN')
+      expect(res.success).toBe(true)
+      expect(res.data).toHaveLength(2)
+      expect(res.data.map((d) => d.jobTitle)).toEqual(['Staff AI Engineer', 'Product Engineer'])
     })
   })
 })

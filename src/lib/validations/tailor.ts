@@ -27,6 +27,8 @@ export const TailorPayloadSchema = z.object({
   companyName: z.string().trim().min(1, 'Company name is required'),
   rawJobDescription: z.string().trim().min(50, 'Job description must be at least 50 characters'),
   language: z.enum(['EN', 'AR']).default('EN'),
+  customInstructions: z.string().optional(),
+  excludedSkills: z.array(z.string()).optional(),
 })
 
 export type TailorPayload = z.infer<typeof TailorPayloadSchema>

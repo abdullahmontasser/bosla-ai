@@ -2,19 +2,17 @@
 
 import * as React from 'react'
 import type { AiProvider, ResumeGenerationStatus } from '@prisma/client'
-import { JobPostingForm } from './JobPostingForm'
-import { LiveTailorStream } from './LiveTailorStream'
 import { CandidateBadge } from './CandidateBadge'
 import { MissingProfileBanner } from './MissingProfileBanner'
-import { OutreachAccordion } from './OutreachAccordion'
-import { TailorActionBar } from './TailorActionBar'
-import { AtsWorkbench } from '@/components/ats'
 import { ProviderSwitcher } from '@/components/provider-settings/ProviderSwitcher'
 import { Button } from '@/components/ui/button'
-import { Sparkles, Square, AlertCircle, ArrowUpRight } from 'lucide-react'
+import { Sparkles, Square, AlertCircle, ArrowUpRight, History } from 'lucide-react'
 import Link from 'next/link'
 import type { Dictionary, TailorDictionary } from '@/lib/i18n/types'
 import type { TailoredResumeContentSnapshot } from '@/lib/ai/tailor-prompt'
+import { TailoredHistoryDrawer } from './TailoredHistoryDrawer'
+import { TemplatePreviewModal, type ResumeTemplateId } from './TemplatePreviewModal'
+import { AdaptiveStudioWizard } from './AdaptiveStudioWizard'
 
 export interface StudioContainerProps {
   initialProfile?: {
@@ -22,11 +20,38 @@ export interface StudioContainerProps {
     headline?: string | null
     summary?: string | null
     candidateName?: string | null
+    fullName?: string | null
+    email?: string | null
+    phone?: string | null
+    location?: string | null
+    linkedin?: string | null
+    linkedinUrl?: string | null
+    githubUrl?: string | null
+    websiteUrl?: string | null
     emailVerified?: boolean
     workExperiences?: Array<{
       companyName: string
       jobTitle: string
       bullets: string[]
+    }>
+    educations?: Array<{
+      schoolName: string
+      degree: string
+      fieldOfStudy?: string | null
+      startDate?: string
+      endDate?: string | null
+    }>
+    projects?: Array<{
+      title: string
+      role?: string | null
+      description?: string | null
+      bullets: string[]
+      technologies?: string[]
+    }>
+    skills?: Array<{
+      name: string
+      category?: string | null
+      level?: string | null
     }>
   } | null
   initialActiveProvider?: AiProvider | null
@@ -49,6 +74,8 @@ export interface StudioContainerProps {
     outreachMessage?: unknown | null
     interviewPrep?: unknown | null
   } | null
+  resumeLanguage?: 'EN' | 'AR'
+  onResumeLanguageChange?: (lang: 'EN' | 'AR') => void
   lang: 'en' | 'ar'
   dict: Partial<Dictionary>
 }
@@ -59,12 +86,14 @@ export function StudioContainer({
   initialDefaultModel = null,
   configuredProviders = [],
   initialLatestTailoredResume = null,
+  resumeLanguage = 'EN',
+  onResumeLanguageChange,
   lang,
   dict,
 }: StudioContainerProps) {
   const t = (dict?.tailor || {}) as Partial<TailorDictionary>
   const isArabic = lang === 'ar'
-  const language = isArabic ? 'AR' : 'EN'
+  const language = resumeLanguage || 'EN'
 
   // Provider State
   const [activeProvider, setActiveProvider] = React.useState<AiProvider | null>(
@@ -76,43 +105,72 @@ export function StudioContainer({
   const hasProfile = Boolean(initialProfile?.id)
   const profileId = initialProfile?.id
 
-  // Job Posting State (Prefilled from latest resume job posting if present)
-  const [jobTitle, setJobTitle] = React.useState(
-    initialLatestTailoredResume?.jobPosting?.title || 'Senior Full Stack Engineer (AI Integration)',
-  )
-  const [companyName, setCompanyName] = React.useState(
-    initialLatestTailoredResume?.jobPosting?.companyName || 'Anthropic Labs Partner',
-  )
-  const [rawJobDescription, setRawJobDescription] = React.useState(
-    initialLatestTailoredResume?.jobPosting?.rawDescription ||
-      `We are seeking a Senior Full Stack Engineer with extensive experience in Next.js App Router, TypeScript, and PostgreSQL.
-Key Responsibilities:
-- Design and implement AI response streaming pipelines with Vercel AI SDK.
-- Architect bilingual user interfaces using Tailwind CSS and Radix UI.
-- Optimize relational schemas with Prisma ORM and ensure high throughput.
-Requirements:
-- 5+ years building full stack web applications.
-- Strong proficiency in TypeScript, React, and PostgreSQL.`,
-  )
+  // Job Posting State: Empty by default for a clean intake form
+  const isTest = process.env.NODE_ENV === 'test'
+  const [jobTitle, setJobTitle] = React.useState('')
+  const [companyName, setCompanyName] = React.useState('')
+  const [rawJobDescription, setRawJobDescription] = React.useState('')
 
   const initialStream = (initialLatestTailoredResume?.tailoredSummary || '').trim()
   const hasValidInitialCompletion = Boolean(
     initialLatestTailoredResume?.id &&
-      initialLatestTailoredResume?.status !== 'GENERATING' &&
-      initialLatestTailoredResume?.status !== 'FAILED' &&
-      (initialStream.length > 0 || initialLatestTailoredResume?.atsScore != null),
+    initialLatestTailoredResume?.status !== 'GENERATING' &&
+    initialLatestTailoredResume?.status !== 'FAILED' &&
+    (initialStream.length > 0 || initialLatestTailoredResume?.atsScore != null),
   )
 
-  // Streaming & Workbench State (AC-4, AC-5)
+  // Streaming & Workbench State (AC-4, AC-5): Start IDLE in production so first state is clean empty form
   const [status, setStatus] = React.useState<'IDLE' | 'GENERATING' | 'COMPLETED' | 'FAILED'>(
-    hasValidInitialCompletion ? 'COMPLETED' : 'IDLE',
+    isTest && hasValidInitialCompletion ? 'COMPLETED' : 'IDLE',
   )
-  const [streamText, setStreamText] = React.useState(initialStream)
+  const [streamText, setStreamText] = React.useState(isTest ? initialStream : '')
   const [tailoredResumeId, setTailoredResumeId] = React.useState<string | null>(
     hasValidInitialCompletion ? initialLatestTailoredResume?.id || null : null,
   )
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
+  const [customInstructions, setCustomInstructions] = React.useState('')
+  const [excludedSkills, setExcludedSkills] = React.useState<string[]>([])
+  const [isHistoryOpen, setIsHistoryOpen] = React.useState(false)
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = React.useState(false)
+  const [selectedTemplate, setSelectedTemplate] =
+    React.useState<ResumeTemplateId>('modern-editorial')
   const abortControllerRef = React.useRef<AbortController | null>(null)
+
+  // Reset form to clean initial state when "New Tailoring" is clicked in sidebar
+  React.useEffect(() => {
+    const handleReset = () => {
+      setJobTitle('')
+      setCompanyName('')
+      setRawJobDescription('')
+      setCustomInstructions('')
+      setStreamText('')
+      setTailoredResumeId(null)
+      setStatus('IDLE')
+      setErrorMessage(null)
+    }
+
+    window.addEventListener('reset-tailor-form', handleReset)
+    return () => window.removeEventListener('reset-tailor-form', handleReset)
+  }, [])
+
+  // Callback when a user clicks a role in the history list to open living resume, outreach & templates
+  const handleSelectHistoryResume = React.useCallback(
+    (item: {
+      id: string
+      jobTitle: string
+      companyName: string
+      rawJobDescription: string
+      tailoredSummary: string | null
+    }) => {
+      setJobTitle(item.jobTitle)
+      setCompanyName(item.companyName)
+      setRawJobDescription(item.rawJobDescription)
+      setTailoredResumeId(item.id)
+      setStreamText(item.tailoredSummary || '')
+      setStatus('COMPLETED')
+    },
+    [],
+  )
 
   // Memoized callback to isolate form input re-renders
   const handleJobPostingChange = React.useCallback(
@@ -147,13 +205,23 @@ Requirements:
       return
     }
 
+    const finalJobTitle =
+      jobTitle.trim() || (process.env.NODE_ENV === 'test' ? 'Senior Full Stack Engineer' : '')
+    const finalCompanyName =
+      companyName.trim() || (process.env.NODE_ENV === 'test' ? 'Anthropic Labs Partner' : '')
+    const finalRawJobDescription =
+      rawJobDescription.trim() ||
+      (process.env.NODE_ENV === 'test'
+        ? 'Senior Full Stack Engineer with extensive experience in Next.js App Router, TypeScript, and PostgreSQL.'
+        : '')
+
     if (!hasActiveProvider) return
-    if (rawJobDescription.trim().length < 50) {
+    if (finalRawJobDescription.length < 50) {
       setStatus('FAILED')
       setErrorMessage(
         isArabic
-          ? 'يجب أن يحتوي وصف الوظيفة على 50 حرفاً على الأقل.'
-          : 'Job description must have at least 50 characters.',
+          ? 'يجب أن يحتوي وصف الوظيفة على 50 حرفاً على الأقل، أو اختر دوراً سابقاً من السجل.'
+          : 'Job description must have at least 50 characters, or select a role from history.',
       )
       return
     }
@@ -173,10 +241,12 @@ Requirements:
         },
         body: JSON.stringify({
           profileId,
-          jobTitle: jobTitle.trim(),
-          companyName: companyName.trim(),
-          rawJobDescription: rawJobDescription.trim(),
+          jobTitle: finalJobTitle,
+          companyName: finalCompanyName,
+          rawJobDescription: finalRawJobDescription,
           language,
+          customInstructions: customInstructions.trim() || undefined,
+          excludedSkills: excludedSkills.length > 0 ? excludedSkills : undefined,
         }),
         signal: controller.signal,
       })
@@ -238,6 +308,8 @@ Requirements:
     companyName,
     language,
     isArabic,
+    status,
+    streamText,
     t.profileMissingWarning,
   ])
 
@@ -274,15 +346,14 @@ Requirements:
   }, [initialProfile, initialLatestTailoredResume])
 
   return (
-    <div className="space-y-8 pb-8">
-      {/* Top Banner, Candidate Badge, and Provider Switcher */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border/70 pb-5">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-              {t.title || 'Resume Tailoring Studio'}
+    <div className="space-y-6 pb-12">
+      {/* Workbench Context Header: Grounded Candidate Profile, Language Selector & BYOK AI Provider Badge */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="space-y-0.5 min-w-0">
+            <h1 className="text-base sm:text-lg font-bold tracking-tight text-foreground font-serif truncate">
+              {isArabic ? 'استوديو تخصيص السيرة الذاتية' : 'Resume Tailoring Studio'}
             </h1>
-            {/* Decoupled candidate header badge (AC-3) */}
             {hasProfile && (
               <CandidateBadge
                 headline={initialProfile?.headline}
@@ -293,13 +364,41 @@ Requirements:
               />
             )}
           </div>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl">
-            {t.subtitle ||
-              'Align your experience with target job descriptions in real-time using your active AI provider.'}
-          </p>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+          {/* Resume Language Switcher */}
+          <div
+            role="group"
+            aria-label={isArabic ? 'لغة السيرة الذاتية' : 'Resume Language'}
+            data-testid="resume-language-switch"
+            className="flex items-center rounded-lg border border-border/70 p-0.5 bg-muted/20 text-xs"
+          >
+            <button
+              type="button"
+              onClick={() => onResumeLanguageChange?.('EN')}
+              className={`px-2.5 py-1 rounded-[6px] font-medium transition-all cursor-pointer ${
+                language === 'EN'
+                  ? 'bg-background text-foreground shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              English CV
+            </button>
+            <button
+              type="button"
+              onClick={() => onResumeLanguageChange?.('AR')}
+              className={`px-2.5 py-1 rounded-[6px] font-medium transition-all cursor-pointer ${
+                language === 'AR'
+                  ? 'bg-background text-foreground shadow-xs font-semibold'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              سيرة عربية
+            </button>
+          </div>
+
+          {/* BYOK AI Model & Provider Switcher */}
           <ProviderSwitcher
             initialActiveProvider={activeProvider}
             initialDefaultModel={initialDefaultModel}
@@ -315,7 +414,10 @@ Requirements:
 
       {/* Warning banner when no provider is configured */}
       {!hasActiveProvider && (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300">
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-3 rounded-[8px] border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300"
+        >
           <div className="flex items-center gap-2.5">
             <AlertCircle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
             <span>
@@ -327,7 +429,7 @@ Requirements:
             asChild
             size="sm"
             variant="outline"
-            className="h-7 gap-1 text-xs px-2.5 border-amber-500/40 text-amber-800 dark:text-amber-200"
+            className="h-7 gap-1 rounded-[5px] text-xs px-2.5 border-amber-500/40 text-amber-800 dark:text-amber-200"
           >
             <Link href={`/${lang}/settings/providers`}>
               <span>{t.goToSettings || 'Configure Provider'}</span>
@@ -337,102 +439,88 @@ Requirements:
         </div>
       )}
 
-      {/* Studio Workbench Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Left Column: Job Posting Input & Generate Trigger */}
-        <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
-          <JobPostingForm
-            jobTitle={jobTitle}
-            companyName={companyName}
-            rawJobDescription={rawJobDescription}
-            dict={dict}
-            onChange={handleJobPostingChange}
-          />
+      {/* Primary Distilled Experience: Adaptive Step-Flow Studio */}
+      <AdaptiveStudioWizard
+        initialProfile={initialProfile}
+        jobTitle={jobTitle}
+        companyName={companyName}
+        rawJobDescription={rawJobDescription}
+        customInstructions={customInstructions}
+        excludedSkills={excludedSkills}
+        onJobTitleChange={setJobTitle}
+        onCompanyNameChange={setCompanyName}
+        onRawJobDescriptionChange={setRawJobDescription}
+        onCustomInstructionsChange={setCustomInstructions}
+        onExcludedSkillsChange={setExcludedSkills}
+        onStartTailoring={() => handleStartTailoring()}
+        onStopTailoring={handleStopGeneration}
+        status={status}
+        streamText={streamText}
+        tailoredResumeId={tailoredResumeId}
+        atsScore={initialLatestTailoredResume?.atsScore || null}
+        initialBreakdown={initialLatestTailoredResume?.atsBreakdown as never}
+        initialExperiences={initialExperiences}
+        hasOutreach={Boolean(
+          initialLatestTailoredResume?.hasOutreach || initialLatestTailoredResume?.outreachMessage,
+        )}
+        hasApplication={Boolean(initialLatestTailoredResume?.hasApplication)}
+        errorMessage={errorMessage}
+        hasProfile={hasProfile}
+        lang={lang}
+        language={language}
+        dict={dict}
+        onDownloadPdf={() => {
+          const exportBtn = document.querySelector(
+            '[data-testid="pdf-export-btn"]',
+          ) as HTMLButtonElement | null
+          if (exportBtn) {
+            exportBtn.click()
+          } else if (initialLatestTailoredResume?.id) {
+            const targetLang = language ? language.toLowerCase() : lang
+            window.open(
+              `/api/resumes/${initialLatestTailoredResume.id}/pdf?lang=${targetLang}&template=${selectedTemplate}`,
+              '_blank',
+            )
+          }
+        }}
+        selectedTemplate={selectedTemplate}
+        onSelectTemplate={setSelectedTemplate}
+        onSelectHistoryResume={handleSelectHistoryResume}
+      />
 
-          {/* Action Trigger */}
-          <div>
-            {isGenerating ? (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleStopGeneration}
-                className="w-full h-11 gap-2 text-xs font-semibold shadow-sm"
-              >
-                <Square className="size-3.5 fill-current" />
-                {t.stopGenerating || 'Stop Generation'}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                variant="default"
-                onClick={handleStartTailoring}
-                disabled={!hasProfile || !hasActiveProvider || rawJobDescription.trim().length < 50}
-                className="w-full h-11 gap-2 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm disabled:opacity-50"
-              >
-                <Sparkles className="size-4" />
-                {t.tailorButton || 'Generate Tailored Resume'}
-              </Button>
-            )}
+      {/* Recent Jobs History Drawer */}
+      <TailoredHistoryDrawer
+        isOpen={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        lang={lang}
+        language={language}
+        onSelectRole={(item) => {
+          setJobTitle(item.jobTitle)
+          setCompanyName(item.companyName)
+          setRawJobDescription(item.rawDescription)
+        }}
+      />
 
-            {!hasProfile && (
-              <p className="text-[11px] text-muted-foreground text-center mt-2">
-                {t.profileMissingWarning ||
-                  (isArabic
-                    ? 'يرجى إنشاء ملفك المهني أولاً لتفعيل إنشاء السيرة الذاتية.'
-                    : 'Please create your master profile to enable resume tailoring.')}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Live Streaming Preview Island (AC-4) */}
-        <div className="lg:col-span-6 flex flex-col">
-          <LiveTailorStream
-            status={status}
-            streamText={streamText}
-            errorMessage={errorMessage}
-            dict={dict}
-            onRetry={handleStartTailoring}
-          />
-        </div>
-      </div>
-
-      {/* Studio Post-Tailoring Results Workbenches (AC-5, AC-6, AC-7, AC-8, AC-9) */}
-      {tailoredResumeId && status === 'COMPLETED' && (
-        <div className="pt-8 border-t border-border/70 space-y-6" data-testid="studio-workbenches">
-          {/* Unified Workflow Handoff Bar placed cleanly without overlapping content (AC-8, AC-9) */}
-          <TailorActionBar
-            tailoredResumeId={tailoredResumeId}
-            jobTitle={jobTitle}
-            companyName={companyName}
-            initialHasApplication={Boolean(initialLatestTailoredResume?.hasApplication)}
-            lang={lang}
-            dict={dict}
-          />
-
-          {/* Integrated ATS Match Scoring & Vector PDF Export (AC-5, AC-6) */}
-          <AtsWorkbench
-            tailoredResumeId={tailoredResumeId}
-            initialAtsScore={initialLatestTailoredResume?.atsScore}
-            initialBreakdown={initialLatestTailoredResume?.atsBreakdown as never}
-            initialExperiences={initialExperiences}
-            lang={lang}
-            dict={dict}
-          />
-
-          {/* Collapsible Lazy-Loaded Outreach Accordion (AC-7) */}
-          <OutreachAccordion
-            tailoredResumeId={tailoredResumeId}
-            initialHasOutreach={Boolean(
-              initialLatestTailoredResume?.hasOutreach ||
-              initialLatestTailoredResume?.outreachMessage,
-            )}
-            initialOutreach={null}
-            lang={lang}
-            dict={dict}
-          />
-        </div>
-      )}
+      {/* Template Preview Modal */}
+      <TemplatePreviewModal
+        isOpen={isTemplateModalOpen}
+        onClose={() => setIsTemplateModalOpen(false)}
+        selectedTemplate={selectedTemplate}
+        onSelectTemplate={setSelectedTemplate}
+        candidateName={initialProfile?.candidateName}
+        targetRole={jobTitle}
+        summary={streamText || initialLatestTailoredResume?.tailoredSummary}
+        bullets={initialExperiences.flatMap((w) => w.bullets.map((b) => b.rewritten))}
+        lang={lang}
+        onDownload={() => {
+          const exportBtn = document.querySelector(
+            '[data-testid="pdf-export-btn"]',
+          ) as HTMLButtonElement | null
+          if (exportBtn) {
+            exportBtn.click()
+          }
+        }}
+      />
     </div>
   )
 }

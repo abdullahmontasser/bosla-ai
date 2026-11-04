@@ -22,6 +22,7 @@ export interface AtsWorkbenchProps {
   initialExperiences?: ExperienceItem[]
   lastExportedAt?: string | Date | null
   lang: 'en' | 'ar'
+  resumeLanguage?: 'EN' | 'AR'
   dict: Partial<Dictionary>
 }
 
@@ -32,6 +33,7 @@ export function AtsWorkbench({
   initialExperiences = [],
   lastExportedAt: initialExportedAt = null,
   lang,
+  resumeLanguage,
   dict,
 }: AtsWorkbenchProps) {
   const [atsScore, setAtsScore] = React.useState<number>(initialAtsScore ?? 0)
@@ -43,9 +45,15 @@ export function AtsWorkbench({
   const [optimizingKey, setOptimizingKey] = React.useState<string | null>(null)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
-  // Fetch or calculate score if not present
+  // Fetch or calculate score if not present or incomplete
   React.useEffect(() => {
-    if (!breakdown && tailoredResumeId) {
+    const isBreakdownIncomplete =
+      !breakdown ||
+      !breakdown.categorySubscores ||
+      !Array.isArray(breakdown.matchedSkills) ||
+      !Array.isArray(breakdown.missingSkills)
+
+    if (isBreakdownIncomplete && tailoredResumeId) {
       calculateAtsScoreAction(tailoredResumeId, false).then((res) => {
         if (res.success && res.breakdown) {
           setAtsScore(res.atsScore ?? 0)
@@ -179,9 +187,9 @@ export function AtsWorkbench({
   return (
     <div className="space-y-6" data-testid="ats-workbench">
       {/* Workbench Header & PDF Export Trigger */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/80 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/70 pb-4">
         <div>
-          <h3 className="text-lg font-bold tracking-tight text-foreground">
+          <h3 className="text-base sm:text-lg font-semibold tracking-tight text-foreground">
             {dict.ats?.title || 'ATS Optimization Workbench'}
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -193,6 +201,7 @@ export function AtsWorkbench({
         <PdfExportButton
           tailoredResumeId={tailoredResumeId}
           lang={lang}
+          resumeLanguage={resumeLanguage}
           dict={dict}
           lastExportedAt={lastExportedAt}
         />
@@ -200,15 +209,15 @@ export function AtsWorkbench({
 
       {/* Global Error Banner */}
       {errorMessage && (
-        <div className="flex items-center gap-2 p-3 rounded-lg border border-destructive/30 bg-destructive/10 text-xs text-destructive">
+        <div className="flex items-center gap-2 p-3 rounded-[6px] border border-destructive/30 bg-destructive/10 text-xs text-destructive">
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{errorMessage}</span>
         </div>
       )}
 
       {/* Grid: ATS Score & Skills Gap Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
           {breakdown ? (
             <AtsScoreCard
               score={atsScore}
@@ -220,7 +229,7 @@ export function AtsWorkbench({
               onRecalculate={handleRecalculate}
             />
           ) : (
-            <div className="p-8 rounded-lg border border-border bg-card text-center text-xs text-muted-foreground animate-pulse">
+            <div className="p-8 rounded-[8px] border border-border bg-card text-center text-xs text-muted-foreground animate-pulse">
               {lang === 'ar'
                 ? 'جارٍ تحليل التوافق مع أنظمة التوظيف...'
                 : 'Evaluating ATS match score...'}
@@ -228,12 +237,12 @@ export function AtsWorkbench({
           )}
         </div>
 
-        <div className="lg:col-span-6">
+        <div>
           {breakdown && (
             <SkillsGapCard
-              matchedSkills={breakdown.matchedSkills}
-              missingSkills={breakdown.missingSkills}
-              dismissedSkills={breakdown.dismissedSkills}
+              matchedSkills={breakdown.matchedSkills ?? []}
+              missingSkills={breakdown.missingSkills ?? []}
+              dismissedSkills={breakdown.dismissedSkills ?? []}
               dict={dict}
               lang={lang}
               onAddSkill={handleAddSkill}

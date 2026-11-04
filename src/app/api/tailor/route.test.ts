@@ -14,7 +14,9 @@ vi.mock('@/auth', () => ({
 vi.mock('@/lib/prisma', () => ({
   prisma: {
     jobPosting: {
+      findFirst: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     tailoredResume: {
       create: vi.fn(),
@@ -54,6 +56,7 @@ describe('POST /api/tailor route handler (covers: AC-4, AC-5, AC-6, AC-7, AC-8)'
 
   beforeEach(() => {
     vi.clearAllMocks()
+    vi.mocked(prisma.jobPosting.findFirst).mockResolvedValue(null)
   })
 
   it('returns 401 when request is unauthenticated (covers: AC-4)', async () => {
@@ -281,5 +284,75 @@ describe('POST /api/tailor route handler (covers: AC-4, AC-5, AC-6, AC-7, AC-8)'
       where: { id: 'tailored_res_99' },
       data: { status: 'FAILED' },
     })
+  })
+
+  it('updates existing JobPosting when duplicate role is submitted instead of creating a new one', async () => {
+    mockAuth.mockResolvedValueOnce({
+      user: { id: 'usr_test' },
+      expires: '2099-01-01',
+    })
+    vi.mocked(getActiveProviderSettings).mockResolvedValueOnce([
+      {
+        id: 'set_1',
+        provider: 'OPENAI',
+        apiKey: 'sk-test',
+        defaultModel: 'gpt-4o',
+        endpointUrl: null,
+        isActive: true,
+        updatedAt: new Date(),
+      },
+    ])
+    vi.mocked(getProfileById).mockResolvedValueOnce({
+      id: 'prof_123',
+      userId: 'usr_test',
+      language: 'EN',
+      fullName: 'Tarek Mansour',
+      headline: 'Senior Full Stack Engineer',
+      summary: 'Experienced cloud engineer',
+      workExperiences: [],
+    } as never)
+
+    // Existing job posting found
+    vi.mocked(prisma.jobPosting.findFirst).mockResolvedValueOnce({
+      id: 'existing_job_123',
+      title: validPayload.jobTitle,
+      companyName: validPayload.companyName,
+      rawDescription: 'Old description',
+    } as never)
+
+    vi.mocked(prisma.jobPosting.update).mockResolvedValueOnce({
+      id: 'existing_job_123',
+      rawDescription: validPayload.rawJobDescription,
+    } as never)
+
+    vi.mocked(prisma.tailoredResume.create).mockResolvedValueOnce({
+      id: 'tailored_res_100',
+    } as never)
+
+    vi.mocked(streamText).mockImplementationOnce(
+      () =>
+        ({
+          toTextStreamResponse: vi.fn(() => new Response('Test stream')),
+        }) as unknown as ReturnType<typeof streamText>,
+    )
+
+    const req = new NextRequest('http://localhost:3000/api/tailor', {
+      method: 'POST',
+      body: JSON.stringify(validPayload),
+    })
+
+    const res = await POST(req)
+    expect(res.status).toBe(200)
+
+    // Verify update was called with existing id, and create was NOT called
+    expect(prisma.jobPosting.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'existing_job_123' },
+        data: expect.objectContaining({
+          rawDescription: validPayload.rawJobDescription,
+        }),
+      }),
+    )
+    expect(prisma.jobPosting.create).not.toHaveBeenCalled()
   })
 })

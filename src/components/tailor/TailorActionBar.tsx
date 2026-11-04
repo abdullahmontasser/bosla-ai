@@ -3,6 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { RtlIcon } from '@/components/ui/rtl-icon'
 import { createApplication } from '@/app/actions/application-actions'
 import type { Dictionary, TailorDictionary } from '@/lib/i18n/types'
@@ -54,29 +55,38 @@ export function TailorActionBar({
 
   return (
     <div
-      className="relative w-full rounded-xl border border-primary/25 bg-gradient-to-r from-primary/8 via-card to-card p-4 shadow-xs transition-all"
+      className="w-full rounded-2xl border border-border/80 bg-gradient-to-r from-card via-card to-primary/5 p-4 sm:p-5 shadow-xs"
       data-testid="tailor-action-bar"
     >
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-        {/* Left / Start Info */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-            <Briefcase className="size-4" />
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Left: Role Context & Readiness Info */}
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+            <Briefcase className="size-5" />
           </div>
-          <div className="min-w-0">
-            <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
-              {jobTitle} · {companyName}
-            </p>
-            <p className="text-[11px] text-muted-foreground truncate">
+          <div className="min-w-0 space-y-0.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-bold text-foreground truncate">
+                {jobTitle}
+                {companyName ? ` · ${companyName}` : ''}
+              </h3>
+              <Badge
+                variant="outline"
+                className="text-[10px] font-medium border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+              >
+                {isArabic ? 'جاهز للتقديم' : 'Ready to Apply'}
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
               {t.applicationSaved ||
                 (isArabic
-                  ? 'السيرة الذاتية المخصصة جاهزة للمتابعة والتحضير'
-                  : 'Tailored resume ready for tracking and interview practice')}
+                  ? 'السيرة الذاتية المخصصة جاهزة للإدراج في لوحة المتابعة والتدرب على أسئلة المقابلة.'
+                  : 'Tailored resume ready for tracking in Kanban and interview preparation.')}
             </p>
           </div>
         </div>
 
-        {/* Right / End Actions */}
+        {/* Right: Dual Career Action CTAs */}
         <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
           {/* Tracker Action */}
           {hasApplication ? (
@@ -84,7 +94,7 @@ export function TailorActionBar({
               asChild
               size="sm"
               variant="outline"
-              className="h-9 gap-1.5 text-xs font-semibold border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+              className="h-9 gap-1.5 rounded-lg text-xs font-semibold border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 cursor-pointer"
               data-testid="view-in-tracker-btn"
             >
               <Link href={`/${lang}/tracker`}>
@@ -102,7 +112,7 @@ export function TailorActionBar({
               variant="outline"
               onClick={handleSaveToTracker}
               disabled={isSaving}
-              className="h-9 gap-1.5 text-xs font-semibold border-border hover:bg-accent text-foreground"
+              className="h-9 gap-1.5 rounded-lg text-xs font-semibold border-border hover:bg-muted text-foreground cursor-pointer"
               data-testid="add-to-tracker-btn"
             >
               <Kanban className="size-3.5 text-muted-foreground" />
@@ -110,7 +120,7 @@ export function TailorActionBar({
                 {isSaving
                   ? dict.tracker?.saving || (isArabic ? 'جارٍ الإضافة...' : 'Adding...')
                   : dict.tracker?.addToTracker ||
-                    (isArabic ? 'إضافة إلى لوحة المتابعة' : 'Add to Tracker')}
+                    (isArabic ? 'إضافة للوحة المتابعة' : 'Add to Tracker')}
               </span>
             </Button>
           )}
@@ -120,7 +130,7 @@ export function TailorActionBar({
             asChild
             size="sm"
             variant="default"
-            className="h-9 gap-1.5 text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs"
+            className="h-9 gap-2 rounded-lg text-xs font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-xs cursor-pointer px-4"
             data-testid="practice-star-btn"
           >
             <Link href={`/${lang}/career-prep?tailoredResumeId=${tailoredResumeId}`}>
@@ -129,7 +139,7 @@ export function TailorActionBar({
                 {t.practiceStarQuestions ||
                   (isArabic ? 'التدرب على أسئلة STAR' : 'Practice STAR Interview Questions')}
               </span>
-              <RtlIcon icon={ArrowRight} className="size-3" />
+              <RtlIcon icon={ArrowRight} className="size-3.5" />
             </Link>
           </Button>
         </div>

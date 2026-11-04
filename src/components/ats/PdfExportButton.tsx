@@ -8,6 +8,7 @@ import type { Dictionary, AtsDictionary } from '@/lib/i18n/types'
 export interface PdfExportButtonProps {
   tailoredResumeId: string
   lang: 'en' | 'ar'
+  resumeLanguage?: 'EN' | 'AR'
   dict: Partial<Dictionary>
   lastExportedAt?: string | Date | null
   className?: string
@@ -16,6 +17,7 @@ export interface PdfExportButtonProps {
 export function PdfExportButton({
   tailoredResumeId,
   lang,
+  resumeLanguage,
   dict,
   lastExportedAt,
   className,
@@ -23,15 +25,18 @@ export function PdfExportButton({
   const t = (dict?.ats || {}) as Partial<AtsDictionary>
   const [isExporting, setIsExporting] = React.useState(false)
   const [downloaded, setDownloaded] = React.useState(false)
+  const [exportError, setExportError] = React.useState<string | null>(null)
 
   const handleDownload = async () => {
     if (!tailoredResumeId || isExporting) return
 
     setIsExporting(true)
     setDownloaded(false)
+    setExportError(null)
 
     try {
-      const exportUrl = `/api/resumes/${tailoredResumeId}/pdf?lang=${lang}`
+      const targetLang = resumeLanguage ? resumeLanguage.toLowerCase() : lang
+      const exportUrl = `/api/resumes/${tailoredResumeId}/pdf?lang=${targetLang}`
       const response = await fetch(exportUrl)
 
       if (!response.ok) {
@@ -68,11 +73,16 @@ export function PdfExportButton({
       setTimeout(() => setDownloaded(false), 3000)
     } catch (err) {
       console.error('Error downloading resume PDF:', err)
-      alert(
+      const errorMsg =
         lang === 'ar'
           ? 'فشل تصدير ملف PDF. يرجى المحاولة مرة أخرى.'
-          : 'Failed to export PDF document.',
-      )
+          : 'Failed to export PDF document.'
+      setExportError(errorMsg)
+      try {
+        alert(errorMsg)
+      } catch {
+        // fallback
+      }
     } finally {
       setIsExporting(false)
     }
@@ -105,6 +115,12 @@ export function PdfExportButton({
               : t.exportPdf || 'Export ATS PDF'}
         </span>
       </Button>
+
+      {exportError && (
+        <p role="alert" className="text-[11px] text-destructive">
+          {exportError}
+        </p>
+      )}
 
       {lastExportedAt && (
         <span className="text-[10px] text-muted-foreground ms-1">

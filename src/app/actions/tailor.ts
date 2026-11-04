@@ -8,7 +8,7 @@ import { getSampleCandidate } from '@/lib/fixtures/sample-candidate'
 import { getProviderConfigurations } from '@/app/actions/provider-settings'
 import { getOutreachMessageAction } from '@/app/actions/outreach-actions'
 import type { Language, AiProvider, ResumeGenerationStatus } from '@prisma/client'
-import type { TailoredResumeContentSnapshot } from '@/lib/ai/tailor-prompt'
+import { formatSnapshotAsText, type TailoredResumeContentSnapshot } from '@/lib/ai/tailor-prompt'
 
 export { getOutreachMessageAction }
 
@@ -67,6 +67,7 @@ export async function loadSampleCandidateProfile(language: 'EN' | 'AR' = 'EN') {
 }
 
 export interface TailorStudioData {
+  resumeLanguage?: 'EN' | 'AR'
   session: {
     user: {
       id: string
@@ -80,11 +81,38 @@ export interface TailorStudioData {
     headline?: string | null
     summary?: string | null
     candidateName?: string | null
+    fullName?: string | null
+    email?: string | null
+    phone?: string | null
+    location?: string | null
+    linkedin?: string | null
+    linkedinUrl?: string | null
+    githubUrl?: string | null
+    websiteUrl?: string | null
     emailVerified?: boolean
     workExperiences: Array<{
       companyName: string
       jobTitle: string
       bullets: string[]
+    }>
+    educations?: Array<{
+      schoolName: string
+      degree: string
+      fieldOfStudy?: string | null
+      startDate?: string
+      endDate?: string | null
+    }>
+    projects?: Array<{
+      title: string
+      role?: string | null
+      description?: string | null
+      bullets: string[]
+      technologies?: string[]
+    }>
+    skills?: Array<{
+      name: string
+      category?: string | null
+      level?: string | null
     }>
   } | null
   activeProvider: AiProvider | null
@@ -108,42 +136,13 @@ export interface TailorStudioData {
   } | null
 }
 
-function reconstructFormattedStream(
-  tailoredSummary?: string | null,
-  tailoredContent?: unknown,
-): string {
-  const snapshot = tailoredContent as TailoredResumeContentSnapshot | null | undefined
-  const summary = (tailoredSummary || snapshot?.tailoredSummary || '').trim()
-  const bullets: string[] = []
-
-  if (snapshot && Array.isArray(snapshot.tailoredExperiences)) {
-    for (const exp of snapshot.tailoredExperiences) {
-      if (Array.isArray(exp.bullets)) {
-        for (const b of exp.bullets) {
-          const text = typeof b?.tailored === 'string' ? b.tailored.trim() : ''
-          if (text) bullets.push(`- ${text}`)
-        }
-      }
-    }
-  }
-
-  if (!summary && bullets.length === 0) {
-    return ''
-  }
-
-  if (bullets.length === 0) {
-    return summary
-  }
-
-  return `### SUMMARY\n${summary}\n\n### BULLETS\n${bullets.join('\n')}`
-}
-
 export async function getTailorStudioInitialData(
   language: 'EN' | 'AR' = 'EN',
 ): Promise<TailorStudioData> {
   const session = await auth()
   if (!session?.user?.id) {
     return {
+      resumeLanguage: language,
       session: null,
       profile: null,
       activeProvider: null,
@@ -204,6 +203,7 @@ export async function getTailorStudioInitialData(
   const isEmailVerified = Boolean(user?.emailVerified)
 
   return {
+    resumeLanguage: language,
     session: {
       user: {
         id: session.user.id,
@@ -217,12 +217,68 @@ export async function getTailorStudioInitialData(
           id: profile.id,
           headline: profile.headline,
           summary: profile.summary,
-          candidateName: user?.name || null,
+          candidateName: profile.fullName || user?.name || null,
+          fullName: profile.fullName || user?.name || null,
+          email: profile.email || session.user.email || null,
+          phone: profile.phone || null,
+          location: profile.location || null,
+          linkedin: profile.linkedinUrl || null,
+          linkedinUrl: profile.linkedinUrl || null,
+          githubUrl: profile.githubUrl || null,
+          websiteUrl: profile.websiteUrl || null,
           emailVerified: isEmailVerified,
           workExperiences: profile.workExperiences.map((w) => ({
             companyName: w.companyName,
             jobTitle: w.jobTitle,
             bullets: w.bullets,
+          })),
+          educations: (
+            (
+              profile as unknown as {
+                educations?: Array<{
+                  institution: string
+                  degree: string
+                  fieldOfStudy: string | null
+                  startDate: Date | null
+                  endDate: Date | null
+                }>
+              }
+            ).educations || []
+          ).map((e) => ({
+            schoolName: e.institution,
+            degree: e.degree,
+            fieldOfStudy: e.fieldOfStudy,
+            startDate: e.startDate ? e.startDate.toISOString() : undefined,
+            endDate: e.endDate ? e.endDate.toISOString() : null,
+          })),
+          projects: (
+            (
+              profile as unknown as {
+                projects?: Array<{
+                  name: string
+                  role: string | null
+                  description: string | null
+                  technologies: string[]
+                }>
+              }
+            ).projects || []
+          ).map((p) => ({
+            title: p.name,
+            role: p.role,
+            description: p.description,
+            bullets: p.technologies,
+            technologies: p.technologies,
+          })),
+          skills: (
+            (
+              profile as unknown as {
+                skills?: Array<{ name: string; category: string | null; level: string | null }>
+              }
+            ).skills || []
+          ).map((s) => ({
+            name: s.name,
+            category: s.category,
+            level: s.level,
           })),
         }
       : null,
@@ -235,7 +291,7 @@ export async function getTailorStudioInitialData(
           status: latestResume.status,
           atsScore: latestResume.atsScore,
           atsBreakdown: latestResume.atsBreakdown,
-          tailoredSummary: reconstructFormattedStream(
+          tailoredSummary: formatSnapshotAsText(
             latestResume.tailoredSummary,
             latestResume.tailoredContent,
           ),
@@ -253,5 +309,84 @@ export async function getTailorStudioInitialData(
           outreachMessage: null,
         }
       : null,
+  }
+}
+
+export interface TailoredJobHistoryItem {
+  id: string
+  jobTitle: string
+  companyName: string
+  rawJobDescription: string
+  atsScore: number | null
+  tailoredSummary: string | null
+  createdAt: string
+  language: 'EN' | 'AR'
+}
+
+export async function getTailoredResumeHistoryAction(
+  language: 'EN' | 'AR' = 'EN',
+): Promise<{ success: boolean; error?: string; data: TailoredJobHistoryItem[] }> {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { success: false, error: 'Unauthorized', data: [] }
+  }
+
+  try {
+    const history = await prisma.tailoredResume.findMany({
+      where: {
+        userId: session.user.id,
+        language: language as Language,
+        status: 'COMPLETED',
+      },
+      orderBy: { createdAt: 'desc' },
+      distinct: ['jobPostingId'],
+      take: 15,
+      select: {
+        id: true,
+        atsScore: true,
+        tailoredSummary: true,
+        createdAt: true,
+        language: true,
+        jobPosting: {
+          select: {
+            title: true,
+            companyName: true,
+            rawDescription: true,
+          },
+        },
+      },
+    })
+
+    // Strict deduplication by normalized (jobTitle + companyName) to guarantee zero duplicate roles in history
+    const seen = new Set<string>()
+    const deduplicatedData: TailoredJobHistoryItem[] = []
+
+    for (const item of history) {
+      const jobTitle = (item.jobPosting?.title || 'Untitled Role').trim()
+      const companyName = (item.jobPosting?.companyName || 'Unknown Company').trim()
+      const normalizedKey = `${jobTitle.toLowerCase().replace(/\s+/g, ' ')}:::${companyName.toLowerCase().replace(/\s+/g, ' ')}`
+
+      if (seen.has(normalizedKey)) continue
+      seen.add(normalizedKey)
+
+      deduplicatedData.push({
+        id: item.id,
+        atsScore: item.atsScore,
+        tailoredSummary: item.tailoredSummary,
+        createdAt: item.createdAt.toISOString(),
+        language: item.language as 'EN' | 'AR',
+        jobTitle,
+        companyName,
+        rawJobDescription: item.jobPosting?.rawDescription || '',
+      })
+    }
+
+    return {
+      success: true,
+      data: deduplicatedData,
+    }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Failed to fetch history'
+    return { success: false, error: msg, data: [] }
   }
 }

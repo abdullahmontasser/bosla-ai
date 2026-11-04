@@ -25,6 +25,7 @@ vi.mock('@/app/actions/tailor', () => ({
   getTailorStudioInitialData: vi.fn(),
   saveCandidateProfile: vi.fn().mockResolvedValue({ success: true }),
   getOutreachMessageAction: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  getTailoredResumeHistoryAction: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
 describe('TailorStudioPage component (covers: AC-1, AC-2, AC-3, AC-10)', () => {
@@ -83,7 +84,7 @@ describe('TailorStudioPage component (covers: AC-1, AC-2, AC-3, AC-10)', () => {
     })
     expect(screen.getByText('Senior Full Stack Engineer')).toBeDefined()
     expect(screen.getByTestId('candidate-badge')).toBeDefined()
-    expect(screen.getByText('Target Job Posting')).toBeDefined()
+    expect(screen.getAllByText('Target Job Posting').length).toBeGreaterThan(0)
     expect(screen.getByText('Live Tailoring Output')).toBeDefined()
     expect(screen.getByRole('button', { name: /Generate Tailored Resume/i })).toBeDefined()
     // Confirm inline experience form is NOT rendered
@@ -114,7 +115,7 @@ describe('TailorStudioPage component (covers: AC-1, AC-2, AC-3, AC-10)', () => {
       expect(screen.getByText('استوديو تخصيص السيرة الذاتية')).toBeDefined()
     })
     expect(screen.getByText('مهندس برمجيات أول')).toBeDefined()
-    expect(screen.getByText('بيانات الوظيفة المستهدفة')).toBeDefined()
+    expect(screen.getAllByText('بيانات الوظيفة المستهدفة').length).toBeGreaterThan(0)
     expect(screen.getByText('مخرجات التخصيص الفوري')).toBeDefined()
     expect(
       screen.getByRole('button', { name: /تخصيص السيرة الذاتية الآن|Generate Tailored Resume/i }),
@@ -137,6 +138,42 @@ describe('TailorStudioPage component (covers: AC-1, AC-2, AC-3, AC-10)', () => {
 
     expect(pageElement).toBeDefined()
     expect(getTailorStudioInitialData).toHaveBeenCalledWith('EN')
+  })
+
+  it('preserves English resume language when UI is set to Arabic', async () => {
+    vi.mocked(getTailorStudioInitialData).mockResolvedValueOnce({
+      session: { user: { id: 'usr_test_123', email: 'test@example.com' } },
+      profile: null,
+      activeProvider: 'OPENAI',
+      defaultModel: 'gpt-4o',
+      configuredProviders: ['OPENAI'],
+      latestTailoredResume: null,
+    })
+
+    await TailorStudioPage({
+      params: Promise.resolve({ lang: 'ar' }),
+    })
+
+    // UI is Arabic ('ar'), but resume data fetched remains 'EN'
+    expect(getTailorStudioInitialData).toHaveBeenCalledWith('EN')
+  })
+
+  it('respects explicit resumeLang searchParam independent of UI language', async () => {
+    vi.mocked(getTailorStudioInitialData).mockResolvedValueOnce({
+      session: { user: { id: 'usr_test_123', email: 'test@example.com' } },
+      profile: null,
+      activeProvider: 'OPENAI',
+      defaultModel: 'gpt-4o',
+      configuredProviders: ['OPENAI'],
+      latestTailoredResume: null,
+    })
+
+    await TailorStudioPage({
+      params: Promise.resolve({ lang: 'en' }),
+      searchParams: Promise.resolve({ resumeLang: 'AR' }),
+    })
+
+    expect(getTailorStudioInitialData).toHaveBeenCalledWith('AR')
   })
 
   it('calls notFound when an unsupported locale is requested', async () => {

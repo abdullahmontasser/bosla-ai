@@ -87,4 +87,47 @@ describe('JobPostingForm (covers: AC-2, AC-4)', () => {
     expect(screen.getByText('Company Name')).toBeDefined()
     expect(screen.getByText('Target Job Description')).toBeDefined()
   })
+
+  it('renders "Load sample brief" button when description is empty and loads preset on click', () => {
+    const onChange = vi.fn()
+    render(
+      <JobPostingForm
+        jobTitle=""
+        companyName=""
+        rawJobDescription=""
+        dict={dummyDict as unknown as Partial<Dictionary>}
+        onChange={onChange}
+      />,
+    )
+
+    const loadSampleBtn = screen.getByRole('button', { name: /Load sample brief/i })
+    expect(loadSampleBtn).toBeDefined()
+
+    fireEvent.click(loadSampleBtn)
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        jobTitle: 'Senior Full Stack Engineer (AI Integration)',
+        companyName: 'Anthropic Labs Partner',
+      }),
+    )
+  })
+
+  it('triggers onSubmit on Cmd+Enter shortcut when description is valid', () => {
+    const onSubmit = vi.fn()
+    render(
+      <JobPostingForm
+        jobTitle="Staff Engineer"
+        companyName="Tech Corp"
+        rawJobDescription="A description that is comfortably longer than 50 characters to satisfy the minimum length requirement."
+        dict={dummyDict as unknown as Partial<Dictionary>}
+        onChange={vi.fn()}
+        onSubmit={onSubmit}
+      />,
+    )
+
+    const textarea = screen.getByDisplayValue(/longer than 50 characters/)
+    fireEvent.keyDown(textarea, { key: 'Enter', metaKey: true })
+
+    expect(onSubmit).toHaveBeenCalledTimes(1)
+  })
 })

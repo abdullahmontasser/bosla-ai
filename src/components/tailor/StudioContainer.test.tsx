@@ -8,6 +8,7 @@ vi.mock('@/app/actions/tailor', () => ({
   saveCandidateProfile: vi.fn(),
   loadSampleCandidateProfile: vi.fn(),
   getOutreachMessageAction: vi.fn().mockResolvedValue({ success: true, data: undefined }),
+  getTailoredResumeHistoryAction: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }))
 
 vi.mock('@/app/actions/application-actions', () => ({
@@ -190,16 +191,16 @@ describe('StudioContainer (covers: AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-
       />,
     )
 
-    const generateBtn = screen.getByRole('button', { name: /Generate Tailored Resume/i })
+    const generateBtn = screen.getAllByRole('button', { name: /Generate Tailored Resume/i })[0]
     fireEvent.click(generateBtn)
 
     await waitFor(() => {
-      expect(screen.getByText('Tailored summary here.')).toBeDefined()
+      expect(screen.getAllByText('Tailored summary here.').length).toBeGreaterThan(0)
     })
 
     await waitFor(() => {
-      expect(screen.getByText('Streamed bullet point one.')).toBeDefined()
-      expect(screen.getByText('Completed & Saved')).toBeDefined()
+      expect(screen.getAllByText(/Streamed bullet point one/i).length).toBeGreaterThan(0)
+      expect(screen.getAllByText('Completed & Saved').length).toBeGreaterThan(0)
     })
 
     vi.unstubAllGlobals()
@@ -227,7 +228,7 @@ describe('StudioContainer (covers: AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-
       />,
     )
 
-    const generateBtn = screen.getByRole('button', { name: /Generate Tailored Resume/i })
+    const generateBtn = screen.getAllByRole('button', { name: /Generate Tailored Resume/i })[0]
     fireEvent.click(generateBtn)
 
     const stopBtn = await screen.findByRole('button', { name: /Stop Generation/i })
@@ -319,5 +320,58 @@ describe('StudioContainer (covers: AC-2, AC-3, AC-4, AC-5, AC-6, AC-7, AC-8, AC-
     expect(screen.getByTestId('tailor-action-bar')).toBeDefined()
     expect(screen.getByTestId('view-in-tracker-btn')).toBeDefined()
     expect(screen.getByTestId('practice-star-btn')).toBeDefined()
+  })
+
+  it('renders resume language switcher and triggers onResumeLanguageChange callback', () => {
+    const onResumeLanguageChange = vi.fn()
+    render(
+      <StudioContainer
+        initialProfile={validProfile}
+        initialActiveProvider="OPENAI"
+        configuredProviders={['OPENAI']}
+        resumeLanguage="EN"
+        onResumeLanguageChange={onResumeLanguageChange}
+        lang="ar"
+        dict={dummyDict}
+      />,
+    )
+
+    const switchContainer = screen.getByTestId('resume-language-switch')
+    expect(switchContainer).toBeDefined()
+
+    const arBtn = screen.getByRole('button', { name: /سيرة عربية/i })
+    fireEvent.click(arBtn)
+
+    expect(onResumeLanguageChange).toHaveBeenCalledWith('AR')
+  })
+
+  it('renders only the phase 1 heads-up for an existing tailored draft', async () => {
+    const mockCompletedResume = {
+      id: 'res_completed_123',
+      atsScore: 91,
+      atsBreakdown: null,
+      hasOutreach: true,
+      hasApplication: false,
+      tailoredSummary: 'Existing tailored summary.',
+      jobPosting: {
+        title: 'Lead Architect',
+        companyName: 'OpenAI Partner',
+        rawDescription: 'Building high throughput AI systems with TypeScript and Next.js.',
+      },
+    }
+
+    render(
+      <StudioContainer
+        initialProfile={validProfile}
+        initialActiveProvider="OPENAI"
+        configuredProviders={['OPENAI']}
+        initialLatestTailoredResume={mockCompletedResume}
+        lang="en"
+        dict={dummyDict}
+      />,
+    )
+
+    expect(screen.queryByText(/A tailored draft already exists/i)).toBeNull()
+    expect(screen.queryByText(/Confirm & Regenerate/i)).toBeNull()
   })
 })

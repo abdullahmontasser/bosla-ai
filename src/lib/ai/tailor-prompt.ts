@@ -4,6 +4,19 @@ export interface CandidateExperiencePromptItem {
   bullets: string[]
 }
 
+export interface CandidateProjectPromptItem {
+  title: string
+  role?: string | null
+  description?: string | null
+  bullets?: string[]
+}
+
+export interface CandidateEducationPromptItem {
+  schoolName: string
+  degree: string
+  fieldOfStudy?: string | null
+}
+
 export interface BuildUserPromptParams {
   jobTitle: string
   companyName: string
@@ -11,7 +24,11 @@ export interface BuildUserPromptParams {
   candidateHeadline?: string | null
   candidateSummary?: string | null
   candidateExperiences: CandidateExperiencePromptItem[]
+  candidateProjects?: CandidateProjectPromptItem[]
+  candidateEducation?: CandidateEducationPromptItem[]
   language?: 'EN' | 'AR'
+  customInstructions?: string | null
+  excludedSkills?: string[]
 }
 
 export interface ParsedTailorOutput {
@@ -74,7 +91,11 @@ export function buildTailoringUserPrompt(params: BuildUserPromptParams): string 
     candidateHeadline,
     candidateSummary,
     candidateExperiences,
+    candidateProjects = [],
+    candidateEducation = [],
     language = 'EN',
+    customInstructions,
+    excludedSkills,
   } = params
 
   const experienceSections = candidateExperiences
@@ -84,12 +105,43 @@ export function buildTailoringUserPrompt(params: BuildUserPromptParams): string 
     })
     .join('\n\n')
 
+  const projectsSections = candidateProjects
+    .map((p, idx) => {
+      const bullets =
+        p.bullets && p.bullets.length > 0 ? p.bullets.map((b) => `  * ${b}`).join('\n') : ''
+      return `Project #${idx + 1}: ${p.title} (${p.role || 'Contributor'})\n${p.description || ''}\n${bullets}`.trim()
+    })
+    .join('\n\n')
+
+  const educationSections = candidateEducation
+    .map(
+      (edu, idx) =>
+        `Education #${idx + 1}: ${edu.degree} in ${edu.fieldOfStudy || 'General'} at ${edu.schoolName}`,
+    )
+    .join('\n')
+
+  const excludedText =
+    excludedSkills && excludedSkills.length > 0
+      ? language === 'AR'
+        ? `\nتنبيه مهارات مستبعدة (لا تقم بإضافتها أو اقتراحها): ${excludedSkills.join(', ')}`
+        : `\nEXCLUDED SKILLS (Candidate does not possess these, DO NOT recommend or inject them): ${excludedSkills.join(', ')}`
+      : ''
+
+  const instructionsText =
+    customInstructions && customInstructions.trim().length > 0
+      ? language === 'AR'
+        ? `\nتوجيهات وتفضيلات إضافية من المرشح:\n${customInstructions.trim()}`
+        : `\nCANDIDATE CUSTOM PREFERENCES & INSTRUCTIONS:\n${customInstructions.trim()}`
+      : ''
+
   if (language === 'AR') {
     return `الوظيفة المستهدفة:
 المسمى الوظيفي: ${jobTitle}
 الشركة: ${companyName}
 الوصف الوظيفي:
 ${rawJobDescription}
+${excludedText}
+${instructionsText}
 
 --------------------
 بيانات المرشح وخبراته الحالية:
@@ -99,6 +151,12 @@ ${rawJobDescription}
 الخبرات المهنية الأصلية:
 ${experienceSections || 'لا توجد خبرات مسجلة'}
 
+المشاريع البارزة:
+${projectsSections || 'لا توجد مشاريع مسجلة'}
+
+المؤهلات الأكاديمية والتعليم:
+${educationSections || 'لا يوجد مؤهل مسجل'}
+
 قم الآن بصياغة الملخص المخصص والنقاط المهنية المخصصة باتباع محددات التنسيق الموضحة.`
   }
 
@@ -107,6 +165,8 @@ Role: ${jobTitle}
 Company: ${companyName}
 Job Description:
 ${rawJobDescription}
+${excludedText}
+${instructionsText}
 
 --------------------
 CANDIDATE QUALIFICATIONS & EXPERIENCE:
@@ -115,6 +175,12 @@ Current Summary: ${candidateSummary || 'Not specified'}
 
 Work History:
 ${experienceSections || 'No experiences provided'}
+
+Projects:
+${projectsSections || 'None provided'}
+
+Education:
+${educationSections || 'None provided'}
 
 Now tailor the candidate summary and experience bullets strictly following the ### SUMMARY and ### BULLETS structure.`
 }
@@ -184,4 +250,37 @@ export function createTailoredSnapshot(
     tailoredSummary: parsed.summary,
     tailoredExperiences: experiences,
   }
+}
+
+/**
+ * Formats a tailored resume content snapshot or summary into standard display text.
+ */
+export function formatSnapshotAsText(
+  tailoredSummary?: string | null,
+  tailoredContent?: unknown,
+): string {
+  const snapshot = tailoredContent as TailoredResumeContentSnapshot | null | undefined
+  const summary = (tailoredSummary || snapshot?.tailoredSummary || '').trim()
+  const bullets: string[] = []
+
+  if (snapshot && Array.isArray(snapshot.tailoredExperiences)) {
+    for (const exp of snapshot.tailoredExperiences) {
+      if (Array.isArray(exp.bullets)) {
+        for (const b of exp.bullets) {
+          const text = typeof b?.tailored === 'string' ? b.tailored.trim() : ''
+          if (text) bullets.push(`- ${text}`)
+        }
+      }
+    }
+  }
+
+  if (!summary && bullets.length === 0) {
+    return ''
+  }
+
+  if (bullets.length === 0) {
+    return summary
+  }
+
+  return `### SUMMARY\n${summary}\n\n### BULLETS\n${bullets.join('\n')}`
 }

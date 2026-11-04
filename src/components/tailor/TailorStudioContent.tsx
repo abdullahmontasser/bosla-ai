@@ -4,6 +4,7 @@ import { startTransition, useCallback, useEffect, useState } from 'react'
 import { StudioContainer } from './StudioContainer'
 import { SignInCard } from './SignInCard'
 import { getTailorStudioInitialData, type TailorStudioData } from '@/app/actions/tailor'
+import { RESUME_LANGUAGE_COOKIE_NAME, type ResumeLanguage } from '@/lib/i18n/config'
 import type { Dictionary } from '@/lib/i18n/types'
 
 export function TailorStudioSkeleton() {
@@ -27,19 +28,83 @@ export interface TailorStudioContentProps {
   lang: string
   dict: Dictionary
   initialData?: TailorStudioData | null
+  initialResumeLanguage?: ResumeLanguage
 }
 
-export function TailorStudioContent({ lang, dict, initialData }: TailorStudioContentProps) {
+export function TailorStudioContent({
+  lang,
+  dict,
+  initialData,
+  initialResumeLanguage = 'EN',
+}: TailorStudioContentProps) {
   const [data, setData] = useState<TailorStudioData | null>(initialData ?? null)
-  const language = lang === 'ar' ? 'AR' : 'EN'
+  const [resumeLanguage, setResumeLanguage] = useState<ResumeLanguage>(
+    initialResumeLanguage || initialData?.resumeLanguage || 'EN',
+  )
+
+  const handleResumeLanguageChange = useCallback((newLang: ResumeLanguage) => {
+    setResumeLanguage(newLang)
+
+    if (typeof document !== 'undefined') {
+      document.cookie = `${RESUME_LANGUAGE_COOKIE_NAME}=${newLang}; path=/; max-age=31536000; SameSite=Lax`
+      document.cookie = `careercraft_profile_lang=${newLang.toLowerCase()}; path=/; max-age=31536000; SameSite=Lax`
+
+      window.dispatchEvent(
+        new CustomEvent('resume-language-changed', {
+          detail: { language: newLang },
+        }),
+      )
+    }
+
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.set('resumeLang', newLang.toLowerCase())
+      window.history.replaceState({}, '', url.toString())
+    }
+
+    startTransition(async () => {
+      try {
+        const result = await getTailorStudioInitialData(newLang)
+        setData(result)
+      } catch {
+        // preserve current
+      }
+    })
+  }, [])
+
+  // Sync internal state when parent props change
+  useEffect(() => {
+    if (initialResumeLanguage && initialResumeLanguage !== resumeLanguage) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setResumeLanguage(initialResumeLanguage)
+    }
+    if (initialData) {
+      setData(initialData)
+    }
+  }, [initialResumeLanguage, initialData])
+
+  // Listen to global resume language changes (e.g. from header switcher)
+  useEffect(() => {
+    const handleGlobalResumeLangChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ language: ResumeLanguage }>
+      const newLang = customEvent.detail?.language
+      if (newLang && (newLang === 'EN' || newLang === 'AR') && newLang !== resumeLanguage) {
+        handleResumeLanguageChange(newLang)
+      }
+    }
+
+    window.addEventListener('resume-language-changed', handleGlobalResumeLangChange)
+    return () => window.removeEventListener('resume-language-changed', handleGlobalResumeLangChange)
+  }, [resumeLanguage, handleResumeLanguageChange])
 
   const refreshData = useCallback(() => {
     startTransition(async () => {
       try {
-        const result = await getTailorStudioInitialData(language)
+        const result = await getTailorStudioInitialData(resumeLanguage)
         setData(result)
       } catch {
         setData({
+          resumeLanguage,
           session: null,
           profile: null,
           activeProvider: null,
@@ -48,7 +113,7 @@ export function TailorStudioContent({ lang, dict, initialData }: TailorStudioCon
         })
       }
     })
-  }, [language])
+  }, [resumeLanguage])
 
   useEffect(() => {
     if (initialData === undefined) {
@@ -70,11 +135,14 @@ export function TailorStudioContent({ lang, dict, initialData }: TailorStudioCon
 
   return (
     <StudioContainer
+      key={`${resumeLanguage}-${data.profile?.id || 'none'}-${data.latestTailoredResume?.id || 'none'}`}
       initialProfile={data.profile}
       initialActiveProvider={data.activeProvider}
       initialDefaultModel={data.defaultModel}
       configuredProviders={data.configuredProviders}
       initialLatestTailoredResume={data.latestTailoredResume}
+      resumeLanguage={resumeLanguage}
+      onResumeLanguageChange={handleResumeLanguageChange}
       lang={lang as 'en' | 'ar'}
       dict={dict}
     />
