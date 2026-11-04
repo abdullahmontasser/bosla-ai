@@ -17,10 +17,13 @@ import {
   saveInterviewPrepAction,
   regenerateInterviewQuestionAction,
 } from '@/app/actions/interview-prep-actions'
-import { StarQuestionCard } from '@/components/interview-prep/StarQuestionCard'
-import { InterviewerQuestionsList } from '@/components/interview-prep/InterviewerQuestionsList'
+import {
+  StarQuestionCard,
+  InterviewerQuestionsList,
+  RehearsalStudio,
+  TargetJobDrawer,
+} from '@/components/interview-prep'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { RtlIcon } from '@/components/ui/rtl-icon'
 import {
@@ -34,9 +37,15 @@ import {
   Copy,
   ExternalLink,
   Info,
+  Layers,
   Plus,
   Printer,
+  RotateCcw,
   Sparkles,
+  Target,
+  Timer,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 
 export interface CareerPrepClientProps {
@@ -84,7 +93,19 @@ export function CareerPrepClient({
   )
   const [fallbackNotice, setFallbackNotice] = React.useState(initialFallbackNotice)
 
+  // Studio & Rehearsal States
+  const [viewMode, setViewMode] = React.useState<'edit' | 'rehearse'>('edit')
+  const [isTargetDrawerOpen, setIsTargetDrawerOpen] = React.useState(false)
+  const [allExpanded, setAllExpanded] = React.useState(true)
+
+  // Safety & History Rollback Caches
+  const [previousDrafts, setPreviousDrafts] = React.useState<Record<string, InterviewQuestion>>({})
+  const [deletedDraft, setDeletedDraft] = React.useState<InterviewQuestion | null>(null)
+  const [undoToastVisible, setUndoToastVisible] = React.useState(false)
+  const undoTimerRef = React.useRef<NodeJS.Timeout | null>(null)
+
   const [isGenerating, setIsGenerating] = React.useState(false)
+  const [generatingStep, setGeneratingStep] = React.useState<string | null>(null)
   const [regeneratingQuestionId, setRegeneratingQuestionId] = React.useState<string | null>(null)
   const [saveStatus, setSaveStatus] = React.useState<'saved' | 'saving' | 'error' | 'stale' | null>(
     null,
@@ -103,6 +124,14 @@ export function CareerPrepClient({
   React.useEffect(() => {
     latestPayloadRef.current = payload
   }, [payload])
+
+  React.useEffect(() => {
+    const handleGlobalResumeLangChange = () => {
+      router.refresh()
+    }
+    window.addEventListener('resume-language-changed', handleGlobalResumeLangChange)
+    return () => window.removeEventListener('resume-language-changed', handleGlobalResumeLangChange)
+  }, [router])
 
   const flushAutosave = React.useCallback(async () => {
     if (autosaveTimerRef.current) {
@@ -186,11 +215,10 @@ export function CareerPrepClient({
     }
   }, [selectedResume?.id])
 
-  // After router.refresh() (e.g. a stale 409 recovery) the Server Component re-renders with
-  // fresh props; adopt the server payload so the client never ping-pongs stale 409s.
   const serverPayloadRef = React.useRef<InterviewPrepPayload | null>(
     initialSelectedResume?.payload ?? null,
   )
+
   React.useEffect(() => {
     const serverPayload = initialSelectedResume?.payload ?? null
     if (serverPayload && serverPayload !== serverPayloadRef.current) {
@@ -214,7 +242,20 @@ export function CareerPrepClient({
     try {
       const res = await getCareerPrepSelectorRowsAction(selectorRows.length)
       if (res.success && res.data) {
-        setSelectorRows((prev) => [...prev, ...res.data.rows])
+        setSelectorRows((prev) => {
+          const seenKeys = new Set(
+            prev.map(
+              (r) =>
+                `${r.roleTitle.toLowerCase().replace(/\s+/g, ' ').trim()}:::${r.companyName.toLowerCase().replace(/\s+/g, ' ').trim()}`,
+            ),
+          )
+          const seenIds = new Set(prev.map((r) => r.tailoredResumeId))
+          const nonDuplicateRows = res.data.rows.filter((r) => {
+            const key = `${r.roleTitle.toLowerCase().replace(/\s+/g, ' ').trim()}:::${r.companyName.toLowerCase().replace(/\s+/g, ' ').trim()}`
+            return !seenKeys.has(key) && !seenIds.has(r.tailoredResumeId)
+          })
+          return [...prev, ...nonDuplicateRows]
+        })
         setHasMore(res.data.hasMore)
       }
     } finally {
@@ -227,6 +268,27 @@ export function CareerPrepClient({
     await flushAutosave()
     setIsGenerating(true)
     setErrorMessage(null)
+    setGeneratingStep(
+      isArabic
+        ? 'الخطوة 1/3: استخراج الكفاءات من الوصف الوظيفي...'
+        : 'Step 1/3: Extracting Job Competencies...',
+    )
+
+    const stepTimer = setTimeout(() => {
+      setGeneratingStep(
+        isArabic
+          ? 'الخطوة 2/3: مطابقة إنجازاتك (Google XYZ)...'
+          : 'Step 2/3: Aligning Google XYZ Achievements...',
+      )
+    }, 4000)
+
+    const stepTimer2 = setTimeout(() => {
+      setGeneratingStep(
+        isArabic
+          ? 'الخطوة 3/3: صياغة إجابات STAR وأسئلة المقابِل...'
+          : 'Step 3/3: Composing STAR Questions & Answers...',
+      )
+    }, 9000)
 
     try {
       const res = await generateInterviewPrepAction(selectedResume.id, {
@@ -250,7 +312,10 @@ export function CareerPrepClient({
           : 'Failed to generate interview questions. Please verify your AI provider settings.',
       )
     } finally {
+      clearTimeout(stepTimer)
+      clearTimeout(stepTimer2)
       setIsGenerating(false)
+      setGeneratingStep(null)
     }
   }
 
@@ -300,12 +365,32 @@ export function CareerPrepClient({
     const target = payload.questions.find((q) => q.id === questionId)
     if (!target || !target.customOrigin) return
 
+    // Save for undo recovery
+    setDeletedDraft(target)
+    setUndoToastVisible(true)
+    if (undoTimerRef.current) clearTimeout(undoTimerRef.current)
+    undoTimerRef.current = setTimeout(() => {
+      setUndoToastVisible(false)
+      setDeletedDraft(null)
+    }, 7000)
+
     const updatedQuestions = payload.questions.filter((q) => q.id !== questionId)
     const updated: InterviewPrepPayload = {
       ...payload,
       questions: updatedQuestions,
     }
     triggerDebouncedAutosave(updated)
+  }
+
+  const handleUndoDelete = () => {
+    if (!deletedDraft || !payload) return
+    const updated: InterviewPrepPayload = {
+      ...payload,
+      questions: [...payload.questions, deletedDraft],
+    }
+    triggerDebouncedAutosave(updated)
+    setUndoToastVisible(false)
+    setDeletedDraft(null)
   }
 
   const handleQuestionChange = (index: number, updatedQuestion: InterviewQuestion) => {
@@ -321,8 +406,15 @@ export function CareerPrepClient({
   }
 
   const handleRegenerateQuestion = async (questionId: string) => {
-    if (!selectedResume?.id) return
+    if (!selectedResume?.id || !payload) return
     await flushAutosave()
+
+    // Store existing draft in history stack before regenerating
+    const existing = payload.questions.find((q) => q.id === questionId)
+    if (existing) {
+      setPreviousDrafts((prev) => ({ ...prev, [questionId]: existing }))
+    }
+
     setRegeneratingQuestionId(questionId)
     setErrorMessage(null)
 
@@ -345,6 +437,21 @@ export function CareerPrepClient({
     } finally {
       setRegeneratingQuestionId(null)
     }
+  }
+
+  const handleRestoreDraft = (questionId: string) => {
+    const prevDraft = previousDrafts[questionId]
+    if (!prevDraft || !payload) return
+
+    const updatedQuestions = payload.questions.map((q) => (q.id === questionId ? prevDraft : q))
+    triggerDebouncedAutosave({ ...payload, questions: updatedQuestions })
+
+    // Clear restored draft from history
+    setPreviousDrafts((prev) => {
+      const next = { ...prev }
+      delete next[questionId]
+      return next
+    })
   }
 
   const handleCopyFullSheet = async () => {
@@ -408,12 +515,31 @@ export function CareerPrepClient({
 
   return (
     <div className="space-y-6" data-testid="career-prep-hub">
+      {/* Undo Delete Toast */}
+      {undoToastVisible && deletedDraft && (
+        <div className="fixed bottom-6 end-6 z-50 flex items-center gap-3 p-3.5 rounded-xl border border-border bg-card shadow-lg animate-in slide-in-from-bottom duration-200">
+          <span className="text-xs text-foreground font-medium">
+            {isArabic ? 'تم حذف السؤال المخصص.' : 'Custom question deleted.'}
+          </span>
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            onClick={handleUndoDelete}
+            className="h-7 text-xs gap-1 font-semibold"
+          >
+            <RotateCcw className="size-3" />
+            <span>{isArabic ? 'تراجع' : 'Undo'}</span>
+          </Button>
+        </div>
+      )}
+
       {fallbackNotice && (
         <div
-          className="flex items-center gap-2.5 p-3.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-xs text-amber-800 dark:text-amber-200"
+          className="flex items-center gap-2.5 p-3.5 rounded-lg border border-border bg-accent/40 text-xs text-foreground"
           data-testid="career-prep-fallback-notice"
         >
-          <AlertCircle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <AlertCircle className="size-4 shrink-0 text-primary" />
           <span>
             {t.fallbackNotice ||
               'The requested interview prep could not be found or was removed. Showing your most recent tailored role instead.'}
@@ -428,34 +554,49 @@ export function CareerPrepClient({
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Job Selector Sidebar */}
-        <aside className="lg:col-span-4 space-y-3">
-          <div className="flex items-center justify-between pb-2.5 border-b border-border/70">
-            <div className="flex items-center gap-2">
-              <Briefcase className="size-4 text-primary" />
-              <h2 className="text-sm font-semibold tracking-tight text-foreground">
-                {t.jobSelector || 'Tailored Jobs'}
-              </h2>
-              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground tabular-nums">
-                {selectorRows.length}
-              </span>
-            </div>
+      {/* Target Job Context Side Drawer */}
+      {selectedResume && (
+        <TargetJobDrawer
+          isOpen={isTargetDrawerOpen}
+          onClose={() => setIsTargetDrawerOpen(false)}
+          roleTitle={selectedResume.roleTitle}
+          companyName={selectedResume.companyName}
+          parsedSkills={selectedResume.parsedSkills}
+          jobDescription={selectedResume.jobDescription}
+          groundingSources={selectedResume.groundingSources}
+          lang={lang}
+        />
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] border-t border-border divide-y lg:divide-y-0 lg:divide-x rtl:lg:divide-x-reverse divide-border">
+        {/* Job Selector Sidebar / Master List */}
+        <aside className="p-5 space-y-4 lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:overflow-y-auto bg-card/30">
+          <div className="flex items-center justify-between pb-3 border-b border-border/70">
+            <span className="text-xs font-mono font-bold tracking-wider text-primary">ROLES</span>
+            <span className="rounded-md border border-border bg-muted/40 px-2 py-0.5 text-xs font-mono font-semibold tabular-nums text-foreground">
+              {selectorRows.length} {selectorRows.length === 1 ? 'ROLE' : 'ROLES'}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {t.jobSelector || 'Tailored Jobs'}
+            </h2>
             <Button
               asChild
               variant="ghost"
               size="sm"
-              className="h-7 text-[11px] gap-1 px-2 text-muted-foreground hover:text-foreground"
+              className="h-6 text-xs gap-1 px-1.5 text-muted-foreground hover:text-foreground"
             >
               <Link href={`/${lang}/tailor`}>
-                <span>{t.openInStudio || 'Open in Tailor Studio'}</span>
-                <ExternalLink className="size-3" />
+                <span>{t.openInStudio || 'Tailor Studio'}</span>
+                <ExternalLink className="size-3 text-primary" />
               </Link>
             </Button>
           </div>
 
           {selectorRows.length > 3 && (
-            <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-card/60 p-1">
+            <div className="flex items-center gap-1 rounded-lg border border-border/70 bg-card p-1">
               {(
                 [
                   { key: 'all', label: isArabic ? 'الكل' : 'All' },
@@ -470,9 +611,9 @@ export function CareerPrepClient({
                   key={tab.key}
                   type="button"
                   onClick={() => setStatusFilter(tab.key)}
-                  className={`flex-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                  className={`flex-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                     statusFilter === tab.key
-                      ? 'bg-secondary text-foreground font-semibold shadow-2xs'
+                      ? 'bg-accent text-foreground font-semibold shadow-2xs'
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -483,7 +624,7 @@ export function CareerPrepClient({
           )}
 
           <div
-            className="space-y-2 max-h-[600px] overflow-y-auto pe-1"
+            className="divide-y divide-border/60 max-h-[600px] overflow-y-auto pe-1"
             data-testid="career-prep-selector-list"
           >
             {filteredSelectorRows.map((row) => {
@@ -494,10 +635,8 @@ export function CareerPrepClient({
                   key={row.tailoredResumeId}
                   type="button"
                   onClick={() => handleSelectJob(row.tailoredResumeId)}
-                  className={`w-full text-start p-3 rounded-xl border transition-all ${
-                    isSelected
-                      ? 'border-primary/70 bg-primary/8 shadow-xs ring-1 ring-primary/20'
-                      : 'border-border/60 bg-card/80 hover:bg-accent/40 hover:border-border'
+                  className={`w-full text-start p-3 rounded-lg transition-colors ${
+                    isSelected ? 'bg-primary/10 border-s-2 border-s-primary' : 'hover:bg-accent/40'
                   }`}
                   data-testid={`selector-row-${row.tailoredResumeId}`}
                 >
@@ -506,12 +645,12 @@ export function CareerPrepClient({
                       <p className="text-xs font-semibold text-foreground truncate">
                         {row.roleTitle}
                       </p>
-                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span className="truncate">{row.companyName}</span>
                         {dateStr && (
                           <>
                             <span aria-hidden>·</span>
-                            <span className="inline-flex items-center gap-1 shrink-0 text-[10px] text-muted-foreground/80">
+                            <span className="inline-flex items-center gap-1 shrink-0 text-xs text-muted-foreground/80">
                               <Calendar className="size-2.5" />
                               {dateStr}
                             </span>
@@ -519,18 +658,17 @@ export function CareerPrepClient({
                         )}
                       </div>
                     </div>
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] px-2 py-0.5 shrink-0 font-medium rounded-md ${
+                    <span
+                      className={`text-[11px] px-2 py-0.5 shrink-0 font-semibold uppercase rounded-md border ${
                         row.hasInterviewPrep
-                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                          : 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                          ? 'border-border bg-accent text-accent-foreground'
+                          : 'border-border bg-muted/50 text-muted-foreground'
                       }`}
                     >
                       {row.hasInterviewPrep
                         ? t.statusGenerated || 'Ready'
                         : t.statusNotGenerated || 'Needs prep'}
-                    </Badge>
+                    </span>
                   </div>
                 </button>
               )
@@ -543,7 +681,7 @@ export function CareerPrepClient({
                 size="sm"
                 onClick={handleLoadMore}
                 disabled={isLoadingMore}
-                className="w-full h-8 text-xs text-muted-foreground hover:text-foreground mt-2"
+                className="w-full h-8 text-xs text-muted-foreground hover:text-foreground mt-3 rounded-lg"
                 data-testid="career-prep-load-more-btn"
               >
                 {isLoadingMore ? t.loadingMore || 'Loading...' : t.loadMore || 'Load more jobs'}
@@ -553,58 +691,105 @@ export function CareerPrepClient({
         </aside>
 
         {/* Main Focus Practice View */}
-        <div className="lg:col-span-8 space-y-5">
+        <div className="p-6 lg:p-8 space-y-6">
           {selectedResume && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               {/* Header and Action Bar */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/70 bg-card shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border bg-card shadow-2xs">
                 <div className="min-w-0 space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-base font-bold tracking-tight text-foreground truncate">
                       {selectedResume.roleTitle}
                     </h2>
-                    <Badge variant="secondary" className="text-[11px] font-medium py-0">
+                    <span className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-xs font-medium text-foreground">
                       {selectedResume.companyName}
-                    </Badge>
-                    <Badge variant="outline" className="text-[10px] uppercase font-mono py-0">
+                    </span>
+                    <span className="rounded-md border border-border bg-muted/40 px-1.5 py-0.5 text-xs uppercase font-mono text-muted-foreground">
                       {selectedResume.language}
-                    </Badge>
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     {saveStatus === 'saving' && (
                       <span className="animate-pulse text-muted-foreground flex items-center gap-1">
-                        <span className="size-1.5 rounded-full bg-amber-500 animate-ping" />
+                        <span className="size-1.5 rounded-full bg-primary animate-ping" />
                         {t.autosaving || 'Autosaving...'}
                       </span>
                     )}
                     {saveStatus === 'saved' && (
-                      <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="size-3" />
+                      <span className="text-foreground flex items-center gap-1 font-medium">
+                        <CheckCircle2 className="size-3 text-primary" />
                         {t.saved || 'Saved'}
                       </span>
                     )}
                     {saveStatus === 'stale' && (
-                      <span className="text-amber-600 dark:text-amber-400">
+                      <span className="text-destructive font-medium">
                         {t.staleError || 'Conflict detected'}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Only render header action toolbar when questions exist so we never duplicate the empty state buttons */}
+                {/* Header Action Toolbar */}
                 {hasAnyQuestions && (
                   <div className="flex items-center gap-2 flex-wrap">
+                    {/* View Mode Switcher */}
+                    <div className="flex items-center rounded-lg border border-border bg-muted/30 p-1">
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('edit')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
+                          viewMode === 'edit'
+                            ? 'bg-background text-foreground shadow-2xs font-semibold'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                        data-testid="mode-edit-btn"
+                      >
+                        <Layers className="size-3.5" />
+                        <span>{isArabic ? 'تعديل النماذج' : 'Edit Stories'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setViewMode('rehearse')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium transition-colors ${
+                          viewMode === 'rehearse'
+                            ? 'bg-primary text-primary-foreground shadow-2xs font-semibold'
+                            : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                        data-testid="mode-rehearse-btn"
+                      >
+                        <Timer className="size-3.5" />
+                        <span>{isArabic ? 'استوديو التدرّب' : 'Rehearse'}</span>
+                      </button>
+                    </div>
+
+                    {/* Role Context Drawer Toggle */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsTargetDrawerOpen(true)}
+                      className="h-8 gap-1.5 text-xs text-foreground rounded-lg"
+                      title={isArabic ? 'عرض سياق الوظيفة المستهدفة' : 'View Target Role Context'}
+                      data-testid="open-context-drawer-btn"
+                    >
+                      <Target className="size-3.5 text-primary" />
+                      <span className="hidden sm:inline">
+                        {isArabic ? 'سياق الوظيفة' : 'Job Context'}
+                      </span>
+                    </Button>
+
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={handleCopyFullSheet}
-                      className="h-8 gap-1.5 text-xs text-foreground"
+                      className="h-8 gap-1.5 text-xs text-foreground rounded-lg"
                       data-testid="copy-full-sheet-btn"
                     >
                       {copiedFull ? (
                         <>
-                          <Check className="size-3 text-emerald-600" />
+                          <Check className="size-3 text-primary" />
                           <span>{t.copiedFullSheet || 'Copied'}</span>
                         </>
                       ) : (
@@ -620,7 +805,7 @@ export function CareerPrepClient({
                       variant="outline"
                       size="sm"
                       onClick={handlePrint}
-                      className="h-8 gap-1.5 text-xs text-foreground"
+                      className="h-8 gap-1.5 text-xs text-foreground rounded-lg"
                       data-testid="print-sheet-btn"
                     >
                       <Printer className="size-3.5" />
@@ -633,7 +818,7 @@ export function CareerPrepClient({
                       size="sm"
                       onClick={handleAddCustomQuestion}
                       disabled={isCustomAtCap}
-                      className="h-8 gap-1.5 text-xs font-semibold"
+                      className="h-8 gap-1.5 text-xs font-semibold rounded-lg"
                       title={
                         isCustomAtCap
                           ? t.customQuestionLimit || 'Maximum 10 custom questions reached'
@@ -648,18 +833,18 @@ export function CareerPrepClient({
                 )}
               </div>
 
-              {/* Instructional Guidance Banner when profile has zero experiences/projects */}
+              {/* Instructional Guidance Banner */}
               {!selectedResume.hasGrounding && (
                 <div
-                  className="flex items-start gap-3 p-3.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-xs text-blue-900 dark:text-blue-200"
+                  className="flex items-start gap-3 p-3.5 rounded-xl border border-border bg-accent/30 text-xs text-foreground"
                   data-testid="grounding-guidance-banner"
                 >
-                  <Info className="size-4 shrink-0 text-blue-600 dark:text-blue-400 mt-0.5" />
+                  <Info className="size-4 shrink-0 text-primary mt-0.5" />
                   <div className="space-y-1">
-                    <span className="font-semibold block">
+                    <span className="font-semibold block text-foreground">
                       {t.guidanceTitle || 'Guidance for Candidates with No Recorded Projects'}
                     </span>
-                    <p className="leading-relaxed">
+                    <p className="leading-relaxed text-muted-foreground">
                       {t.guidanceBody ||
                         'No work experiences or projects are currently recorded in your profile. The AI will generate model STAR structures with bracketed placeholders indicating where to supply your own authentic metrics.'}
                     </p>
@@ -667,9 +852,24 @@ export function CareerPrepClient({
                 </div>
               )}
 
-              {/* Generate Inline CTA: no payload yet, or the AI question set is absent */}
-              {showGenerateCta && (
-                <Card className="border border-dashed border-border/80 bg-card/50">
+              {/* Stepped Generation Progress Feedback */}
+              {isGenerating && generatingStep && (
+                <div className="flex items-center gap-3 p-4 rounded-xl border border-primary/30 bg-primary/5 text-xs text-foreground animate-in fade-in duration-200">
+                  <Sparkles className="size-4 text-primary animate-spin shrink-0" />
+                  <div className="space-y-0.5 flex-1">
+                    <span className="font-semibold text-primary block">
+                      {isArabic
+                        ? 'جاري تجهيز استوديو المقابلة...'
+                        : 'Preparing Interview Studio...'}
+                    </span>
+                    <p className="text-muted-foreground">{generatingStep}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Generate Inline CTA */}
+              {showGenerateCta && !isGenerating && (
+                <Card className="border border-dashed border-border/80 bg-card/50 rounded-2xl">
                   <CardContent className="flex flex-col items-center justify-center p-8 sm:p-10 text-center space-y-4">
                     <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       <BookOpenCheck className="size-6" />
@@ -691,7 +891,7 @@ export function CareerPrepClient({
                         size="sm"
                         onClick={handleGenerateAll}
                         disabled={isGenerating}
-                        className="h-9 gap-2 text-xs font-semibold bg-primary text-primary-foreground shadow-xs"
+                        className="h-9 gap-2 text-xs font-semibold bg-primary text-primary-foreground shadow-2xs"
                         data-testid="generate-prep-btn"
                       >
                         <Sparkles className={`size-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
@@ -709,7 +909,7 @@ export function CareerPrepClient({
                           size="sm"
                           onClick={handleAddCustomQuestion}
                           disabled={isCustomAtCap}
-                          className="h-9 gap-1.5 text-xs text-foreground"
+                          className="h-9 gap-1.5 text-xs text-foreground rounded-lg"
                           data-testid="add-custom-question-btn"
                         >
                           <Plus className="size-3.5" />
@@ -721,52 +921,96 @@ export function CareerPrepClient({
                 </Card>
               )}
 
-              {/* Focus Content Questions and Answers */}
+              {/* View Mode Switching: Rehearsal Studio vs Edit Stories */}
               {payload && payload.questions.length > 0 && (
-                <div className="space-y-6" dir={contentDir}>
-                  <div className="space-y-4">
-                    {payload.questions.map((q, idx) => (
-                      <StarQuestionCard
-                        key={q.id || idx}
-                        question={q}
-                        index={idx}
-                        onChange={(updated) => handleQuestionChange(idx, updated)}
-                        onRegenerate={() => handleRegenerateQuestion(q.id)}
-                        onDelete={() => handleDeleteCustomQuestion(q.id)}
-                        isRegenerating={regeneratingQuestionId === q.id}
-                        lang={lang}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Bottom Add Question Affordance */}
-                  <div className="flex items-center justify-between pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddCustomQuestion}
-                      disabled={isCustomAtCap}
-                      className="gap-1.5 text-xs text-foreground"
-                      data-testid="add-custom-question-bottom-btn"
-                    >
-                      <Plus className="size-3.5" />
-                      <span>{t.addCustomQuestion || 'Add Custom Question'}</span>
-                    </Button>
-                    {isCustomAtCap && (
-                      <span className="text-[11px] text-muted-foreground">
-                        {t.customQuestionLimit || 'Cap of 10 custom questions reached'}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Strategic Questions for Interviewer */}
-                  {payload.questionsToAskInterviewer.length > 0 && (
-                    <InterviewerQuestionsList
-                      questions={payload.questionsToAskInterviewer}
-                      onChange={handleInterviewerQuestionsChange}
+                <div dir={contentDir}>
+                  {viewMode === 'rehearse' ? (
+                    <RehearsalStudio
+                      questions={payload.questions}
                       lang={lang}
+                      onExit={() => setViewMode('edit')}
+                      roleTitle={selectedResume.roleTitle}
+                      companyName={selectedResume.companyName}
                     />
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Collapse All / Expand All Toggle */}
+                      <div className="flex items-center justify-between text-xs text-muted-foreground pb-1">
+                        <span>
+                          {isArabic
+                            ? `${payload.questions.length} أسئلة STAR مجهزة`
+                            : `${payload.questions.length} STAR questions prepared`}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setAllExpanded((prev) => !prev)}
+                          className="h-7 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                        >
+                          {allExpanded ? (
+                            <>
+                              <ChevronUp className="size-3.5" />
+                              <span>{isArabic ? 'طي الكل' : 'Collapse All'}</span>
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="size-3.5" />
+                              <span>{isArabic ? 'توسيع الكل' : 'Expand All'}</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* STAR Questions List */}
+                      <div className="space-y-4">
+                        {payload.questions.map((q, idx) => (
+                          <StarQuestionCard
+                            key={q.id || idx}
+                            question={q}
+                            index={idx}
+                            onChange={(updated) => handleQuestionChange(idx, updated)}
+                            onRegenerate={() => handleRegenerateQuestion(q.id)}
+                            onDelete={() => handleDeleteCustomQuestion(q.id)}
+                            onRestorePrevious={() => handleRestoreDraft(q.id)}
+                            hasPreviousDraft={Boolean(previousDrafts[q.id])}
+                            isRegenerating={regeneratingQuestionId === q.id}
+                            isInitiallyExpanded={allExpanded}
+                            lang={lang}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Bottom Add Question Affordance */}
+                      <div className="flex items-center justify-between pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddCustomQuestion}
+                          disabled={isCustomAtCap}
+                          className="gap-1.5 text-xs text-foreground rounded-lg"
+                          data-testid="add-custom-question-bottom-btn"
+                        >
+                          <Plus className="size-3.5" />
+                          <span>{t.addCustomQuestion || 'Add Custom Question'}</span>
+                        </Button>
+                        {isCustomAtCap && (
+                          <span className="text-xs text-muted-foreground">
+                            {t.customQuestionLimit || 'Cap of 10 custom questions reached'}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Strategic Questions for Interviewer */}
+                      {payload.questionsToAskInterviewer.length > 0 && (
+                        <InterviewerQuestionsList
+                          questions={payload.questionsToAskInterviewer}
+                          onChange={handleInterviewerQuestionsChange}
+                          lang={lang}
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               )}

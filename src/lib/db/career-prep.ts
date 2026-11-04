@@ -27,6 +27,12 @@ export interface CareerPrepSelectedResume {
   language: 'EN' | 'AR'
   payload: InterviewPrepPayload | null
   hasGrounding: boolean
+  jobDescription?: string
+  parsedSkills?: string[]
+  groundingSources?: {
+    workExperiences: string[]
+    projects: string[]
+  }
 }
 
 export interface CareerPrepDataResult {
@@ -36,9 +42,16 @@ export interface CareerPrepDataResult {
   fallbackNotice: boolean
 }
 
+function normalizeRoleKey(title: string, company: string): string {
+  const t = title.toLowerCase().replace(/\s+/g, ' ').trim()
+  const c = company.toLowerCase().replace(/\s+/g, ' ').trim()
+  return `${t}:::${c}`
+}
+
 /**
  * Retrieves selector rows capped at limit (default 50) newest postings first.
- * Each row points to the newest tailored resume for that posting.
+ * Strictly deduplicates roles by title and company name so identical jobs never appear twice.
+ * When multiple tailored resumes exist for the same role, prefers the one with interview prep.
  */
 export async function getCareerPrepSelectorRows(
   userId: string,
@@ -65,26 +78,60 @@ export async function getCareerPrepSelectorRows(
     },
   })
 
-  const seenJobPostingIds = new Set<string>()
-  const uniqueRows: CareerPrepSelectorRow[] = []
+  // Group resumes by normalized (title + company) to guarantee zero duplicate roles in selector
+  type ResumeRow = (typeof resumes)[number]
+  const groupedByRole = new Map<
+    string,
+    {
+      newest: ResumeRow
+      withPrep: ResumeRow | null
+    }
+  >()
 
   for (const r of resumes) {
-    if (!seenJobPostingIds.has(r.jobPostingId) && r.jobPosting) {
-      seenJobPostingIds.add(r.jobPostingId)
-      const prep = normalizeInterviewPrepPayload(r.interviewPrep)
-      // Prep exists when the AI question set is present; a custom-only draft is not yet "Ready".
-      const hasInterviewPrep = Boolean(prep && prep.questions.some((q) => !q.customOrigin))
+    if (!r.jobPosting) continue
 
-      uniqueRows.push({
-        jobPostingId: r.jobPostingId,
-        tailoredResumeId: r.id,
-        companyName: r.jobPosting.companyName,
-        roleTitle: r.jobPosting.title,
-        hasInterviewPrep,
-        createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    const roleKey = normalizeRoleKey(r.jobPosting.title, r.jobPosting.companyName)
+    const prep = normalizeInterviewPrepPayload(r.interviewPrep)
+    const hasInterviewPrep = Boolean(prep && prep.questions.some((q) => !q.customOrigin))
+
+    const existing = groupedByRole.get(roleKey)
+    if (!existing) {
+      groupedByRole.set(roleKey, {
+        newest: r,
+        withPrep: hasInterviewPrep ? r : null,
       })
+    } else {
+      // If an existing group lacks prep but this older copy has prep, keep the prep copy
+      if (hasInterviewPrep && !existing.withPrep) {
+        existing.withPrep = r
+      }
     }
   }
+
+  const uniqueRows: CareerPrepSelectorRow[] = []
+
+  for (const [, group] of groupedByRole) {
+    // Prefer the resume with prep if available; otherwise newest
+    const chosen = group.withPrep || group.newest
+    const prep = normalizeInterviewPrepPayload(chosen.interviewPrep)
+    const hasInterviewPrep = Boolean(prep && prep.questions.some((q) => !q.customOrigin))
+
+    uniqueRows.push({
+      jobPostingId: chosen.jobPostingId,
+      tailoredResumeId: chosen.id,
+      companyName: chosen.jobPosting.companyName,
+      roleTitle: chosen.jobPosting.title,
+      hasInterviewPrep,
+      createdAt:
+        chosen.createdAt instanceof Date
+          ? chosen.createdAt.toISOString()
+          : String(chosen.createdAt),
+    })
+  }
+
+  // Sort newest first
+  uniqueRows.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   const pagedRows = uniqueRows.slice(offset, offset + limit)
   const hasMore = offset + limit < uniqueRows.length
@@ -176,6 +223,10 @@ export async function getCareerPrepData(
 
   const payload = normalizeInterviewPrepPayload(targetResume.interviewPrep)
 
+  const workExpTitles =
+    targetResume.profile?.workExperiences?.map((w) => `${w.jobTitle} at ${w.companyName}`) ?? []
+  const projectTitles = targetResume.profile?.projects?.map((p) => p.name) ?? []
+
   return {
     selectorRows: selectorResult.rows,
     hasMore: selectorResult.hasMore,
@@ -187,6 +238,12 @@ export async function getCareerPrepData(
       language: (targetResume.language === 'AR' ? 'AR' : 'EN') as 'EN' | 'AR',
       payload,
       hasGrounding,
+      jobDescription: targetResume.jobPosting.rawDescription ?? '',
+      parsedSkills: targetResume.jobPosting.parsedSkills ?? [],
+      groundingSources: {
+        workExperiences: workExpTitles,
+        projects: projectTitles,
+      },
     },
     fallbackNotice,
   }

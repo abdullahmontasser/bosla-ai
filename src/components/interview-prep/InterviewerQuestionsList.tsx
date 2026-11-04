@@ -38,7 +38,7 @@ export function InterviewerQuestionsList({
   }
 
   return (
-    <Card className="border border-border/80 bg-card shadow-xs transition-colors print:border print:shadow-none break-inside-avoid">
+    <Card className="border border-border/80 bg-card shadow-2xs transition-colors print:border print:shadow-none break-inside-avoid rounded-xl">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2">
           <MessageSquareQuote className="size-4 text-primary" />
@@ -51,15 +51,15 @@ export function InterviewerQuestionsList({
       </CardHeader>
 
       <CardContent className="space-y-3 pt-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {questions.map((q, idx) => (
             <div
               key={q.id || idx}
-              className="flex flex-col justify-between p-3 rounded-lg border border-border/60 bg-background/50 space-y-2.5 print:border"
+              className="flex flex-col justify-between p-3.5 rounded-lg border border-border/70 bg-background/60 space-y-3 print:border"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center justify-center size-5 rounded-full bg-primary/10 text-primary font-mono text-xs font-bold">
+                  <span className="flex items-center justify-center size-5 rounded-md bg-primary/10 text-primary font-mono text-xs font-bold">
                     {idx + 1}
                   </span>
                   <Button
@@ -67,38 +67,48 @@ export function InterviewerQuestionsList({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleCopyQuestion(q.question, idx)}
-                    className="h-6 text-[11px] gap-1 px-2 text-muted-foreground hover:text-foreground print:hidden"
+                    className="h-6 text-xs gap-1 px-2 text-muted-foreground hover:text-foreground print:hidden rounded"
+                    aria-label={isArabic ? 'نسخ السؤال' : 'Copy question'}
                   >
                     {copiedIndex === idx ? (
                       <>
-                        <Check className="size-3 text-emerald-600" />
+                        <Check className="size-3 text-primary" />
                         <span>{isArabic ? 'تم النسخ' : 'Copied'}</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="size-3" />
+                        <Copy className="size-3 text-muted-foreground" />
                         <span>{isArabic ? 'نسخ' : 'Copy'}</span>
                       </>
                     )}
                   </Button>
                 </div>
 
+                <label htmlFor={`interviewer-question-${idx}`} className="sr-only">
+                  {isArabic ? 'سؤال للمحاور' : 'Question for interviewer'}
+                </label>
                 <Textarea
+                  id={`interviewer-question-${idx}`}
                   value={q.question}
                   onChange={(e) => handleQuestionTextChange(idx, e.target.value)}
+                  aria-label={isArabic ? 'سؤال للمحاور' : 'Question for interviewer'}
                   dir={isArabic ? 'rtl' : 'ltr'}
                   rows={3}
-                  className="text-xs resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed font-medium text-foreground"
+                  className="text-xs resize-none bg-card/60 hover:bg-card border border-transparent hover:border-border/60 focus:border-ring rounded-md p-2 focus-visible:ring-1 focus-visible:ring-ring leading-relaxed font-medium text-foreground transition-colors"
                 />
               </div>
 
-              <div className="flex items-start gap-1.5 p-2 rounded bg-muted/40 text-[11px] text-muted-foreground">
-                <HelpCircle className="size-3 shrink-0 text-primary mt-0.5" />
+              <div className="flex items-start gap-1.5 p-2 rounded-md bg-muted/40 border border-border/50 text-xs text-muted-foreground">
+                <HelpCircle className="size-3.5 shrink-0 text-primary mt-0.5" />
                 <div className="flex-1 space-y-1">
-                  <span className="font-semibold text-foreground/80 block">
+                  <span className="font-semibold text-foreground block text-[11px]">
                     {isArabic ? 'الهدف الاستراتيجي:' : 'Strategic Goal:'}
                   </span>
+                  <label htmlFor={`strategic-goal-input-${idx}`} className="sr-only">
+                    {isArabic ? 'الهدف الاستراتيجي' : 'Strategic goal'}
+                  </label>
                   <Textarea
+                    id={`strategic-goal-input-${idx}`}
                     value={q.strategicGoal}
                     onChange={(e) => {
                       const updated = [...questions]
@@ -110,9 +120,10 @@ export function InterviewerQuestionsList({
                         ? 'ما هو الهدف الاستراتيجي من طرح هذا السؤال؟'
                         : 'What is the strategic goal of asking this question?'
                     }
+                    aria-label={isArabic ? 'الهدف الاستراتيجي' : 'Strategic goal'}
                     dir={isArabic ? 'rtl' : 'ltr'}
                     rows={2}
-                    className="text-[11px] resize-none bg-transparent border-0 p-0 rounded-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 leading-relaxed text-foreground placeholder:text-muted-foreground/60"
+                    className="text-xs resize-none bg-transparent hover:bg-background/40 border border-transparent hover:border-border/60 focus:border-ring rounded p-1 focus-visible:ring-1 focus-visible:ring-ring leading-relaxed text-foreground placeholder:text-muted-foreground/60 transition-colors"
                     data-testid={`strategic-goal-input-${idx}`}
                   />
                 </div>

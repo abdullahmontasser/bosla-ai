@@ -75,6 +75,42 @@ describe('Career Prep Database Read Helpers (covers: AC-1, AC-8, AC-10)', () => 
       expect(result.hasMore).toBe(false)
     })
 
+    it('strictly deduplicates roles with different jobPostingIds having identical title and company', async () => {
+      const mockDuplicateResumes = [
+        {
+          id: 'resume-run1',
+          jobPostingId: 'job-posting-alpha',
+          interviewPrep: null,
+          createdAt: new Date('2026-10-30T12:00:00.000Z'),
+          jobPosting: {
+            id: 'job-posting-alpha',
+            title: 'Lead Frontend Engineer',
+            companyName: 'Acme Corp',
+          },
+        },
+        {
+          id: 'resume-run2',
+          jobPostingId: 'job-posting-beta', // Different jobPostingId!
+          interviewPrep: mockInterviewPrepPayloadEn, // Has prep!
+          createdAt: new Date('2026-10-29T10:00:00.000Z'),
+          jobPosting: {
+            id: 'job-posting-beta',
+            title: 'Lead Frontend Engineer  ', // with whitespace
+            companyName: 'ACME CORP', // with different casing
+          },
+        },
+      ]
+
+      vi.mocked(prisma.tailoredResume.findMany).mockResolvedValueOnce(mockDuplicateResumes as never)
+
+      const result = await getCareerPrepSelectorRows('user-1', { offset: 0, limit: 50 })
+
+      // Strictly 1 row, no duplicates
+      expect(result.rows).toHaveLength(1)
+      expect(result.rows[0].tailoredResumeId).toBe('resume-run2') // Picked the one with prep
+      expect(result.rows[0].hasInterviewPrep).toBe(true)
+    })
+
     it('marks a custom-only draft job as Needs prep, not Ready (AC-1, Invariants)', async () => {
       const customOnlyDraft: InterviewPrepPayload = {
         ...mockInterviewPrepPayloadEn,

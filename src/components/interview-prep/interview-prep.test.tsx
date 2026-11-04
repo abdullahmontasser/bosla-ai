@@ -135,4 +135,66 @@ describe('Interview Prep Components (covers: AC-2, AC-4, AC-IP-3, AC-IP-5)', () 
       )
     })
   })
+
+  describe('RehearsalStudio', () => {
+    it('renders verbal rehearsal spotlight, timer, hint toggle, and confidence buttons', async () => {
+      const { RehearsalStudio } = await import('./RehearsalStudio')
+      const questions = mockInterviewPrepPayloadEn.questions
+      const handleExit = vi.fn()
+
+      render(<RehearsalStudio questions={questions} lang="en" onExit={handleExit} />)
+
+      expect(screen.getByTestId('rehearsal-studio')).toBeDefined()
+      expect(screen.getByText('Verbal Rehearsal Studio')).toBeDefined()
+      expect(screen.getByText(questions[0].question)).toBeDefined()
+      expect(screen.getByText('Speaking Timer (2-min target)')).toBeDefined()
+
+      // Active recall: hints initially concealed
+      expect(screen.queryByText(questions[0].starResponse.situation)).toBeNull()
+
+      // Toggle hint visibility
+      const toggleHintBtn = screen.getByTestId('toggle-hints-btn')
+      fireEvent.click(toggleHintBtn)
+      expect(screen.getByText(questions[0].starResponse.situation)).toBeDefined()
+
+      // Rate confidence
+      const nailedItBtn = screen.getByRole('button', { name: /Nailed It/i })
+      fireEvent.click(nailedItBtn)
+
+      // Exit
+      const exitBtn = screen.getByTestId('exit-rehearsal-btn')
+      fireEvent.click(exitBtn)
+      expect(handleExit).toHaveBeenCalled()
+    })
+  })
+
+  describe('TargetJobDrawer', () => {
+    it('renders target job details, parsed skills, and grounding sources', async () => {
+      const { TargetJobDrawer } = await import('./TargetJobDrawer')
+      const handleClose = vi.fn()
+
+      render(
+        <TargetJobDrawer
+          isOpen={true}
+          onClose={handleClose}
+          roleTitle="Senior Full Stack Engineer"
+          companyName="Acme AI"
+          parsedSkills={['TypeScript', 'Next.js', 'PostgreSQL']}
+          jobDescription="Seeking experienced engineer to lead AI integrations."
+          groundingSources={{
+            workExperiences: ['Lead Engineer at CloudCorp'],
+            projects: ['AI Search Engine'],
+          }}
+          lang="en"
+        />,
+      )
+
+      expect(screen.getByTestId('target-job-drawer')).toBeDefined()
+      expect(screen.getByText('Senior Full Stack Engineer')).toBeDefined()
+      expect(screen.getByText('Acme AI')).toBeDefined()
+      expect(screen.getByText('TypeScript')).toBeDefined()
+      expect(screen.getByText('Lead Engineer at CloudCorp')).toBeDefined()
+      expect(screen.getByText('AI Search Engine')).toBeDefined()
+    })
+  })
 })

@@ -390,4 +390,46 @@ describe('Career Prep Hub Client (covers: AC-1, AC-2, AC-3, AC-4, AC-6, AC-7, AC
 
     expect(screen.getByDisplayValue('Server authoritative situation text.')).toBeDefined()
   })
+
+  it('toggles between edit stories mode and interactive rehearsal studio mode', () => {
+    render(
+      <CareerPrepClient
+        lang="en"
+        dict={mockDict}
+        initialSelectorRows={mockSelectorRows}
+        initialHasMore={false}
+        initialSelectedResume={mockSelectedResume}
+        fallbackNotice={false}
+      />,
+    )
+
+    // Edit mode is active by default
+    expect(screen.getByTestId('mode-edit-btn')).toBeDefined()
+    expect(screen.getByTestId('mode-rehearse-btn')).toBeDefined()
+
+    // Switch to rehearse mode
+    fireEvent.click(screen.getByTestId('mode-rehearse-btn'))
+    expect(screen.getByTestId('rehearsal-studio')).toBeDefined()
+
+    // Switch back to edit mode
+    fireEvent.click(screen.getByTestId('mode-edit-btn'))
+    expect(screen.queryByTestId('rehearsal-studio')).toBeNull()
+  })
+
+  it('opens and closes target job context drawer', () => {
+    render(
+      <CareerPrepClient
+        lang="en"
+        dict={mockDict}
+        initialSelectorRows={mockSelectorRows}
+        initialHasMore={false}
+        initialSelectedResume={mockSelectedResume}
+        fallbackNotice={false}
+      />,
+    )
+
+    const openDrawerBtn = screen.getByTestId('open-context-drawer-btn')
+    fireEvent.click(openDrawerBtn)
+    expect(screen.getByTestId('target-job-drawer')).toBeDefined()
+  })
 })
