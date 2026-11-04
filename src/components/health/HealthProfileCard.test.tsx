@@ -12,6 +12,7 @@ vi.mock('@/lib/health/queries', () => ({
 
 vi.mock('@/app/actions/resume-health', () => ({
   getProfileHealthAction: vi.fn(),
+  forceRecalculateHealthAction: vi.fn(),
 }))
 
 const dict = {
@@ -81,9 +82,7 @@ describe('HealthProfileCard', () => {
     expect(screen.getByText('Fair')).toBeDefined()
     expect(screen.getByText('3 open issues')).toBeDefined()
     expect(screen.getByRole('img', { name: '55 out of 100' })).toBeDefined()
-
-    const link = screen.getByRole('link', { name: 'Open the full audit' })
-    expect(link.getAttribute('href')).toBe('/en/resume?auditLang=en')
+    expect(screen.getByRole('button', { name: /Check & Fix ATS/i })).toBeDefined()
   })
 
   it('follows the audit profile language for digits and the link target', async () => {
@@ -98,8 +97,9 @@ describe('HealthProfileCard', () => {
 
     // Card language is the profile language, so digits are Arabic Indic.
     expect(screen.getByText('٥٥')).toBeDefined()
-    const link = screen.getByRole('link', { name: 'Open the full audit' })
-    expect(link.getAttribute('href')).toBe('/en/resume?auditLang=ar')
+    expect(
+      screen.getByRole('button', { name: /فحص ومعالجة الـ ATS|Check & Fix ATS/i }),
+    ).toBeDefined()
   })
 
   it('maps 90 and above to the excellent band', async () => {
@@ -165,7 +165,38 @@ describe('HealthProfileCard', () => {
 
     expect(screen.getByText('Excellent')).toBeDefined()
     expect(screen.getByText('٩٢')).toBeDefined()
-    const link = screen.getByRole('link', { name: 'Open the full audit' })
-    expect(link.getAttribute('href')).toBe('/en/resume?auditLang=ar')
+    expect(
+      screen.getByRole('button', { name: /فحص ومعالجة الـ ATS|Check & Fix ATS/i }),
+    ).toBeDefined()
+  })
+
+  it('renders recalculate button and calls forceRecalculateHealthAction on click', async () => {
+    vi.mocked(getResumeHealthForProfile).mockResolvedValue(
+      view({ overallScore: 50, language: 'EN' }),
+    )
+    const { getProfileHealthAction, forceRecalculateHealthAction } =
+      await import('@/app/actions/resume-health')
+    const updatedView = view({ overallScore: 85, language: 'EN', openCount: 1 })
+    vi.mocked(forceRecalculateHealthAction).mockResolvedValue(updatedView)
+    vi.mocked(getProfileHealthAction).mockResolvedValue(updatedView)
+
+    const jsx = await HealthProfileCard({
+      userId: 'usr_1',
+      profileId: 'prof_1',
+      lang: 'en',
+      dict,
+    })
+    render(jsx)
+
+    const recalcBtn = screen.getByRole('button', { name: /recalculate/i })
+    expect(recalcBtn).toBeDefined()
+
+    await act(async () => {
+      recalcBtn.click()
+    })
+
+    expect(forceRecalculateHealthAction).toHaveBeenCalledWith('prof_1')
+    expect(screen.getByText('85')).toBeDefined()
+    expect(screen.getByText('1 open issues')).toBeDefined()
   })
 })

@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { recordAnalyticsEvent } from '@/lib/db/analytics'
@@ -89,6 +90,15 @@ async function loadSuggestion(
   }
 }
 
+function normalizeComparisonText(text: string): string {
+  return text
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 /** The current text of the line the card anchors to, from the live profile. */
 async function resolveTargetText(tx: DecisionTx, row: SuggestionRow): Promise<string | null> {
   const profile = await tx.profile.findUnique({
@@ -108,9 +118,29 @@ async function resolveTargetText(tx: DecisionTx, row: SuggestionRow): Promise<st
 
   switch (row.targetKind) {
     case 'WORK_EXPERIENCE_BULLET': {
-      if (!experience || row.targetIndex === null) return null
-      const bullet = (experience.bullets ?? [])[row.targetIndex]
-      return bullet?.trim() ? bullet.trim() : null
+      if (!experience) return null
+      const bullets = experience.bullets ?? []
+      const normOrig = normalizeComparisonText(row.originalText)
+
+      if (row.targetIndex !== null && bullets[row.targetIndex]?.trim()) {
+        const bulletAtIdx = bullets[row.targetIndex].trim()
+        if (
+          bulletAtIdx === row.originalText.trim() ||
+          normalizeComparisonText(bulletAtIdx) === normOrig
+        ) {
+          return bulletAtIdx
+        }
+      }
+      // Fallback: search by content match if targetIndex shifted
+      const found = bullets.find(
+        (b) => b.trim() === row.originalText.trim() || normalizeComparisonText(b) === normOrig,
+      )
+      if (found) return found.trim()
+
+      if (row.targetIndex !== null && bullets[row.targetIndex]?.trim()) {
+        return bullets[row.targetIndex].trim()
+      }
+      return null
     }
     case 'WORK_EXPERIENCE':
       if (!experience) return null
@@ -152,17 +182,58 @@ async function writeTargetText(
 ): Promise<'OK' | 'STALE'> {
   switch (row.targetKind) {
     case 'WORK_EXPERIENCE_BULLET': {
-      if (!row.targetId || row.targetIndex === null) return 'STALE'
+      if (!row.targetId) return 'STALE'
       const experience = await tx.workExperience.findUnique({
         where: { id: row.targetId },
       })
       if (!experience || experience.profileId !== row.profileId) return 'STALE'
       const bullets = [...(experience.bullets ?? [])]
-      if (row.targetIndex < 0 || row.targetIndex >= bullets.length) return 'STALE'
-      if (mode === 'apply' && bullets[row.targetIndex].trim() !== row.originalText.trim()) {
-        return 'STALE'
+      if (bullets.length === 0) return 'STALE'
+
+      let targetIdx = row.targetIndex ?? -1
+      const normOrig = normalizeComparisonText(row.originalText)
+
+      if (
+        targetIdx >= 0 &&
+        targetIdx < bullets.length &&
+        (bullets[targetIdx].trim() === row.originalText.trim() ||
+          normalizeComparisonText(bullets[targetIdx]) === normOrig)
+      ) {
+        // Matched target index
+      } else {
+        // Fallback: search by content match
+        const foundIdx = bullets.findIndex(
+          (b) => b.trim() === row.originalText.trim() || normalizeComparisonText(b) === normOrig,
+        )
+        if (foundIdx !== -1) {
+          targetIdx = foundIdx
+        } else if (mode === 'apply') {
+          return 'STALE'
+        }
       }
-      bullets[row.targetIndex] = text
+
+      if (targetIdx < 0 || targetIdx >= bullets.length) return 'STALE'
+
+      bullets[targetIdx] = text
+      await tx.workExperience.update({
+        where: { id: experience.id },
+        data: { bullets: { set: bullets } },
+      })
+      return 'OK'
+    }
+    case 'WORK_EXPERIENCE': {
+      if (!row.targetId) return 'STALE'
+      const experience = await tx.workExperience.findUnique({
+        where: { id: row.targetId },
+      })
+      if (!experience || experience.profileId !== row.profileId) return 'STALE'
+      const bullets = [...(experience.bullets ?? [])]
+      if (mode === 'apply') {
+        bullets.push(text)
+      } else {
+        const lastIdx = bullets.lastIndexOf(text)
+        if (lastIdx >= 0) bullets.splice(lastIdx, 1)
+      }
       await tx.workExperience.update({
         where: { id: experience.id },
         data: { bullets: { set: bullets } },
@@ -175,8 +246,12 @@ async function writeTargetText(
         select: { id: true, summary: true },
       })
       if (!profile) return 'STALE'
-      if (mode === 'apply' && (profile.summary?.trim() ?? '') !== row.originalText.trim()) {
-        return 'STALE'
+      if (mode === 'apply') {
+        const normCurrent = (profile.summary ?? '').replace(/\s+/g, ' ').trim()
+        const normOriginal = row.originalText.replace(/\s+/g, ' ').trim()
+        if (normCurrent !== normOriginal && normOriginal.length > 0) {
+          return 'STALE'
+        }
       }
       await tx.profile.update({
         where: { id: row.profileId },
@@ -243,9 +318,11 @@ export async function acceptHealthSuggestionAction(
         return errorResult('NO_PROPOSED_TEXT')
       }
 
-      // The feature only offers proposed rewrites for bullets and the summary.
+      // The feature offers proposed rewrites for bullets, roles, and the summary.
       const writable =
-        row.targetKind === 'WORK_EXPERIENCE_BULLET' || row.targetKind === 'PROFILE_SUMMARY'
+        row.targetKind === 'WORK_EXPERIENCE_BULLET' ||
+        row.targetKind === 'WORK_EXPERIENCE' ||
+        row.targetKind === 'PROFILE_SUMMARY'
       if (!writable) {
         await tx.resumeHealthSuggestion.update({
           where: { id: row.id },
@@ -255,7 +332,9 @@ export async function acceptHealthSuggestionAction(
       }
 
       const current = await resolveTargetText(tx, row)
-      if (current === null || current !== row.originalText.trim()) {
+      const normCurrent = normalizeComparisonText(current ?? '')
+      const normOriginal = normalizeComparisonText(row.originalText)
+      if (current === null || (normOriginal.length > 0 && normCurrent !== normOriginal)) {
         await tx.resumeHealthSuggestion.update({
           where: { id: row.id },
           data: { status: 'PENDING', decidedAt: null },
@@ -290,6 +369,12 @@ export async function acceptHealthSuggestionAction(
     if (!view) return errorResult('NOT_FOUND')
 
     await logDecision('health_suggestion_accepted', toLocale(view.language), outcome.metadata ?? {})
+
+    try {
+      revalidatePath('/[lang]/profile', 'page')
+    } catch {
+      // Revalidation errors in test runners or edge contexts should not fail the action
+    }
 
     return { ok: true, view, previousScore: outcome.previousScore }
   } catch (err) {
@@ -516,6 +601,7 @@ function isGroundedRewrite(proposed: string, sources: string[]): boolean {
 
 const REWRITABLE_TARGET_KINDS: HealthTargetKindValue[] = [
   'WORK_EXPERIENCE_BULLET',
+  'WORK_EXPERIENCE',
   'PROFILE_SUMMARY',
 ]
 
@@ -676,6 +762,17 @@ export async function generateHealthRewriteAction(
           return { ok: false, error: 'STALE' }
         }
         targetLine = current
+      } else if (targetKind === 'WORK_EXPERIENCE') {
+        if (!row.targetId) {
+          return { ok: false, error: 'CONFLICT' }
+        }
+        const experience = await tx.workExperience.findUnique({
+          where: { id: row.targetId },
+        })
+        if (!experience || experience.profileId !== row.profileId) {
+          return { ok: false, error: 'CONFLICT' }
+        }
+        targetLine = `${experience.companyName} · ${experience.jobTitle}`
       } else {
         const current = profile.summary?.trim() ?? ''
         if (current !== row.originalText.trim()) {
@@ -690,7 +787,7 @@ export async function generateHealthRewriteAction(
         profileId: row.profileId,
         issueTitle: row.title,
         targetLine,
-        kind: targetKind === 'WORK_EXPERIENCE_BULLET' ? 'bullet' : 'summary',
+        kind: targetKind === 'PROFILE_SUMMARY' ? 'summary' : 'bullet',
         language,
       }
     })
@@ -832,5 +929,24 @@ export async function getProfileHealthAction(profileId: string): Promise<HealthA
   const session = await auth()
   const userId = session?.user?.id
   if (!userId) return null
+  return getResumeHealthForProfile(userId, profileId)
+}
+
+/**
+ * Forces a fresh recalculation of the profile's resume health audit.
+ * Updates profile updatedAt timestamp so recalculateAudit detects staleness.
+ */
+export async function forceRecalculateHealthAction(
+  profileId: string,
+): Promise<HealthAuditView | null> {
+  const session = await auth()
+  const userId = session?.user?.id
+  if (!userId) return null
+
+  await prisma.profile.updateMany({
+    where: { id: profileId, userId },
+    data: { updatedAt: new Date() },
+  })
+
   return getResumeHealthForProfile(userId, profileId)
 }

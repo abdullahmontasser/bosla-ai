@@ -66,20 +66,22 @@ export function HealthSuggestionCard({ card, dict }: HealthSuggestionCardProps) 
   const hasOriginal = card.originalText.trim().length > 0
   const originalText = hasOriginal ? card.originalText : t.notSet || ''
   const conciseRationale = formatConciseRationale(card.rationale, card.originalText)
-  const showProposed = Boolean(card.proposedText && card.proposedText.trim().length > 0 && !card.isAiStale)
+  const showProposed = Boolean(
+    card.proposedText && card.proposedText.trim().length > 0 && !card.isAiStale,
+  )
 
   return (
     <div
-      className="rounded-lg bg-background/60 p-3.5 space-y-2.5"
+      className="rounded-[8px] border border-border/80 bg-card p-4 space-y-3 shadow-xs"
       data-target-kind={card.targetKind}
       data-target-id={card.targetId ?? undefined}
       data-fingerprint={card.fingerprint}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2 flex-wrap">
-          <p className="text-sm font-semibold text-foreground">{card.title}</p>
+          <p className="text-[13px] font-bold text-foreground">{card.title}</p>
           {targetLabel && (
-            <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+            <span className="rounded-[3px] border border-border bg-muted/50 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
               {targetLabel}
             </span>
           )}
@@ -88,13 +90,16 @@ export function HealthSuggestionCard({ card, dict }: HealthSuggestionCardProps) 
           {card.isAiStale && (
             <Badge
               variant="outline"
-              className="border-amber-500/30 bg-amber-500/10 text-[10px] text-amber-600 dark:text-amber-400"
+              className="rounded-[3px] border-amber-500/30 bg-amber-500/10 text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400"
             >
               {t.aiStaleBadge || 'Text changed'}
             </Badge>
           )}
           {card.isAiGenerated && !card.isAiStale && (
-            <Badge variant="secondary" className="text-[10px]">
+            <Badge
+              variant="secondary"
+              className="rounded-[3px] border border-primary/20 bg-primary/10 text-[9px] font-bold uppercase tracking-wider text-primary"
+            >
               {t.aiBadge || 'AI generated'}
             </Badge>
           )}
@@ -102,23 +107,24 @@ export function HealthSuggestionCard({ card, dict }: HealthSuggestionCardProps) 
       </div>
 
       {originalText && (
-        <blockquote className="border-s-2 border-border ps-3 py-1 text-xs whitespace-pre-wrap text-muted-foreground">
-          {originalText}
-        </blockquote>
-      )}
-
-      {showProposed && (
-        <div className="border-s-2 border-emerald-500 bg-emerald-500/8 ps-3 py-2 rounded-e-md space-y-0.5">
-          <span className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-            {t.aiBadge || 'Suggested Rewrite'}
+        <div className="rounded-[6px] border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+          <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground/80">
+            {t.originalLabel || 'Before'}
           </span>
-          <p className="text-xs whitespace-pre-wrap text-foreground font-medium">
-            {card.proposedText}
-          </p>
+          <p className="whitespace-pre-wrap leading-relaxed">{originalText}</p>
         </div>
       )}
 
-      <p className="text-xs leading-relaxed text-foreground/90">{conciseRationale}</p>
+      {showProposed && (
+        <div className="rounded-[6px] border border-primary/30 border-s-2 border-s-primary bg-primary/[0.06] p-3 text-xs font-medium text-foreground space-y-1">
+          <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-primary">
+            {t.aiBadge ? `${t.aiBadge} — Rewrite` : 'After — AI Rewrite'}
+          </span>
+          <p className="whitespace-pre-wrap leading-relaxed font-medium">{card.proposedText}</p>
+        </div>
+      )}
+
+      <p className="text-xs leading-relaxed text-foreground/85">{conciseRationale}</p>
     </div>
   )
 }

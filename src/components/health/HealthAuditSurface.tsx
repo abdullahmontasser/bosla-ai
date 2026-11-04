@@ -25,6 +25,7 @@ export interface HealthAuditSurfaceProps {
   initialView: HealthAuditView
   dict: Dictionary
   pageLang: 'en' | 'ar'
+  ingestionSlot?: React.ReactNode
 }
 
 /** AI errors join the decision codes the server actions can return. */
@@ -38,7 +39,12 @@ type CardAction = 'accept' | 'undo' | 'dismiss' | 'restore' | 'askAi'
  * animation, and the 10 second undo window react in place, without a full
  * page reload.
  */
-export function HealthAuditSurface({ initialView, dict, pageLang }: HealthAuditSurfaceProps) {
+export function HealthAuditSurface({
+  initialView,
+  dict,
+  pageLang,
+  ingestionSlot,
+}: HealthAuditSurfaceProps) {
   const router = useRouter()
   const t = (dict.health || {}) as Partial<HealthDictionary>
 
@@ -152,47 +158,69 @@ export function HealthAuditSurface({ initialView, dict, pageLang }: HealthAuditS
   const categoryOrder = Array.from(new Set(categoriesInOrder))
 
   return (
-    <div className="space-y-5" data-testid="health-audit-surface">
-      <HealthScoreGauge
-        score={view.overallScore}
-        breakdown={view.breakdown}
-        lang={cardLang}
-        dict={dict}
-        updating={busyCardId !== null}
-      />
+    <div
+      data-testid="health-audit-surface"
+      className="grid grid-cols-1 lg:grid-cols-[380px_1fr] divide-y lg:divide-y-0 lg:divide-x rtl:lg:divide-x-reverse divide-border"
+    >
+      {/* Left Pane (Gauge & Ingestion Dropzone) */}
+      <div className="p-6 space-y-6 lg:sticky lg:top-14 bg-landing-panel-deep/40">
+        <HealthScoreGauge
+          score={view.overallScore}
+          breakdown={view.breakdown}
+          lang={cardLang}
+          dict={dict}
+          updating={busyCardId !== null}
+        />
+        {ingestionSlot}
+      </div>
 
-      {categoryOrder.length === 0 && (
-        <p className="rounded-lg border border-border/60 bg-muted/20 p-4 text-center text-xs text-muted-foreground">
-          {t.profileCardSubtitle || ''}
-        </p>
-      )}
+      {/* Right Pane (Category Accordions & Suggestions) */}
+      <div className="p-6 lg:p-8 space-y-4">
+        <div className="flex items-center justify-between border-b border-border/70 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 bg-primary" aria-hidden="true" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+              AUDIT / 02 — HEALTH ISSUES
+            </span>
+          </div>
+          <span className="text-[10px] font-mono font-semibold tabular-nums text-muted-foreground">
+            {showableCards.length} {showableCards.length === 1 ? 'FINDING' : 'FINDINGS'}
+          </span>
+        </div>
 
-      {categoryOrder.map((category, index) => {
-        const cards = showableCards.filter((card) => card.category === category)
-        const latestDismissed = dismissedByCategory[category]
-        return (
-          <HealthCategorySection
-            key={category}
-            label={sectionLabel(category, t)}
-            cards={cards}
-            dict={dict}
-            openDefault={index === 0}
-            restorable={Boolean(latestDismissed)}
-            onRestore={latestDismissed ? () => runAction(latestDismissed, 'restore') : undefined}
-            renderCard={(card) => (
-              <CardShell
-                card={card}
-                dict={dict}
-                pageLang={pageLang}
-                isAccepted={Boolean(acceptedRecently[card.id])}
-                notice={notices[card.id]}
-                busy={busyCardId === card.id}
-                onAction={runAction}
-              />
-            )}
-          />
-        )
-      })}
+        {categoryOrder.length === 0 && (
+          <p className="rounded-[8px] border border-border/80 bg-muted/20 p-6 text-center text-xs text-muted-foreground">
+            {t.profileCardSubtitle || 'No open suggestions found for this profile.'}
+          </p>
+        )}
+
+        {categoryOrder.map((category, index) => {
+          const cards = showableCards.filter((card) => card.category === category)
+          const latestDismissed = dismissedByCategory[category]
+          return (
+            <HealthCategorySection
+              key={category}
+              label={sectionLabel(category, t)}
+              cards={cards}
+              dict={dict}
+              openDefault={index === 0}
+              restorable={Boolean(latestDismissed)}
+              onRestore={latestDismissed ? () => runAction(latestDismissed, 'restore') : undefined}
+              renderCard={(card) => (
+                <CardShell
+                  card={card}
+                  dict={dict}
+                  pageLang={pageLang}
+                  isAccepted={Boolean(acceptedRecently[card.id])}
+                  notice={notices[card.id]}
+                  busy={busyCardId === card.id}
+                  onAction={runAction}
+                />
+              )}
+            />
+          )
+        })}
+      </div>
     </div>
   )
 }

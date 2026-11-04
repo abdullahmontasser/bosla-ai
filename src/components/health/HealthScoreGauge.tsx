@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { healthBand, type HealthScoreBand } from '@/lib/health/constants'
 import type { HealthBreakdown } from '@/lib/health/rules'
 import type { Dictionary, HealthDictionary } from '@/lib/i18n/types'
@@ -42,15 +43,25 @@ const BAND_STYLES: Record<HealthScoreBand, { ring: string; text: string; bar: st
     bar: 'bg-amber-500',
   },
   strong: {
-    ring: 'stroke-emerald-500',
-    text: 'text-emerald-600 dark:text-emerald-400',
-    bar: 'bg-emerald-500',
+    ring: 'stroke-primary',
+    text: 'text-primary',
+    bar: 'bg-primary',
   },
   excellent: {
-    ring: 'stroke-emerald-500',
-    text: 'text-emerald-600 dark:text-emerald-400',
-    bar: 'bg-emerald-500',
+    ring: 'stroke-primary',
+    text: 'text-primary',
+    bar: 'bg-primary',
   },
+}
+
+function getCategoryBand(score: number): { bar: string; text: string } {
+  if (score >= 75) {
+    return { bar: 'bg-primary', text: 'text-primary' }
+  }
+  if (score >= 50) {
+    return { bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' }
+  }
+  return { bar: 'bg-rose-500', text: 'text-rose-600 dark:text-rose-400' }
 }
 
 const CIRCUMFERENCE = 2 * Math.PI * 40
@@ -125,93 +136,141 @@ export function HealthScoreGauge({
   }
   const bandLabel = bandLabels[band]
   const bandStyles = BAND_STYLES[visualBand]
-  const settledBandStyles = BAND_STYLES[band]
   const scoreOutOf = t.scoreOutOf || 'out of 100'
   const excludedCount = breakdown?.excludedCount ?? 0
 
   const gaugeAriaLabel = `${formatNumber(clamped, lang)} ${scoreOutOf}`
 
   return (
-    <div className="rounded-xl bg-muted/20 p-4 sm:p-5">
-      <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-5">
-          <div className="relative h-22 w-22 shrink-0" role="img" aria-label={gaugeAriaLabel}>
-            <svg viewBox="0 0 96 96" className="h-22 w-22 -rotate-90">
-              <circle
-                cx="48"
-                cy="48"
-                r="40"
-                fill="none"
-                strokeWidth="8"
-                className="stroke-muted"
-              />
-              <circle
-                cx="48"
-                cy="48"
-                r="40"
-                fill="none"
-                strokeWidth="8"
-                strokeLinecap="round"
-                className={bandStyles.ring}
-                strokeDasharray={CIRCUMFERENCE}
-                strokeDashoffset={CIRCUMFERENCE * (1 - displayed / 100)}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className={`text-2xl font-bold leading-none tabular-nums ${bandStyles.text}`}>
-                {formatNumber(displayed, lang)}
-              </span>
-              <span
-                className="mt-1 text-[10px] font-normal text-muted-foreground"
-                aria-hidden="true"
-              >
-                {formatNumber(100, lang)}
-              </span>
-            </div>
+    <div className="rounded-[10px] border border-border bg-card p-5 space-y-5 shadow-xs">
+      {/* Header Eyebrow */}
+      <div className="flex items-center justify-between border-b border-border/70 pb-3">
+        <div className="flex items-center gap-2">
+          <span className="h-px w-5 bg-primary" aria-hidden="true" />
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+            SCORE / 01
+          </span>
+        </div>
+        <span className="text-[10px] font-mono font-semibold tabular-nums text-muted-foreground">
+          {t.scoreLabel || 'Health score'}
+        </span>
+      </div>
+
+      {/* Main Score Display & Dial */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-[44px] font-bold tracking-tight text-foreground tabular-nums leading-none">
+              {formatNumber(displayed, lang)}
+            </span>
+            <span className="text-xs font-medium text-muted-foreground">
+              / {formatNumber(100, lang)}
+            </span>
           </div>
 
-          <div className="min-w-0 space-y-1 text-center sm:text-start">
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-              <span className={`text-base font-bold ${settledBandStyles.text}`}>{bandLabel}</span>
-              {updating && (
-                <Badge variant="secondary" className="text-[10px] animate-pulse">
-                  {t.updating || 'Updating…'}
-                </Badge>
+          <div className="mt-2 flex items-center gap-2">
+            <span
+              className={cn(
+                'rounded-[3px] border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em]',
+                band === 'needs_work'
+                  ? 'border-rose-500/30 bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                  : band === 'fair'
+                    ? 'border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'border-primary/30 bg-primary/10 text-primary',
               )}
-            </div>
+            >
+              {bandLabel}
+            </span>
             {updating && (
-              <p className="text-xs text-muted-foreground">{t.lastKnown || 'Last known score'}</p>
+              <Badge variant="secondary" className="rounded-[3px] text-[10px] animate-pulse">
+                {t.updating || 'Updating…'}
+              </Badge>
             )}
-            {excludedCount > 0 && (
-              <p className="text-xs text-muted-foreground">
-                {formatNumber(excludedCount, lang)} {t.excludedSuffix || 'dismissed issues'}
-              </p>
-            )}
+          </div>
+
+          {updating && (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {t.lastKnown || 'Last known score'}
+            </p>
+          )}
+
+          {excludedCount > 0 && (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              {formatNumber(excludedCount, lang)} {t.excludedSuffix || 'dismissed issues'}
+            </p>
+          )}
+        </div>
+
+        {/* Circular SVG Gauge for tactile feel and test compatibility */}
+        <div className="relative h-18 w-18 shrink-0" role="img" aria-label={gaugeAriaLabel}>
+          <svg viewBox="0 0 96 96" className="h-18 w-18 -rotate-90">
+            <circle
+              cx="48"
+              cy="48"
+              r="40"
+              fill="none"
+              strokeWidth="8"
+              className="stroke-muted/40"
+            />
+            <circle
+              cx="48"
+              cy="48"
+              r="40"
+              fill="none"
+              strokeWidth="8"
+              strokeLinecap="round"
+              className={bandStyles.ring}
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={CIRCUMFERENCE * (1 - displayed / 100)}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className={cn('text-xs font-bold tabular-nums', bandStyles.text)}>
+              {formatNumber(displayed, lang)}
+            </span>
+            <span className="sr-only">{formatNumber(100, lang)}</span>
           </div>
         </div>
       </div>
 
-      <div
-        className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3.5 pt-4 border-t border-border/50"
-        aria-hidden="false"
-      >
+      {/* 10-Segment Pill Meter from Landing ATS Panel */}
+      <div className="flex gap-1 w-full pt-1" aria-hidden="true">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <span
+            key={i}
+            className={cn(
+              'h-1.5 flex-1 rounded-full transition-all duration-300',
+              i < Math.round(displayed / 10)
+                ? displayed >= 75
+                  ? 'bg-primary'
+                  : displayed >= 50
+                    ? 'bg-amber-500'
+                    : 'bg-rose-500'
+                : 'bg-foreground/10',
+            )}
+          />
+        ))}
+      </div>
+
+      {/* Semantic Category Progress Bars */}
+      <div className="space-y-3 pt-3 border-t border-border/70" aria-hidden="false">
         {CATEGORY_ROWS.map(({ key, labelKey }) => {
           const category = breakdown?.categories?.[key]
           const categoryScore = category?.score ?? 0
-          const catBand = healthBand(categoryScore)
-          const barColor = BAND_STYLES[catBand].bar
+          const catStyles = getCategoryBand(categoryScore)
           const label = t[labelKey] || key
+
           return (
             <div key={key} className="space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <span className="font-medium text-foreground">{label}</span>
-                <span className={`font-semibold tabular-nums ${BAND_STYLES[catBand].text}`}>
+                <span className={cn('font-semibold tabular-nums', catStyles.text)}>
                   {formatNumber(categoryScore, lang)}%
                 </span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-foreground/10">
                 <div
-                  className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+                  className={cn('h-full rounded-full transition-all duration-300', catStyles.bar)}
                   style={{ width: `${categoryScore}%` }}
                 />
               </div>
@@ -220,7 +279,7 @@ export function HealthScoreGauge({
         })}
       </div>
 
-      {/* Follows the settled score, so animation frames never announce. */}
+      {/* Follows settled score for SR */}
       <span role="status" aria-live="polite" className="sr-only">
         {`${formatNumber(clamped, lang)} ${scoreOutOf} — ${bandLabel}`}
       </span>

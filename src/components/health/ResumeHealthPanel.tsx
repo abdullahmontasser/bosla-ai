@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { getResumeHealthForLanguage } from '@/lib/health/queries'
 import type { HealthLanguage } from '@/lib/health/rules'
 import type { Dictionary, HealthDictionary } from '@/lib/i18n/types'
@@ -16,6 +15,7 @@ export interface ResumeHealthPanelProps {
   /** Audit target resolved from the `auditLang` query param. */
   auditLang: 'en' | 'ar'
   dict: Dictionary
+  ingestionSlot?: React.ReactNode
 }
 
 function toHealthLanguage(lang: 'en' | 'ar'): HealthLanguage {
@@ -27,6 +27,7 @@ export async function ResumeHealthPanel({
   pageLang,
   auditLang,
   dict,
+  ingestionSlot,
 }: ResumeHealthPanelProps) {
   const t = (dict.health || {}) as Partial<HealthDictionary>
   const view = await getResumeHealthForLanguage(userId, toHealthLanguage(auditLang))
@@ -34,68 +35,72 @@ export async function ResumeHealthPanel({
   return (
     <section aria-labelledby="health-panel-heading">
       <HealthAuditViewedTracker locale={pageLang} />
-      <Card className="border-border bg-card">
-        <CardHeader className="pb-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="rounded-[10px] border border-border bg-card overflow-hidden">
+        {/* Top Header Bar */}
+        <div className="border-b border-border p-4 sm:p-6 bg-card/60">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <CardTitle
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="h-px w-5 bg-primary" aria-hidden="true" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                  AUDIT / 01
+                </span>
+              </div>
+              <h2
                 id="health-panel-heading"
-                className="text-base font-semibold text-foreground"
+                role="heading"
+                aria-level={2}
+                className="text-base font-bold text-foreground"
               >
                 {t.panelTitle || 'Base Resume Health Audit'}
-              </CardTitle>
-              <CardDescription className="mt-0.5 text-xs text-muted-foreground">
-                {t.panelSubtitle || ''}
-              </CardDescription>
+              </h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t.panelSubtitle || ''}</p>
             </div>
 
-            <nav
-              aria-label={t.auditLanguageLabel || 'Card language'}
-              className="flex shrink-0 items-center gap-1 rounded-lg border border-border bg-muted/40 p-1"
-            >
-              {(['en', 'ar'] as const).map((code) => {
-                const isActive = auditLang === code
-                return (
-                  <Link
-                    key={code}
-                    href={`/${pageLang}/resume?auditLang=${code}`}
-                    aria-current={isActive ? 'true' : undefined}
-                    aria-label={code === 'en' ? t.switchToEnglish : t.switchToArabic}
-                    className={cn(
-                      'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                      isActive
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground',
-                    )}
-                  >
-                    {code === 'en' ? 'English' : 'العربية'}
-                  </Link>
-                )
-              })}
-            </nav>
+            <div className="flex items-center gap-2 rounded-[6px] border border-border/80 bg-background/80 px-2.5 py-1 text-xs text-muted-foreground">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              <span className="font-medium text-foreground">
+                {pageLang === 'ar'
+                  ? auditLang === 'ar'
+                    ? 'تقييم: السيرة العربية'
+                    : 'تقييم: السيرة الإنجليزية'
+                  : auditLang === 'ar'
+                    ? 'Audit Target: Arabic CV'
+                    : 'Audit Target: English CV'}
+              </span>
+            </div>
           </div>
-        </CardHeader>
+        </div>
 
-        <CardContent className="pt-0">
+        <div>
           {!view ? (
             <div
-              className="flex flex-col items-center gap-5 sm:flex-row sm:items-stretch"
+              className="grid grid-cols-1 lg:grid-cols-[380px_1fr] divide-y lg:divide-y-0 lg:divide-x rtl:lg:divide-x-reverse divide-border"
               data-testid="health-empty-state"
             >
-              <HealthScoreGauge score={0} lang={auditLang} dict={dict} />
-              <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-4 text-center sm:items-start sm:text-start">
-                <h3 className="text-sm font-semibold text-foreground">
+              <div className="p-6 space-y-6 bg-landing-panel-deep/40">
+                <HealthScoreGauge score={0} lang={auditLang} dict={dict} />
+                {ingestionSlot}
+              </div>
+              <div className="flex flex-1 flex-col items-center justify-center gap-3 p-8 text-center sm:items-start sm:text-start bg-card/40">
+                <h3 className="text-sm font-bold text-foreground">
                   {t.emptyTitle || 'Start with your master profile'}
                 </h3>
-                <p className="max-w-prose text-xs text-muted-foreground">{t.emptyBody || ''}</p>
-                <div className="mt-1 flex flex-wrap justify-center gap-2 sm:justify-start">
-                  <Button asChild variant="outline" size="sm">
+                <p className="max-w-prose text-xs text-muted-foreground leading-relaxed">
+                  {t.emptyBody || ''}
+                </p>
+                <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
+                  <Button asChild variant="outline" size="sm" className="rounded-[6px] text-xs">
                     <Link href={`/${pageLang}/profile`}>
                       {t.emptyProfile || 'Open your profile'}
                     </Link>
                   </Button>
-                  <Button asChild variant="default" size="sm">
+                  <Button
+                    asChild
+                    variant="default"
+                    size="sm"
+                    className="rounded-[6px] text-xs font-semibold"
+                  >
                     <Link href="#resume-ingestion">{t.emptyUpload || 'Upload a resume'}</Link>
                   </Button>
                 </div>
@@ -107,10 +112,11 @@ export async function ResumeHealthPanel({
               initialView={view}
               dict={dict}
               pageLang={pageLang}
+              ingestionSlot={ingestionSlot}
             />
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </section>
   )
 }
