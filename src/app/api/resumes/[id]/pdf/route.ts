@@ -300,7 +300,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         startDate: formatDisplayDate(exp.startDate) || null,
         endDate: formatDisplayDate(exp.endDate) || null,
         isCurrent: Boolean(exp.isCurrent),
-        bullets: (exp.bullets || []).map((b: PdfBulletInput) => ({
+        bullets: (exp.bullets || []).map((b: string | PdfBulletInput) => ({
           rewritten: typeof b === 'string' ? b : b.rewritten || b.tailored || b.original || '',
         })),
       })),
