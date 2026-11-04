@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpenCheck, Cpu, FileText, Kanban, Sparkles, UserRound } from 'lucide-react'
+import { BookOpenCheck, Cpu, Kanban, Sparkles, UserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export interface WorkspaceNavProps {
@@ -29,7 +29,6 @@ export function WorkspaceNav({ lang, labels, variant = 'bar', onNavigate }: Work
       icon: UserRound,
     },
     { href: `/${lang}/tailor`, label: labels.tailor, icon: Sparkles },
-    { href: `/${lang}/resume`, label: labels.resumes, icon: FileText },
     { href: `/${lang}/tracker`, label: labels.tracker, icon: Kanban },
     {
       href: `/${lang}/career-prep`,
@@ -56,11 +55,11 @@ export function WorkspaceNav({ lang, labels, variant = 'bar', onNavigate }: Work
             onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'inline-flex items-center gap-2 rounded-lg px-3 text-[13px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-              variant === 'bar' ? 'h-8.5' : 'min-h-11',
+              'inline-flex items-center gap-2 rounded-[6px] px-2.5 text-[12.5px] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              variant === 'bar' ? 'h-8' : 'min-h-10',
               active
-                ? 'bg-secondary font-semibold text-foreground ring-1 ring-border/80 shadow-2xs'
-                : 'font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground',
+                ? 'bg-accent font-semibold text-foreground border border-border/80 shadow-[0_1px_2px_rgba(0,0,0,0.04)]'
+                : 'font-medium text-muted-foreground hover:bg-accent/60 hover:text-foreground',
             )}
           >
             <Icon

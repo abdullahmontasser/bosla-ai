@@ -44,8 +44,7 @@ describe('Workspace Shell Components (covers: AC-7, AC-9)', () => {
     const tailorLink = screen.getByRole('link', { name: /Tailor/i })
     expect(tailorLink.getAttribute('aria-current')).toBe('page')
 
-    const resumeLink = screen.getByRole('link', { name: /Resumes/i })
-    expect(resumeLink.getAttribute('aria-current')).toBeNull()
+    expect(screen.queryByRole('link', { name: /Resumes/i })).toBeNull()
   })
 
   it('renders career prep navigation link and sets active state (AC-11)', () => {

@@ -93,13 +93,7 @@ export function getPreferredLocale(request: NextRequest): Locale {
   return defaultLocale
 }
 
-export const PROTECTED_WORKSPACE_ROUTES = new Set([
-  'tailor',
-  'tracker',
-  'resume',
-  'profile',
-  'settings',
-])
+export const PROTECTED_WORKSPACE_ROUTES = new Set(['tailor', 'tracker', 'profile', 'settings'])
 
 export function hasSessionCookie(request: NextRequest): boolean {
   const cookies = request.cookies
