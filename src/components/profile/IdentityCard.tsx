@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { User, Check, AlertCircle, Save } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Check, AlertCircle, Save, Sparkles, RotateCw } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { enhanceProfileSummaryAction } from '@/app/actions/profile-ai'
 
 interface IdentityCardProps {
   profileId: string
@@ -30,6 +30,7 @@ interface IdentityCardProps {
     linkedinUrl?: string | null
     githubUrl?: string | null
   }) => void
+  onDirtyChange?: (isDirty: boolean) => void
 }
 
 export function IdentityCard({
@@ -45,6 +46,7 @@ export function IdentityCard({
   githubUrl: initialGithubUrl,
   lang,
   onSaveSuccess,
+  onDirtyChange,
 }: IdentityCardProps) {
   const isAr = lang === 'ar'
 
@@ -58,9 +60,83 @@ export function IdentityCard({
   const [linkedinUrl, setLinkedinUrl] = useState(initialLinkedinUrl || '')
   const [githubUrl, setGithubUrl] = useState(initialGithubUrl || '')
 
+  // Track unsaved dirty state against initial props
+  const isDirty =
+    fullName !== (initialFullName || '') ||
+    headline !== (initialHeadline || '') ||
+    summary !== (initialSummary || '') ||
+    email !== (initialEmail || '') ||
+    phone !== (initialPhone || '') ||
+    location !== (initialLocation || '') ||
+    websiteUrl !== (initialWebsiteUrl || '') ||
+    linkedinUrl !== (initialLinkedinUrl || '') ||
+    githubUrl !== (initialGithubUrl || '')
+
+  // Keep local fields in sync with incoming props (e.g. after AI health fixes or external saves).
+  // Adjusted during render so the sync does not trigger a cascading effect render.
+  const initialValues = {
+    fullName: initialFullName || '',
+    headline: initialHeadline || '',
+    summary: initialSummary || '',
+    email: initialEmail || '',
+    phone: initialPhone || '',
+    location: initialLocation || '',
+    websiteUrl: initialWebsiteUrl || '',
+    linkedinUrl: initialLinkedinUrl || '',
+    githubUrl: initialGithubUrl || '',
+  }
+  const [prevInitialValues, setPrevInitialValues] = useState(initialValues)
+  if (
+    initialValues.fullName !== prevInitialValues.fullName ||
+    initialValues.headline !== prevInitialValues.headline ||
+    initialValues.summary !== prevInitialValues.summary ||
+    initialValues.email !== prevInitialValues.email ||
+    initialValues.phone !== prevInitialValues.phone ||
+    initialValues.location !== prevInitialValues.location ||
+    initialValues.websiteUrl !== prevInitialValues.websiteUrl ||
+    initialValues.linkedinUrl !== prevInitialValues.linkedinUrl ||
+    initialValues.githubUrl !== prevInitialValues.githubUrl
+  ) {
+    setPrevInitialValues(initialValues)
+    setFullName(initialValues.fullName)
+    setHeadline(initialValues.headline)
+    setSummary(initialValues.summary)
+    setEmail(initialValues.email)
+    setPhone(initialValues.phone)
+    setLocation(initialValues.location)
+    setWebsiteUrl(initialValues.websiteUrl)
+    setLinkedinUrl(initialValues.linkedinUrl)
+    setGithubUrl(initialValues.githubUrl)
+  }
+
+  React.useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
+
   const [saving, setSaving] = useState(false)
   const [savedSuccess, setSavedSuccess] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isEnhancingSummary, setIsEnhancingSummary] = useState(false)
+
+  const handleEnhanceSummary = async () => {
+    if (isEnhancingSummary) return
+    setIsEnhancingSummary(true)
+    try {
+      const res = await enhanceProfileSummaryAction({
+        fullName,
+        headline,
+        currentSummary: summary,
+        language: isAr ? 'AR' : 'EN',
+      })
+      if (res.success && res.enhancedSummary) {
+        setSummary(res.enhancedSummary)
+      }
+    } catch (err) {
+      console.error('Failed to enhance summary:', err)
+    } finally {
+      setIsEnhancingSummary(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,31 +191,30 @@ export function IdentityCard({
   }
 
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="pb-4">
-        <div className="flex items-center gap-2">
-          <User className="h-5 w-5 text-primary" />
-          <CardTitle className="text-[17px] font-bold text-foreground">
-            {isAr ? 'البيانات الشخصية والمهنية' : 'Personal & Professional Identity'}
-          </CardTitle>
-        </div>
-        <CardDescription className="text-[13px] text-muted-foreground">
+    <div className="p-6 lg:p-8 grid grid-cols-1 xl:grid-cols-[240px_1fr] gap-6">
+      {/* Left sub-column */}
+      <div>
+        <h3 className="text-[17px] font-bold text-foreground">
+          {isAr ? 'البيانات الشخصية والمهنية' : 'Personal & Professional Identity'}
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
           {isAr
             ? 'المصدر الرئيسي لبياناتك الشخصية ومعلومات الاتصال عبر جميع السير الذاتية ومساحة العمل.'
             : 'Single source of truth for your name, professional summary, and contact channels.'}
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
 
-      <CardContent>
+      {/* Right sub-column: Form */}
+      <div>
         {errorMessage && (
-          <div className="mb-4 flex items-center gap-2 rounded-[8px] border border-destructive/30 bg-destructive/10 p-3 text-[12px] text-destructive">
+          <div className="mb-4 flex items-center gap-2 rounded-[6px] border border-destructive/30 bg-destructive/10 p-3 text-[12px] text-destructive">
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {savedSuccess && (
-          <div className="mb-4 flex items-center gap-2 rounded-[8px] border border-primary/30 bg-primary/10 p-3 text-[12px] text-primary">
+          <div className="mb-4 flex items-center gap-2 rounded-[6px] border border-primary/30 bg-primary/10 p-3 text-[12px] text-primary">
             <Check className="h-4 w-4 shrink-0" />
             <span>{isAr ? 'تم حفظ التعديلات بنجاح' : 'Identity details saved successfully'}</span>
           </div>
@@ -148,34 +223,78 @@ export function IdentityCard({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-[12px] font-semibold text-foreground mb-1">
+              <label
+                htmlFor="identity-field-fullName"
+                className="block text-[12px] font-semibold text-foreground mb-1"
+              >
                 {isAr ? 'الاسم الكامل *' : 'Full Name *'}
               </label>
               <Input
+                id="identity-field-fullName"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder={isAr ? 'مثال: عبد الله أحمد' : 'e.g. Alex Morgan'}
                 required
+                className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[12px] font-semibold text-foreground mb-1">
+              <label
+                htmlFor="identity-field-headline"
+                className="block text-[12px] font-semibold text-foreground mb-1"
+              >
                 {isAr ? 'المسمى المهني الرئيسي' : 'Professional Headline'}
               </label>
               <Input
+                id="identity-field-headline"
                 value={headline}
                 onChange={(e) => setHeadline(e.target.value)}
                 placeholder={isAr ? 'مثال: كبير مهندسي برمجيات' : 'e.g. Senior Full-Stack Engineer'}
+                className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary transition-all"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[12px] font-semibold text-foreground mb-1">
-              {isAr ? 'الملخص المهني' : 'Professional Summary'}
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label
+                htmlFor="identity-field-summary"
+                className="block text-[12px] font-semibold text-foreground"
+              >
+                {isAr ? 'الملخص المهني' : 'Professional Summary'}
+              </label>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={isEnhancingSummary}
+                onClick={handleEnhanceSummary}
+                className="h-6 px-2 text-[11px] gap-1 text-primary hover:text-primary hover:bg-primary/10 rounded-[4px] font-medium transition-colors"
+                title={
+                  isAr
+                    ? 'تحسين صياغة الملخص بالذكاء الاصطناعي'
+                    : 'Enhance executive summary with AI'
+                }
+              >
+                {isEnhancingSummary ? (
+                  <RotateCw className="h-3 w-3 animate-spin text-primary" />
+                ) : (
+                  <Sparkles className="h-3 w-3 text-primary" />
+                )}
+                <span>
+                  {isEnhancingSummary
+                    ? isAr
+                      ? 'جارٍ التحسين...'
+                      : 'Enhancing...'
+                    : isAr
+                      ? 'تحسين بالذكاء الاصطناعي'
+                      : 'Enhance with AI'}
+                </span>
+              </Button>
+            </div>
             <Textarea
+              id="identity-field-summary"
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               rows={4}
@@ -184,87 +303,122 @@ export function IdentityCard({
                   ? 'نبذة شاملة عن خبراتك ومجالات تخصصك وأهم إنجازاتك المهنية...'
                   : 'Compelling summary highlighting your domain expertise, core strengths, and major career achievements...'
               }
+              className="rounded-[6px] border-border bg-card text-xs leading-relaxed resize-none focus-visible:ring-1 focus-visible:ring-primary transition-all"
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className="block text-[12px] font-semibold text-foreground mb-1">
+              <label
+                htmlFor="identity-field-email"
+                className="block text-[12px] font-semibold text-foreground mb-1"
+              >
                 {isAr ? 'البريد الإلكتروني' : 'Contact Email'}
               </label>
               <Input
+                id="identity-field-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@example.com"
+                className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[12px] font-semibold text-foreground mb-1">
+              <label
+                htmlFor="identity-field-phone"
+                className="block text-[12px] font-semibold text-foreground mb-1"
+              >
                 {isAr ? 'رقم الهاتف' : 'Phone Number'}
               </label>
               <Input
+                id="identity-field-phone"
                 value={phone}
                 dir="ltr"
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+1 555-0199"
+                className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[12px] font-semibold text-foreground mb-1">
+              <label
+                htmlFor="identity-field-location"
+                className="block text-[12px] font-semibold text-foreground mb-1"
+              >
                 {isAr ? 'الموقع الجغرافي' : 'Location'}
               </label>
               <Input
+                id="identity-field-location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder={isAr ? 'الرياض، المملكة العربية السعودية' : 'San Francisco, CA'}
+                className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary transition-all"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className="block text-[12px] font-semibold text-foreground mb-1">
+              <label
+                htmlFor="identity-field-websiteUrl"
+                className="block text-[12px] font-semibold text-foreground mb-1"
+              >
                 {isAr ? 'الموقع الشخصي' : 'Personal Website'}
               </label>
               <Input
+                id="identity-field-websiteUrl"
                 type="url"
                 value={websiteUrl}
                 onChange={(e) => setWebsiteUrl(e.target.value)}
                 placeholder="https://example.com"
+                className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[12px] font-semibold text-foreground mb-1">
+              <label
+                htmlFor="identity-field-linkedinUrl"
+                className="block text-[12px] font-semibold text-foreground mb-1"
+              >
                 LinkedIn URL
               </label>
               <Input
+                id="identity-field-linkedinUrl"
                 type="url"
                 value={linkedinUrl}
                 onChange={(e) => setLinkedinUrl(e.target.value)}
                 placeholder="https://linkedin.com/in/username"
+                className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-[12px] font-semibold text-foreground mb-1">
+              <label
+                htmlFor="identity-field-githubUrl"
+                className="block text-[12px] font-semibold text-foreground mb-1"
+              >
                 GitHub URL
               </label>
               <Input
+                id="identity-field-githubUrl"
                 type="url"
                 value={githubUrl}
                 onChange={(e) => setGithubUrl(e.target.value)}
                 placeholder="https://github.com/username"
+                className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary transition-all"
               />
             </div>
           </div>
 
           <div className="flex justify-end pt-2">
-            <Button type="submit" disabled={saving} className="gap-2">
-              <Save className="h-4 w-4" />
+            <Button
+              type="submit"
+              disabled={saving}
+              className="gap-2 rounded-[6px] bg-primary text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.22)_inset] hover:bg-primary/90 text-xs font-semibold"
+            >
+              <Save className="h-3.5 w-3.5" />
               {saving
                 ? isAr
                   ? 'جارٍ الحفظ...'
@@ -275,7 +429,7 @@ export function IdentityCard({
             </Button>
           </div>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

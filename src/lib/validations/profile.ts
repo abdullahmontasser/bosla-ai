@@ -164,6 +164,15 @@ export const SkillCreateSchema = z.object({
 
 export type SkillCreateInput = z.infer<typeof SkillCreateSchema>
 
+export const SkillUpdateSchema = z.object({
+  name: z.string().trim().min(1, 'Skill name is required').optional(),
+  category: z.string().trim().optional().nullable().or(z.literal('')),
+  proficiency: z.string().trim().optional().nullable().or(z.literal('')),
+  sortOrder: z.number().int().optional(),
+})
+
+export type SkillUpdateInput = z.infer<typeof SkillUpdateSchema>
+
 export const ProjectCreateSchema = z.object({
   profileId: z.string().min(1, 'Profile ID is required'),
   name: z.string().trim().min(1, 'Project name is required'),

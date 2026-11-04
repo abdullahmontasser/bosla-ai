@@ -1,4 +1,5 @@
 export { AvatarCropModal } from './AvatarCropModal'
+export { ImportResumeModal } from './ImportResumeModal'
 export { ProfileOverviewCard } from './ProfileOverviewCard'
 export { LanguageProfileSwitch } from './LanguageProfileSwitch'
 export { IdentityCard } from './IdentityCard'

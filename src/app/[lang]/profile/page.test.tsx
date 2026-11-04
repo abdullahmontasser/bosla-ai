@@ -55,6 +55,18 @@ vi.mock('@/components/workspace', () => ({
   ),
 }))
 
+vi.mock('@/lib/health/queries', () => ({
+  getResumeHealthForProfile: vi.fn().mockResolvedValue(null),
+}))
+
+vi.mock('@/app/actions/resume-health', () => ({
+  getProfileHealthAction: vi.fn().mockResolvedValue(null),
+  acceptHealthSuggestionAction: vi.fn().mockResolvedValue({ ok: true }),
+  dismissHealthSuggestionAction: vi.fn().mockResolvedValue({ ok: true }),
+  generateHealthRewriteAction: vi.fn().mockResolvedValue({ ok: true }),
+  forceRecalculateHealthAction: vi.fn().mockResolvedValue(null),
+}))
+
 vi.mock('@/components/health/HealthProfileCard', () => ({
   HealthProfileCard: ({ lang }: { lang: string }) => (
     <section data-testid="health-profile-card" data-lang={lang} />

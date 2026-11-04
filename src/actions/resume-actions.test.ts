@@ -417,7 +417,7 @@ describe('Resume Actions Server Actions (AC-1, AC-3, AC-5, AC-6, AC-7)', () => {
       )
       // Verify skill deduplication on append (only 'Next.js' should be inserted since 'React' exists)
       expect(mockTx.skill.createMany).toHaveBeenCalledWith({
-        data: [{ profileId: 'new-profile-1', name: 'Next.js', sortOrder: 1 }],
+        data: [{ profileId: 'new-profile-1', name: 'Next.js', category: null, sortOrder: 1 }],
       })
       // Verify parsedResume marked as APPLIED
       expect(mockTx.parsedResume.update).toHaveBeenCalledWith({

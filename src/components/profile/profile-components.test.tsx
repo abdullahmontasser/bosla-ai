@@ -390,6 +390,48 @@ describe('Candidate Profile Components', () => {
 
       global.fetch = originalFetch
     })
+
+    it('renders Categorize with AI button and triggers categorization', () => {
+      const onSkillsChange = vi.fn()
+      render(
+        <SkillsCard
+          profileId="prof_en_1"
+          skills={skills}
+          lang="en"
+          onSkillsChange={onSkillsChange}
+        />,
+      )
+
+      const aiButton = screen.getByRole('button', { name: /Categorize with AI/i })
+      expect(aiButton).toBeDefined()
+    })
+
+    it('renders edit buttons, clear categories, and clear all buttons', () => {
+      const onSkillsChange = vi.fn()
+      render(
+        <SkillsCard
+          profileId="prof_en_1"
+          skills={skills}
+          lang="en"
+          onSkillsChange={onSkillsChange}
+        />,
+      )
+
+      const editButtons = screen.getAllByRole('button', { name: 'Edit skill' })
+      expect(editButtons.length).toBe(2)
+
+      const clearAllButton = screen.getByRole('button', { name: /Clear All/i })
+      expect(clearAllButton).toBeDefined()
+
+      // When categories exist, Clear Categories button should be available
+      const clearCategoriesButton = screen.getByRole('button', { name: /Clear Categories/i })
+      expect(clearCategoriesButton).toBeDefined()
+
+      // Clicking Edit button opens dialog
+      fireEvent.click(editButtons[0]!)
+      expect(screen.getByRole('dialog')).toBeDefined()
+      expect(screen.getByText('Edit Skill')).toBeDefined()
+    })
   })
 
   describe('ProjectsCard (covers: AC-5)', () => {

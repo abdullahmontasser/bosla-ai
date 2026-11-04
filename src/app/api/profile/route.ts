@@ -27,27 +27,34 @@ export async function GET(request: NextRequest) {
       email: user?.email,
     })
 
-    return NextResponse.json({
-      user,
-      profile: {
-        id: profile.id,
-        language: profile.language,
-        fullName: profile.fullName,
-        headline: profile.headline,
-        summary: profile.summary,
-        email: profile.email,
-        phone: profile.phone,
-        location: profile.location,
-        websiteUrl: profile.websiteUrl,
-        linkedinUrl: profile.linkedinUrl,
-        githubUrl: profile.githubUrl,
-        isDefault: profile.isDefault,
+    return NextResponse.json(
+      {
+        user,
+        profile: {
+          id: profile.id,
+          language: profile.language,
+          fullName: profile.fullName,
+          headline: profile.headline,
+          summary: profile.summary,
+          email: profile.email,
+          phone: profile.phone,
+          location: profile.location,
+          websiteUrl: profile.websiteUrl,
+          linkedinUrl: profile.linkedinUrl,
+          githubUrl: profile.githubUrl,
+          isDefault: profile.isDefault,
+        },
+        experiences: profile.workExperiences,
+        educations: profile.educations,
+        skills: profile.skills,
+        projects: profile.projects,
       },
-      experiences: profile.workExperiences,
-      educations: profile.educations,
-      skills: profile.skills,
-      projects: profile.projects,
-    })
+      {
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+        },
+      },
+    )
   } catch (error) {
     console.error('Error fetching profile:', error)
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })

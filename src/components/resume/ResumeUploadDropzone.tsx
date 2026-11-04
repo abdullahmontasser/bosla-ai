@@ -10,7 +10,6 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-  Badge,
 } from '@/components/ui'
 import type { ParsedResumePayload } from '@/lib/validations/parsed-resume'
 
@@ -179,24 +178,30 @@ export function ResumeUploadDropzone({
   }
 
   return (
-    <Card className="border border-border bg-card shadow-xs">
-      <CardHeader className="pb-4">
+    <Card className="rounded-[10px] border border-border bg-card shadow-xs">
+      <CardHeader className="p-4 pb-2">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg font-semibold tracking-tight text-foreground">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className="h-px w-4 bg-primary" aria-hidden="true" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-primary">
+                INGESTION / 02
+              </span>
+            </div>
+            <CardTitle className="text-sm font-bold tracking-tight text-foreground">
               {r.dropzoneTitle || 'Upload Your Resume'}
             </CardTitle>
-            <CardDescription className="text-xs text-muted-foreground mt-1">
+            <CardDescription className="text-[11px] text-muted-foreground mt-0.5">
               {r.dropzoneConstraints || 'PDF up to 10 pages, DOCX up to 50k chars (max 10MB)'}
             </CardDescription>
           </div>
-          <Badge variant="outline" className="text-xs font-mono uppercase tracking-wider">
+          <span className="rounded-[3px] border border-border bg-muted/40 px-1.5 py-0.5 text-[9px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
             PDF · DOCX
-          </Badge>
+          </span>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="p-4 pt-1 space-y-3">
         {/* Drag & Drop Canvas */}
         <div
           data-testid="resume-dropzone-box"
@@ -207,7 +212,7 @@ export function ResumeUploadDropzone({
           onDragLeave={() => setIsDragOver(false)}
           onDrop={handleDrop}
           onClick={() => !isUploading && fileInputRef.current?.click()}
-          className={`relative border-2 border-dashed rounded-lg p-8 sm:p-12 text-center transition-colors cursor-pointer ${
+          className={`relative border-2 border-dashed rounded-[8px] p-5 text-center transition-colors cursor-pointer ${
             isDragOver
               ? 'border-primary bg-primary/5'
               : 'border-border/80 hover:border-primary/50 hover:bg-muted/40'

@@ -7,8 +7,8 @@ import { POST as createExperience } from './experiences/route'
 import { PUT as updateExperience, DELETE as deleteExperience } from './experiences/[id]/route'
 import { POST as createEducation } from './educations/route'
 import { PUT as updateEducation, DELETE as deleteEducation } from './educations/[id]/route'
-import { POST as createSkill } from './skills/route'
-import { DELETE as deleteSkill } from './skills/[id]/route'
+import { POST as createSkill, DELETE as deleteSkillsBulk } from './skills/route'
+import { PUT as updateSkill, DELETE as deleteSkill } from './skills/[id]/route'
 import { POST as createProject } from './projects/route'
 import { PUT as updateProject, DELETE as deleteProject } from './projects/[id]/route'
 import { POST as reorderItems } from './reorder/route'
@@ -61,7 +61,12 @@ vi.mock('@/lib/db/profiles', async (importOriginal) => {
     updateEducation: vi.fn(),
     deleteEducation: vi.fn(),
     createSkill: vi.fn(),
+    updateSkill: vi.fn(),
     deleteSkill: vi.fn(),
+    deleteAllSkills: vi.fn(),
+    deleteCategorySkills: vi.fn(),
+    clearCategorySkills: vi.fn(),
+    clearAllSkillCategories: vi.fn(),
     createProject: vi.fn(),
     updateProject: vi.fn(),
     deleteProject: vi.fn(),
@@ -484,6 +489,107 @@ describe('Profile API Route Handlers (covers: AC-1, AC-2, AC-4, AC-5, AC-7)', ()
       const json = await res.json()
       expect(json.success).toBe(true)
       expect(profileDb.deleteSkill).toHaveBeenCalledWith('usr_test_1', 'sk_1')
+    })
+
+    it('updates skill entry with name and category', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({
+        user: { id: 'usr_test_1' },
+      } as never)
+
+      vi.mocked(profileDb.updateSkill).mockResolvedValueOnce({
+        id: 'sk_1',
+        name: 'React 19',
+        category: 'Frontend & Web',
+      } as never)
+
+      const req = new NextRequest('http://localhost:3000/api/profile/skills/sk_1', {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: 'React 19',
+          category: 'Frontend & Web',
+        }),
+      })
+
+      const res = await updateSkill(req, { params: Promise.resolve({ id: 'sk_1' }) })
+      expect(res.status).toBe(200)
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(json.skill.name).toBe('React 19')
+      expect(profileDb.updateSkill).toHaveBeenCalledWith('usr_test_1', 'sk_1', {
+        name: 'React 19',
+        category: 'Frontend & Web',
+      })
+    })
+
+    it('deletes all skills for profile once via bulk DELETE', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({
+        user: { id: 'usr_test_1' },
+      } as never)
+
+      vi.mocked(profileDb.deleteAllSkills).mockResolvedValueOnce({ count: 5 } as never)
+
+      const req = new NextRequest('http://localhost:3000/api/profile/skills', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          profileId: 'prof_1',
+          action: 'all',
+        }),
+      })
+
+      const res = await deleteSkillsBulk(req)
+      expect(res.status).toBe(200)
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(profileDb.deleteAllSkills).toHaveBeenCalledWith('usr_test_1', 'prof_1')
+    })
+
+    it('clears all categories across skills via bulk DELETE', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({
+        user: { id: 'usr_test_1' },
+      } as never)
+
+      vi.mocked(profileDb.clearAllSkillCategories).mockResolvedValueOnce({ count: 3 } as never)
+
+      const req = new NextRequest('http://localhost:3000/api/profile/skills', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          profileId: 'prof_1',
+          action: 'clear-all-categories',
+        }),
+      })
+
+      const res = await deleteSkillsBulk(req)
+      expect(res.status).toBe(200)
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(profileDb.clearAllSkillCategories).toHaveBeenCalledWith('usr_test_1', 'prof_1')
+    })
+
+    it('deletes skills in a specific category via bulk DELETE', async () => {
+      vi.mocked(auth).mockResolvedValueOnce({
+        user: { id: 'usr_test_1' },
+      } as never)
+
+      vi.mocked(profileDb.deleteCategorySkills).mockResolvedValueOnce({ count: 2 } as never)
+
+      const req = new NextRequest('http://localhost:3000/api/profile/skills', {
+        method: 'DELETE',
+        body: JSON.stringify({
+          profileId: 'prof_1',
+          action: 'category',
+          category: 'Cloud & DevOps',
+        }),
+      })
+
+      const res = await deleteSkillsBulk(req)
+      expect(res.status).toBe(200)
+      const json = await res.json()
+      expect(json.success).toBe(true)
+      expect(profileDb.deleteCategorySkills).toHaveBeenCalledWith(
+        'usr_test_1',
+        'prof_1',
+        'Cloud & DevOps',
+      )
     })
   })
 

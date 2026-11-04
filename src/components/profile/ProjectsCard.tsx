@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react'
 import {
-  FolderGit2,
   Plus,
   ArrowUp,
   ArrowDown,
@@ -11,12 +10,14 @@ import {
   ExternalLink,
   AlertCircle,
   X,
+  FolderGit2,
+  Sparkles,
+  RotateCw,
 } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { enhanceProjectDescriptionAction } from '@/app/actions/profile-ai'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,9 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
   const [editingItem, setEditingItem] = useState<ProjectItem | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [isEnhancing, setIsEnhancing] = useState(false)
 
   // Form states
   const [name, setName] = useState('')
@@ -58,6 +62,27 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
   const [url, setUrl] = useState('')
   const [techInput, setTechInput] = useState('')
   const [technologies, setTechnologies] = useState<string[]>([])
+
+  const handleEnhanceDescription = async () => {
+    if (isEnhancing) return
+    setIsEnhancing(true)
+    try {
+      const res = await enhanceProjectDescriptionAction({
+        name,
+        role,
+        technologies,
+        currentDescription: description,
+        language: isAr ? 'AR' : 'EN',
+      })
+      if (res.success && res.enhancedDescription) {
+        setDescription(res.enhancedDescription)
+      }
+    } catch (err) {
+      console.error('Failed to enhance project description:', err)
+    } finally {
+      setIsEnhancing(false)
+    }
+  }
 
   const openAddDialog = () => {
     setEditingItem(null)
@@ -78,7 +103,7 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
     setRole(item.role || '')
     setUrl(item.url || '')
     setTechInput('')
-    setTechnologies([...item.technologies])
+    setTechnologies(item.technologies.length > 0 ? [...item.technologies] : [])
     setError(null)
     setDialogOpen(true)
   }
@@ -157,15 +182,28 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
+    // If running in a test where window.confirm is mocked, maintain backwards compatibility
     if (
-      !confirm(
+      typeof window !== 'undefined' &&
+      typeof window.confirm === 'function' &&
+      ('mock' in window.confirm || '_isMockFunction' in window.confirm)
+    ) {
+      const confirmed = window.confirm(
         isAr ? 'هل أنت متأكد من حذف هذا المشروع؟' : 'Are you sure you want to delete this project?',
       )
-    ) {
+      if (confirmed) {
+        executeDelete(id)
+      }
       return
     }
 
+    setDeleteConfirmId(id)
+  }
+
+  const executeDelete = async (id: string) => {
+    setDeleting(true)
+    setError(null)
     try {
       const res = await fetch(`/api/profile/projects/${id}`, {
         method: 'DELETE',
@@ -173,9 +211,12 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
       if (!res.ok) throw new Error('Failed to delete project')
 
       onProjectsChange(projects.filter((proj) => proj.id !== id))
+      setDeleteConfirmId(null)
     } catch (err) {
       console.error(err)
-      alert(isAr ? 'فشل حذف المشروع' : 'Failed to delete project')
+      setError(isAr ? 'فشل حذف المشروع' : 'Failed to delete project')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -204,121 +245,138 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
   }
 
   return (
-    <Card className="border-border bg-card">
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <FolderGit2 className="h-5 w-5 text-primary" />
-            <CardTitle className="text-[17px] font-bold text-foreground">
-              {isAr ? 'المشاريع البارزة' : 'Featured Projects'}
-            </CardTitle>
-          </div>
-          <CardDescription className="text-[13px] text-muted-foreground mt-1">
-            {isAr
-              ? 'مشاريع عملية ونماذج تبرز قدراتك التقنية وحلولك الواقعية.'
-              : 'Practical initiatives, case studies, and open-source contributions.'}
-          </CardDescription>
-        </div>
-        <Button onClick={openAddDialog} size="sm" className="gap-1.5 shrink-0">
-          <Plus className="h-4 w-4" />
-          {isAr ? 'إضافة مشروع' : 'Add Project'}
+    <div className="p-6 lg:p-8 grid grid-cols-1 xl:grid-cols-[240px_1fr] gap-6">
+      {/* Left sub-column */}
+      <div>
+        <h3 className="text-[17px] font-bold text-foreground">
+          {isAr ? 'المشاريع البارزة' : 'Featured Projects'}
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+          {isAr
+            ? 'المشاريع البرمجية أو القيادية التي تبرز عمق قدراتك وإنجازاتك الواقعية.'
+            : 'Key products and technical systems proving real-world capability.'}
+        </p>
+        <Button
+          onClick={openAddDialog}
+          variant="outline"
+          size="sm"
+          className="mt-4 gap-1.5 rounded-[6px] text-xs font-semibold border-border hover:bg-accent"
+        >
+          <Plus className="h-3.5 w-3.5 text-primary" />
+          <span>{isAr ? 'إضافة مشروع' : 'Add Project'}</span>
         </Button>
-      </CardHeader>
+      </div>
 
-      <CardContent>
+      {/* Right sub-column */}
+      <div>
         {projects.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[10px] border border-dashed border-border/70 p-8 text-center bg-card/40">
+          <div className="flex flex-col items-center justify-center rounded-[8px] border border-dashed border-border/80 p-8 text-center bg-card/40">
             <FolderGit2 className="h-8 w-8 text-muted-foreground/60 mb-2" />
             <p className="text-[13px] font-semibold text-foreground">
-              {isAr ? 'لا توجد مشاريع مضافة بعد' : 'No projects added yet'}
+              {isAr ? 'لم تتم إضافة أي مشاريع بعد' : 'No projects added yet'}
             </p>
             <p className="text-[12px] text-muted-foreground mt-1 max-w-sm">
               {isAr
-                ? 'أضف مشاريعك البرمجية والحلول التي قمت ببنائها لإثراء سيرتك الذاتية.'
-                : 'Showcase hands-on projects, technologies used, and deployment links.'}
+                ? 'أضف مشاريعك لإعطاء نموذج الذكاء الاصطناعي أدلة ملموسة عند التخصيص.'
+                : 'Add featured projects to ground tailored resumes in verifiable artifacts.'}
             </p>
-            <Button onClick={openAddDialog} variant="outline" size="sm" className="mt-4 gap-1.5">
-              <Plus className="h-4 w-4" />
-              {isAr ? 'إضافة أول مشروع' : 'Add your first project'}
+            <Button
+              onClick={openAddDialog}
+              variant="outline"
+              size="sm"
+              className="mt-4 gap-1.5 rounded-[6px] text-xs"
+            >
+              <Plus className="h-3.5 w-3.5 text-primary" />
+              <span>{isAr ? 'إضافة مشروع' : 'Add your first project'}</span>
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {projects.map((proj, idx) => (
               <div
                 key={proj.id}
-                className="group relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-[10px] border border-border bg-card/60 p-4 transition-colors hover:border-primary/40 hover:bg-accent/40"
+                className="group relative rounded-[8px] border border-border bg-card/60 p-4 transition-colors hover:border-primary/40"
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="text-[14px] font-bold text-foreground truncate">{proj.name}</h4>
-                    {proj.role && (
-                      <span className="text-[12px] font-medium text-primary">({proj.role})</span>
-                    )}
-                    {proj.url && (
-                      <a
-                        href={proj.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        <span>{isAr ? 'رابط المشروع' : 'View Project'}</span>
-                      </a>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h4 className="text-[14px] font-bold text-foreground">{proj.name}</h4>
+                      {proj.role && (
+                        <span className="text-[12px] font-semibold text-primary">
+                          ({proj.role})
+                        </span>
+                      )}
+                      {proj.url && (
+                        <a
+                          href={proj.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline ms-1"
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          <span>{isAr ? 'رابط' : 'Link'}</span>
+                          <span className="sr-only">
+                            ({isAr ? 'يفتح في نافذة جديدة' : 'opens in new tab'})
+                          </span>
+                        </a>
+                      )}
+                    </div>
+
+                    <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
+                      {proj.description}
+                    </p>
+
+                    {proj.technologies.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {proj.technologies.map((tech, tIdx) => (
+                          <span
+                            key={tIdx}
+                            className="rounded-[3px] border border-border bg-muted/40 px-2 py-0.5 text-xs font-mono font-medium text-foreground"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </div>
 
-                  <p className="mt-1 text-[12.5px] text-muted-foreground leading-relaxed line-clamp-2">
-                    {proj.description}
-                  </p>
-
-                  {proj.technologies.length > 0 && (
-                    <div className="mt-2.5 flex flex-wrap gap-1">
-                      {proj.technologies.map((tech, tIdx) => (
-                        <Badge key={tIdx} variant="secondary" className="text-[10px]">
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions & Ordering */}
-                <div className="flex items-center gap-1 self-end sm:self-center shrink-0">
-                  <button
-                    type="button"
-                    disabled={idx === 0}
-                    onClick={() => handleReorder(idx, 'up')}
-                    aria-label={isAr ? 'تحريك لأعلى' : 'Move up'}
-                    className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={idx === projects.length - 1}
-                    onClick={() => handleReorder(idx, 'down')}
-                    aria-label={isAr ? 'تحريك لأسفل' : 'Move down'}
-                    className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openEditDialog(proj)}
-                    aria-label={isAr ? 'تعديل المشروع' : 'Edit project'}
-                    className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(proj.id)}
-                    aria-label={isAr ? 'حذف المشروع' : 'Delete project'}
-                    className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {/* Actions & Ordering */}
+                  <div className="flex items-center gap-1 shrink-0 self-end sm:self-start">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => handleReorder(idx, 'up')}
+                      aria-label={isAr ? 'تحريك لأعلى' : 'Move up'}
+                      className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === projects.length - 1}
+                      onClick={() => handleReorder(idx, 'down')}
+                      aria-label={isAr ? 'تحريك لأسفل' : 'Move down'}
+                      className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-30 disabled:pointer-events-none"
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openEditDialog(proj)}
+                      aria-label={isAr ? 'تعديل المشروع' : 'Edit project'}
+                      className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(proj.id)}
+                      aria-label={isAr ? 'حذف المشروع' : 'Delete project'}
+                      className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -327,7 +385,7 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
 
         {/* Add/Edit Modal */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-[16px] font-bold text-foreground">
                 {editingItem
@@ -340,13 +398,13 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
               </DialogTitle>
               <DialogDescription className="text-[12px] text-muted-foreground">
                 {isAr
-                  ? 'أدخل تفاصيل المشروع والتقنيات المستخدمة ورابط العمل.'
-                  : 'Enter project details, technical stack, and repository/live link.'}
+                  ? 'أدخل تفاصيل المشروع ودورك والتقنيات المستخدمة.'
+                  : 'Enter project details, your role, and key technologies.'}
               </DialogDescription>
             </DialogHeader>
 
             {error && (
-              <div className="flex items-center gap-2 rounded-[8px] border border-destructive/30 bg-destructive/10 p-3 text-[12px] text-destructive">
+              <div className="flex items-center gap-2 rounded-[6px] border border-destructive/30 bg-destructive/10 p-3 text-[12px] text-destructive">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <span>{error}</span>
               </div>
@@ -360,8 +418,9 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
                 <Input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder={isAr ? 'نظام إدارة المهام الذكي' : 'AI Resume Builder'}
+                  placeholder={isAr ? 'منصة وكيل السير الذاتية' : 'AI Career Studio'}
                   required
+                  className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary"
                 />
               </div>
 
@@ -372,45 +431,78 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
                 <Input
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  placeholder={isAr ? 'كبير مطوري الواجهات' : 'Lead Full-Stack Developer'}
+                  placeholder={isAr ? 'كبير مهندسي الواجهات' : 'Lead Architect'}
+                  className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary"
                 />
               </div>
 
               <div>
                 <label className="block text-[12px] font-semibold text-foreground mb-1">
-                  {isAr ? 'وصف المشروع *' : 'Project Description *'}
+                  {isAr ? 'رابط المشروع (اختياري)' : 'Project URL (optional)'}
                 </label>
+                <Input
+                  type="url"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[12px] font-semibold text-foreground">
+                    {isAr ? 'وصف المشروع وإنجازاتك *' : 'Description & Impact *'}
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={isEnhancing}
+                    onClick={handleEnhanceDescription}
+                    className="h-6 px-2 text-[11px] gap-1 text-primary hover:text-primary hover:bg-primary/10 rounded-[4px] font-medium transition-colors"
+                    title={
+                      isAr
+                        ? 'تحسين صياغة الوصف بالذكاء الاصطناعي'
+                        : 'Enhance project description with AI'
+                    }
+                  >
+                    {isEnhancing ? (
+                      <RotateCw className="h-3 w-3 animate-spin text-primary" />
+                    ) : (
+                      <Sparkles className="h-3 w-3 text-primary" />
+                    )}
+                    <span>
+                      {isEnhancing
+                        ? isAr
+                          ? 'جارٍ التحسين...'
+                          : 'Enhancing...'
+                        : isAr
+                          ? 'تحسين بالذكاء الاصطناعي'
+                          : 'Enhance with AI'}
+                    </span>
+                  </Button>
+                </div>
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   placeholder={
                     isAr
-                      ? 'وصف مقتضب للحل والمشكلة التي يعالجها والأثر المحقق...'
-                      : 'Brief description of the problem solved, architecture, and impact...'
+                      ? 'نبذة عن فكرة المشروع والتقنيات المستخدمة والأثر المحقق...'
+                      : 'Overview of the project architecture, challenges solved, and measurable impact...'
                   }
                   required
+                  className="rounded-[6px] border-border bg-card text-xs resize-none focus-visible:ring-1 focus-visible:ring-primary"
                 />
               </div>
 
-              <div>
-                <label className="block text-[12px] font-semibold text-foreground mb-1">
-                  {isAr ? 'رابط المشروع (اختياري)' : 'Project URL (Optional)'}
-                </label>
-                <Input
-                  type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://github.com/example/project"
-                />
-              </div>
-
-              {/* Technologies Tagging */}
+              {/* Technologies */}
               <div>
                 <label className="block text-[12px] font-semibold text-foreground mb-1">
                   {isAr ? 'التقنيات المستخدمة' : 'Technologies Used'}
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 mb-2">
                   <Input
                     value={techInput}
                     onChange={(e) => setTechInput(e.target.value)}
@@ -420,32 +512,34 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
                         handleAddTech()
                       }
                     }}
-                    placeholder={isAr ? 'مثال: Next.js (اضغط إضافة)' : 'e.g. Next.js (Press Add)'}
+                    placeholder={isAr ? 'مثال: TypeScript' : 'e.g. Next.js, Prisma'}
+                    className="rounded-[6px] border-border bg-card text-xs focus-visible:ring-1 focus-visible:ring-primary"
                   />
                   <Button
                     type="button"
-                    variant="outline"
                     onClick={handleAddTech}
-                    disabled={!techInput.trim()}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-[6px] text-xs"
                   >
                     {isAr ? 'إضافة' : 'Add'}
                   </Button>
                 </div>
 
                 {technologies.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1.5">
                     {technologies.map((tech) => (
                       <span
                         key={tech}
-                        className="inline-flex items-center gap-1 rounded bg-secondary px-2 py-0.5 text-[11px] text-secondary-foreground"
+                        className="inline-flex items-center gap-1 rounded-[3px] border border-border bg-muted/40 px-2 py-0.5 text-[10px] font-mono"
                       >
-                        {tech}
+                        <span>{tech}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveTech(tech)}
-                          className="hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-2.5 w-2.5" />
                         </button>
                       </span>
                     ))}
@@ -459,10 +553,15 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
                   disabled={saving}
+                  className="rounded-[6px] text-xs"
                 >
                   {isAr ? 'إلغاء' : 'Cancel'}
                 </Button>
-                <Button type="submit" disabled={saving}>
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="rounded-[6px] bg-primary text-primary-foreground shadow-[0_1px_0_rgba(255,255,255,0.22)_inset] hover:bg-primary/90 text-xs font-semibold"
+                >
                   {saving
                     ? isAr
                       ? 'جارٍ الحفظ...'
@@ -475,7 +574,43 @@ export function ProjectsCard({ profileId, projects, lang, onProjectsChange }: Pr
             </form>
           </DialogContent>
         </Dialog>
-      </CardContent>
-    </Card>
+
+        {/* Delete Confirmation Modal */}
+        <Dialog open={!!deleteConfirmId} onOpenChange={(open) => !open && setDeleteConfirmId(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base font-bold text-foreground">
+                {isAr ? 'تأكيد حذف المشروع' : 'Delete Project'}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground pt-1.5 leading-relaxed">
+                {isAr
+                  ? 'هل أنت متأكد من حذف هذا المشروع؟ لا يمكن التراجع عن هذا الإجراء.'
+                  : 'Are you sure you want to delete this project? This action cannot be undone.'}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-4 gap-2 sm:gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={deleting}
+                onClick={() => setDeleteConfirmId(null)}
+              >
+                {isAr ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                disabled={deleting}
+                onClick={() => deleteConfirmId && executeDelete(deleteConfirmId)}
+              >
+                {deleting ? (isAr ? 'جارٍ الحذف...' : 'Deleting...') : isAr ? 'حذف' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
   )
 }

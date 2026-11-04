@@ -13,19 +13,23 @@ import type { ParsedResumePayload } from '@/lib/validations/parsed-resume'
 export interface ResumeIngestionContainerProps {
   lang: string
   dict: Record<string, unknown>
+  targetProfileId?: string
   initialParsedResumeId?: string
   initialParsedPayload?: ParsedResumePayload
   initialFileName?: string
   initialFileFormat?: 'PDF' | 'DOCX'
+  onCommitSuccess?: (profileId: string) => void
 }
 
 export function ResumeIngestionContainer({
   lang,
   dict,
+  targetProfileId,
   initialParsedResumeId,
   initialParsedPayload,
   initialFileName = 'resume.pdf',
   initialFileFormat = 'PDF',
+  onCommitSuccess,
 }: ResumeIngestionContainerProps) {
   const [parsedResumeId, setParsedResumeId] = useState<string | null>(initialParsedResumeId || null)
   const [parsedData, setParsedData] = useState<ParsedResumePayload | null>(
@@ -65,11 +69,13 @@ export function ResumeIngestionContainer({
         <ResumeReviewWorkbench
           lang={lang}
           dict={dict}
+          targetProfileId={targetProfileId}
           parsedResumeId={parsedResumeId}
           initialData={parsedData}
           fileName={fileName}
           fileFormat={fileFormat}
           onCommitAction={commitParsedResumeAction}
+          onCommitSuccess={onCommitSuccess}
           onResetUpload={handleResetUpload}
         />
       )}

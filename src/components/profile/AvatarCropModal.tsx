@@ -87,10 +87,10 @@ export function AvatarCropModal({
     ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CROP_RADIUS, 0, Math.PI * 2, true)
     ctx.fill()
 
-    // Stroke circle border
+    // Stroke circle border with primary cobalt focus
     ctx.beginPath()
     ctx.arc(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CROP_RADIUS, 0, Math.PI * 2)
-    ctx.strokeStyle = '#45d99a'
+    ctx.strokeStyle = '#3b82f6'
     ctx.lineWidth = 2
     ctx.stroke()
     ctx.restore()

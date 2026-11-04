@@ -11,6 +11,7 @@ import {
 } from '@/lib/db/parsed-resumes'
 import { detectDocumentFormat, extractDocumentText, ExtractionError } from '@/lib/parsing/extract'
 import { parseResumeWithAi } from '@/lib/ai/prompts/resume-parser'
+import { classifySkillFallback } from '@/lib/skills/classifier'
 import {
   CommitParsedResumeInputSchema,
   type CommitParsedResumeInput,
@@ -159,6 +160,21 @@ export async function parseResumeAction(formData: FormData) {
   try {
     const payload = await parseResumeWithAi(extracted.text, activeSettings[0])
 
+    // Auto-categorize extracted skills using AI/deterministic taxonomy
+    if (payload.skills && payload.skills.length > 0) {
+      const isAr = payload.language === 'AR'
+      const skillCategoriesMap: Record<string, string> = {}
+      for (const skill of payload.skills) {
+        if (skill && skill.trim()) {
+          skillCategoriesMap[skill.trim()] = classifySkillFallback(skill, isAr)
+        }
+      }
+      payload.rawMetadata = {
+        ...(payload.rawMetadata || {}),
+        skillCategories: skillCategoriesMap,
+      }
+    }
+
     await updateParsedResumeSuccess(userId, parsedRecord.id, {
       rawText: extracted.text,
       parsedPayload: payload,
@@ -237,6 +253,21 @@ export async function retryParsingAction(parsedResumeId: string) {
 
   try {
     const payload = await parseResumeWithAi(record.rawText, activeSettings[0])
+
+    // Auto-categorize extracted skills using AI/deterministic taxonomy
+    if (payload.skills && payload.skills.length > 0) {
+      const isAr = payload.language === 'AR'
+      const skillCategoriesMap: Record<string, string> = {}
+      for (const skill of payload.skills) {
+        if (skill && skill.trim()) {
+          skillCategoriesMap[skill.trim()] = classifySkillFallback(skill, isAr)
+        }
+      }
+      payload.rawMetadata = {
+        ...(payload.rawMetadata || {}),
+        skillCategories: skillCategoriesMap,
+      }
+    }
 
     await updateParsedResumeSuccess(userId, parsedResumeId, {
       rawText: record.rawText,
@@ -436,6 +467,9 @@ export async function commitParsedResumeAction(input: CommitParsedResumeInput) {
       }
 
       // 4. Skills merge semantics with case-insensitive name deduplication (AC-4, AC-5)
+      const skillCategoriesMap =
+        (editedData.rawMetadata?.skillCategories as Record<string, string>) || {}
+
       if (mergeConfig.skills === 'replace') {
         await tx.skill.deleteMany({ where: { profileId } })
         if (editedData.skills.length > 0) {
@@ -443,6 +477,7 @@ export async function commitParsedResumeAction(input: CommitParsedResumeInput) {
             data: editedData.skills.map((skillName, idx) => ({
               profileId,
               name: skillName.trim(),
+              category: skillCategoriesMap[skillName.trim()] || null,
               sortOrder: idx,
             })),
           })
@@ -465,6 +500,7 @@ export async function commitParsedResumeAction(input: CommitParsedResumeInput) {
             data: uniqueNewSkills.map((name, idx) => ({
               profileId,
               name,
+              category: skillCategoriesMap[name] || null,
               sortOrder: maxSortOrder + 1 + idx,
             })),
           })

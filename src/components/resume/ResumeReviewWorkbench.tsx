@@ -41,6 +41,7 @@ export interface ResumeReviewWorkbenchProps {
   initialData: ParsedResumePayload
   fileName: string
   fileFormat: 'PDF' | 'DOCX'
+  targetProfileId?: string
   onCommitSuccess?: (profileId: string) => void
   onCommitAction: (input: {
     parsedResumeId: string
@@ -62,6 +63,7 @@ export function ResumeReviewWorkbench({
   initialData,
   fileName,
   fileFormat,
+  targetProfileId,
   onCommitSuccess,
   onCommitAction,
   onResetUpload,
@@ -251,6 +253,7 @@ export function ResumeReviewWorkbench({
     try {
       const res = await onCommitAction({
         parsedResumeId,
+        targetProfileId,
         mergeConfig,
         editedData: data,
       })

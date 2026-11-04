@@ -1,7 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
-import { deleteSkill } from '@/lib/db/profiles'
+import { SkillUpdateSchema } from '@/lib/validations/profile'
+import { updateSkill, deleteSkill } from '@/lib/db/profiles'
+
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await auth()
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+    const json = await request.json()
+    const parsed = SkillUpdateSchema.safeParse(json)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message || 'Invalid skill data' },
+        { status: 400 },
+      )
+    }
+
+    const skill = await updateSkill(session.user.id, id, parsed.data)
+
+    revalidatePath('/en/profile')
+    revalidatePath('/ar/profile')
+    revalidatePath('/en/tailor')
+    revalidatePath('/ar/tailor')
+    revalidatePath('/en/resume')
+    revalidatePath('/ar/resume')
+
+    return NextResponse.json({ success: true, skill })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to update skill'
+    const status = message.includes('not found') ? 404 : 500
+    return NextResponse.json({ error: message }, { status })
+  }
+}
+
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  return PUT(request, context)
+}
 
 export async function DELETE(
   _request: NextRequest,

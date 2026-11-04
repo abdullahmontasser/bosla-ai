@@ -9,6 +9,7 @@ import {
   type EducationCreateInput,
   type EducationUpdateInput,
   type SkillCreateInput,
+  type SkillUpdateInput,
   type ProjectCreateInput,
   type ProjectUpdateInput,
 } from '@/lib/validations/profile'
@@ -169,6 +170,9 @@ export async function getDefaultProfile(userId: string, language: Language = 'EN
     },
     include: {
       workExperiences: { orderBy: { sortOrder: 'asc' } },
+      educations: { orderBy: { sortOrder: 'asc' } },
+      skills: { orderBy: { sortOrder: 'asc' } },
+      projects: { orderBy: { sortOrder: 'asc' } },
     },
     orderBy: [{ isDefault: 'desc' }, { updatedAt: 'desc' }],
   })
@@ -493,6 +497,24 @@ export async function createSkill(userId: string, input: SkillCreateInput) {
   })
 }
 
+export async function updateSkill(userId: string, id: string, input: SkillUpdateInput) {
+  const existing = await prisma.skill.findFirst({
+    where: { id, profile: { userId } },
+  })
+  if (!existing) throw new Error('Skill not found')
+
+  return prisma.skill.update({
+    where: { id },
+    data: {
+      name: input.name !== undefined ? input.name : existing.name,
+      category: input.category !== undefined ? input.category || null : existing.category,
+      proficiency:
+        input.proficiency !== undefined ? input.proficiency || null : existing.proficiency,
+      sortOrder: input.sortOrder !== undefined ? input.sortOrder : existing.sortOrder,
+    },
+  })
+}
+
 export async function deleteSkill(userId: string, id: string) {
   const existing = await prisma.skill.findFirst({
     where: { id, profile: { userId } },
@@ -501,6 +523,62 @@ export async function deleteSkill(userId: string, id: string) {
 
   return prisma.skill.delete({
     where: { id },
+  })
+}
+
+export async function deleteAllSkills(userId: string, profileId: string) {
+  const profile = await prisma.profile.findFirst({
+    where: { id: profileId, userId },
+  })
+  if (!profile) throw new Error('Profile not found')
+
+  return prisma.skill.deleteMany({
+    where: { profileId },
+  })
+}
+
+export async function deleteCategorySkills(userId: string, profileId: string, category: string) {
+  const profile = await prisma.profile.findFirst({
+    where: { id: profileId, userId },
+  })
+  if (!profile) throw new Error('Profile not found')
+
+  return prisma.skill.deleteMany({
+    where: {
+      profileId,
+      category: category ? { equals: category, mode: 'insensitive' } : null,
+    },
+  })
+}
+
+export async function clearCategorySkills(userId: string, profileId: string, category: string) {
+  const profile = await prisma.profile.findFirst({
+    where: { id: profileId, userId },
+  })
+  if (!profile) throw new Error('Profile not found')
+
+  return prisma.skill.updateMany({
+    where: {
+      profileId,
+      category: category ? { equals: category, mode: 'insensitive' } : null,
+    },
+    data: {
+      category: null,
+    },
+  })
+}
+
+export async function clearAllSkillCategories(userId: string, profileId: string) {
+  const profile = await prisma.profile.findFirst({
+    where: { id: profileId, userId },
+  })
+  if (!profile) throw new Error('Profile not found')
+
+  return prisma.skill.updateMany({
+    where: { profileId },
+    data: {
+      category: null,
+    },
   })
 }
 
