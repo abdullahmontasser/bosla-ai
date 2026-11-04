@@ -1,6 +1,13 @@
 'use client'
 
-import React, { useState, useTransition, useOptimistic, useCallback } from 'react'
+import React, {
+  useState,
+  useTransition,
+  useOptimistic,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -114,6 +121,35 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
   const [selectedCard, setSelectedCard] = useState<ApplicationWithRelations | null>(null)
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false)
+
+  // Ref for search input hotkey
+  const searchInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Workbench Keyboard Accelerators: "/" to search, "n" or "c" to add card
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeElement = document.activeElement
+      const isInput =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        (activeElement as HTMLElement)?.isContentEditable
+
+      if (isInput) return
+
+      if (e.key === '/') {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      } else if (e.key === 'n' || e.key === 'c' || e.key === 'N' || e.key === 'C') {
+        if (!isDrawerOpen && !isQuickAddOpen) {
+          e.preventDefault()
+          setIsQuickAddOpen(true)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isDrawerOpen, isQuickAddOpen])
 
   const isFilterActive = searchQuery.trim().length > 0 || minAtsScore > 0 || followUpOnly
 
@@ -342,6 +378,11 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
         newSortOrder,
         appliedAt: updatedAppliedAt,
       })
+      setSelectedCard((prev) =>
+        prev && prev.id === cardId
+          ? { ...prev, status: newStatus, appliedAt: updatedAppliedAt, sortOrder: newSortOrder }
+          : prev,
+      )
 
       try {
         const result = await updateApplicationStatusAndOrder(cardId, newStatus, newSortOrder)
@@ -349,8 +390,10 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
           throw new Error(result.error || 'Failed to update status')
         }
         setCards((prev) => prev.map((c) => (c.id === cardId ? result.application! : c)))
+        setSelectedCard((prev) => (prev && prev.id === cardId ? result.application! : prev))
       } catch (err) {
         setCards(previousCards)
+        setSelectedCard(card)
         setErrorMessage(
           err instanceof Error ? err.message : 'Failed to update status. Changes reverted.',
         )
@@ -453,6 +496,10 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
     },
   }
 
+  const activeSelectedCard = selectedCard
+    ? (optimisticCards.find((c) => c.id === selectedCard.id) ?? selectedCard)
+    : null
+
   return (
     <div className="space-y-6" data-testid="kanban-tracker-container">
       {/* Error Toast Notification Banner (AC-4) */}
@@ -487,6 +534,7 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
         onAddApplication={() => setIsQuickAddOpen(true)}
         lang={lang}
         dict={dict}
+        searchInputRef={searchInputRef}
       />
 
       {/* Kanban Multi-Column Board (AC-1, AC-2) */}
@@ -500,7 +548,7 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
         }}
       >
         <div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-start pb-6 pt-2"
+          className="flex overflow-x-auto snap-x snap-mandatory lg:grid lg:grid-cols-5 divide-y-0 divide-x rtl:divide-x-reverse divide-border border border-border/80 bg-card/20 rounded-[10px] pb-3 lg:pb-0 scrollbar-thin"
           data-testid="kanban-columns-wrapper"
         >
           {COLUMN_ORDER.map((columnId) => (
@@ -541,7 +589,7 @@ export function KanbanContainer({ initialApplications = [], lang, dict }: Kanban
 
       {/* Slide-Over Details Drawer (AC-7) */}
       <ApplicationDetailsDrawer
-        card={selectedCard}
+        card={activeSelectedCard}
         isOpen={isDrawerOpen}
         onClose={() => {
           setIsDrawerOpen(false)

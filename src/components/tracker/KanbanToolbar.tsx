@@ -15,6 +15,7 @@ export interface KanbanToolbarProps {
   onAddApplication: () => void
   lang?: string
   dict: Dictionary
+  searchInputRef?: React.RefObject<HTMLInputElement | null>
 }
 
 export function KanbanToolbar({
@@ -26,6 +27,7 @@ export function KanbanToolbar({
   onFollowUpOnlyToggle,
   onAddApplication,
   dict,
+  searchInputRef,
 }: KanbanToolbarProps) {
   const t = (dict.tracker ?? {}) as Record<string, string | undefined>
   const hasActiveFilters = searchQuery.trim().length > 0 || minAtsScore > 0 || followUpOnly
@@ -46,22 +48,34 @@ export function KanbanToolbar({
           <div className="relative min-w-[220px] max-w-sm flex-1">
             <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
             <Input
+              ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={t.searchPlaceholder || 'Search by company or role...'}
-              className="ps-9 pe-8 h-9 text-xs"
+              className="ps-9 pe-14 h-9 text-xs"
               data-testid="search-input"
             />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => onSearchChange('')}
-                className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-3.5" />
-              </button>
-            )}
+            <div className="absolute end-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => onSearchChange('')}
+                  className="text-muted-foreground hover:text-foreground p-0.5 rounded transition-colors"
+                  aria-label={dict.common.close || 'Clear search'}
+                >
+                  <X className="size-3.5" />
+                  <span className="sr-only">{dict.common.close || 'Clear search'}</span>
+                </button>
+              ) : (
+                <kbd
+                  className="hidden sm:inline-flex items-center justify-center rounded border border-border/70 bg-muted/50 px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground/80 select-none pointer-events-none"
+                  title="Press / to search"
+                >
+                  /
+                </kbd>
+              )}
+            </div>
           </div>
 
           {/* ATS Score Filter Buttons */}
@@ -143,6 +157,9 @@ export function KanbanToolbar({
           >
             <Plus className="size-4" />
             <span>{t.addApplication || 'Add Application'}</span>
+            <kbd className="hidden sm:inline-flex items-center justify-center rounded bg-primary-foreground/20 px-1.5 py-0.5 text-[9px] font-mono text-primary-foreground ms-0.5 opacity-90 select-none">
+              N
+            </kbd>
           </Button>
         </div>
       </div>

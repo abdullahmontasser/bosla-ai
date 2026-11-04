@@ -20,32 +20,40 @@ export interface KanbanColumnProps {
   onStatusChange: (cardId: string, newStatus: ApplicationStatus) => void
 }
 
+const stageIndexMap: Record<ApplicationStatus, string> = {
+  SAVED: '01',
+  APPLIED: '02',
+  INTERVIEWING: '03',
+  OFFER: '04',
+  REJECTED: '05',
+}
+
 const statusColorStyles: Record<ApplicationStatus, { dot: string; count: string; border: string }> =
   {
     SAVED: {
-      dot: 'bg-slate-400 dark:bg-slate-500',
-      count: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-      border: 'hover:border-slate-300 dark:hover:border-slate-700',
+      dot: 'bg-muted-foreground/70',
+      count: 'border-border/80 bg-muted/30 text-muted-foreground',
+      border: 'hover:border-border',
     },
     APPLIED: {
-      dot: 'bg-blue-500',
-      count: 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300',
-      border: 'hover:border-blue-300 dark:hover:border-blue-800',
+      dot: 'bg-primary/80',
+      count: 'border-primary/20 bg-primary/10 text-primary',
+      border: 'hover:border-primary/40',
     },
     INTERVIEWING: {
       dot: 'bg-amber-500',
-      count: 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
-      border: 'hover:border-amber-300 dark:hover:border-amber-800',
+      count: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+      border: 'hover:border-amber-500/40',
     },
     OFFER: {
-      dot: 'bg-emerald-500',
-      count: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
-      border: 'hover:border-emerald-300 dark:hover:border-emerald-800',
+      dot: 'bg-emerald-600 dark:bg-emerald-400',
+      count: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+      border: 'hover:border-emerald-500/40',
     },
     REJECTED: {
-      dot: 'bg-rose-500',
-      count: 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
-      border: 'hover:border-rose-300 dark:hover:border-rose-800',
+      dot: 'bg-muted-foreground/50',
+      count: 'border-border bg-muted/40 text-muted-foreground',
+      border: 'hover:border-border',
     },
   }
 
@@ -71,20 +79,21 @@ export function KanbanColumn({
     <div
       ref={setNodeRef}
       data-testid={`kanban-column-${id}`}
-      className={`flex flex-col rounded-xl border bg-muted/25 p-3 transition-colors min-w-0 w-full ${
-        isOver ? 'border-primary/60 bg-primary/5 ring-1 ring-primary/20' : 'border-border/60'
+      className={`flex flex-col p-3 sm:p-3.5 transition-colors w-[280px] sm:w-[310px] shrink-0 snap-start lg:w-full lg:shrink min-h-[480px] ${
+        isOver ? 'bg-primary/5' : 'bg-transparent'
       }`}
     >
       {/* Column Header */}
-      <div className="flex items-center justify-between pb-2.5 px-1 border-b border-border/40">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className={`size-2 rounded-full shrink-0 ${colors.dot}`} />
-          <h3 className="font-semibold text-[11px] text-foreground uppercase tracking-wider truncate">
+      <div className="flex items-center justify-between pb-2.5 px-1 border-b border-border/70">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-mono text-xs font-bold text-primary">{stageIndexMap[id]}</span>
+          <span className="text-muted-foreground/40 text-xs">/</span>
+          <h3 className="font-bold text-xs text-foreground uppercase tracking-wider truncate">
             {title}
           </h3>
         </div>
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold shrink-0 tabular-nums ${colors.count}`}
+          className={`rounded-[4px] border px-1.5 py-0.5 text-xs font-mono font-bold shrink-0 tabular-nums ${colors.count}`}
           data-testid={`column-count-${id}`}
         >
           {cards.length}
@@ -110,10 +119,10 @@ export function KanbanColumn({
         {/* Empty Drop Zone Placeholder */}
         {cards.length === 0 && (
           <div
-            className={`flex h-36 flex-col items-center justify-center rounded-lg border border-dashed p-3 text-center text-[11px] transition-colors ${
+            className={`flex h-36 flex-col items-center justify-center rounded-lg border border-dashed p-4 text-center text-xs transition-colors ${
               isOver
                 ? 'border-primary bg-primary/10 text-primary'
-                : 'border-border/40 bg-background/20 text-muted-foreground/80'
+                : 'border-border/60 bg-muted/10 text-muted-foreground'
             }`}
           >
             <p className="max-w-[180px] leading-relaxed">

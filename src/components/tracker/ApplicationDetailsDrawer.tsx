@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import type { ApplicationStatus } from '@prisma/client'
 import type { ApplicationWithRelations } from '@/lib/db/applications'
@@ -55,6 +55,17 @@ export function ApplicationDetailsDrawer({
   lang,
   dict,
 }: ApplicationDetailsDrawerProps) {
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
   if (!isOpen || !card) return null
 
   return (
@@ -72,9 +83,7 @@ export function ApplicationDetailsDrawer({
       />
 
       {/* Drawer Panel */}
-      <div
-        className={`fixed inset-y-0 ${lang === 'ar' ? 'left-0' : 'right-0'} flex max-w-full z-50`}
-      >
+      <div className="fixed inset-y-0 end-0 flex max-w-full z-50">
         <ApplicationDetailsContent
           key={card.id}
           card={card}
@@ -178,7 +187,11 @@ function ApplicationDetailsContent({
   const atsScore = card.tailoredResume?.atsScore
 
   return (
-    <div className="w-screen max-w-xl bg-card border-s border-border shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-200">
+    <div
+      className={`w-screen max-w-xl bg-card border-s border-border shadow-2xl flex flex-col h-full animate-in ${
+        isRtl ? 'slide-in-from-left' : 'slide-in-from-right'
+      } duration-200`}
+    >
       {/* Drawer Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <div className="min-w-0 flex-1">
@@ -199,8 +212,14 @@ function ApplicationDetailsContent({
               className="size-8 text-muted-foreground hover:text-foreground"
               title={t.visitJobPosting || 'Visit Posting'}
             >
-              <a href={jobUrl} target="_blank" rel="noopener noreferrer">
+              <a
+                href={jobUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t.visitJobPosting || 'Visit Posting'}
+              >
                 <ExternalLink className="size-4" />
+                <span className="sr-only">{t.visitJobPosting || 'Visit Posting'}</span>
               </a>
             </Button>
           )}

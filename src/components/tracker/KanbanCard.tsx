@@ -25,6 +25,7 @@ import {
   Calendar,
   DollarSign,
   MapPin,
+  GripVertical,
 } from 'lucide-react'
 
 export interface KanbanCardProps {
@@ -61,9 +62,7 @@ export function KanbanCard({
 
   // Extract connection note if available
   const outreachPayload = card.tailoredResume?.outreachMessage as
-    | { connectionNoteText?: string; inMail?: { body?: string } }
-    | null
-    | undefined
+    { connectionNoteText?: string; inMail?: { body?: string } } | null | undefined
 
   const outreachNote = outreachPayload?.connectionNoteText || outreachPayload?.inMail?.body || null
 
@@ -96,11 +95,9 @@ export function KanbanCard({
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
       onClick={() => onSelect(card)}
       data-testid={`kanban-card-${card.id}`}
-      className={`group relative rounded-lg border bg-card p-3 shadow-xs transition-all cursor-pointer select-none ${
+      className={`group relative rounded-[8px] border bg-card p-3 shadow-xs transition-all cursor-pointer ${
         isDragging
           ? 'opacity-40 border-dashed border-primary shadow-lg ring-2 ring-primary/20'
           : 'border-border/80 hover:border-primary/50 hover:shadow-sm'
@@ -110,7 +107,7 @@ export function KanbanCard({
       {followUpNeeded && (
         <div
           data-testid="follow-up-badge"
-          className="mb-2.5 flex items-center gap-1.5 rounded-sm bg-amber-500/10 px-2 py-1 text-[11px] font-medium text-amber-700 dark:text-amber-400 border border-amber-500/20"
+          className="mb-2.5 flex items-center gap-1.5 rounded-[3px] bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400 border border-amber-500/20"
         >
           <Clock className="size-3 shrink-0" />
           <span>
@@ -121,11 +118,23 @@ export function KanbanCard({
         </div>
       )}
 
-      {/* Card Header: Job Title & Quick Menu */}
-      <div className="flex items-start justify-between gap-1.5">
+      {/* Card Header: Drag Grip, Job Title, & Quick Menu */}
+      <div className="flex items-start gap-1.5">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          aria-label={t.dragToReorder || 'Drag to reorder'}
+          data-testid={`card-drag-handle-${card.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="cursor-grab active:cursor-grabbing p-0.5 -ms-1 -mt-0.5 text-muted-foreground/30 hover:text-foreground touch-none rounded transition-colors shrink-0"
+        >
+          <GripVertical className="size-3.5" />
+        </button>
+
         <div className="min-w-0 flex-1">
           <h4
-            className="font-semibold text-xs sm:text-[13px] text-foreground line-clamp-2 leading-snug tracking-tight"
+            className="font-bold text-xs sm:text-[13px] text-foreground line-clamp-2 leading-snug tracking-tight"
             title={card.jobPosting.title}
           >
             {card.jobPosting.title}
@@ -203,19 +212,23 @@ export function KanbanCard({
       )}
 
       {/* Card Footer: ATS Match Badge + Quick Outreach Copy */}
-      <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between gap-1.5">
+      <div className="mt-3 pt-2 border-t border-border/50 flex items-center justify-between gap-1.5 min-h-[28px]">
         {/* ATS Score Badge */}
         {atsScore != null ? (
           <Link
             href={`/${lang}/tailor?resumeId=${card.tailoredResumeId}`}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-[11px] font-medium tracking-tight bg-secondary hover:bg-secondary/80 text-foreground transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-[3px] border border-border bg-muted/40 px-2 py-0.5 text-[11px] font-mono font-semibold tracking-tight text-foreground hover:bg-accent transition-colors"
             title="ATS Match Score"
             data-testid={`ats-score-badge-${card.id}`}
           >
             <span
               className={`size-1.5 rounded-full ${
-                atsScore >= 80 ? 'bg-emerald-500' : atsScore >= 60 ? 'bg-amber-500' : 'bg-rose-500'
+                atsScore >= 80
+                  ? 'bg-primary'
+                  : atsScore >= 60
+                    ? 'bg-amber-500'
+                    : 'bg-muted-foreground'
               }`}
             />
             <span>{Math.round(atsScore)}% ATS</span>
@@ -233,14 +246,14 @@ export function KanbanCard({
 
         {/* Quick Outreach Copy Button */}
         <div onClick={(e) => e.stopPropagation()}>
-          {outreachNote ? (
+          {outreachNote && (
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={handleCopyOutreach}
               data-testid={`copy-outreach-${card.id}`}
-              className="h-6 px-2 text-[10px] gap-1 rounded-md border-border/80 text-foreground hover:bg-accent"
+              className="h-6 px-2 text-[11px] gap-1 rounded-md border-border/80 text-foreground hover:bg-accent"
               title={outreachNote}
             >
               {copied ? (
@@ -255,10 +268,6 @@ export function KanbanCard({
                 </>
               )}
             </Button>
-          ) : (
-            <span className="text-[10px] text-muted-foreground/60 italic">
-              {t.noOutreach || 'No outreach note'}
-            </span>
           )}
         </div>
       </div>
